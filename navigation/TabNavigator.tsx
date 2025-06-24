@@ -2,7 +2,7 @@ import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
 import { View, Text, StyleSheet } from 'react-native';
-import { MainTabParamList, FriendsStackParamList, CameraStackParamList } from '../types';
+import { MainTabParamList, FriendsStackParamList, CameraStackParamList, InboxStackParamList, SentStackParamList } from '../types';
 import { theme } from '../constants/theme';
 
 // Import existing friends screens
@@ -12,10 +12,19 @@ import FriendRequestsScreen from '../screens/main/FriendRequestsScreen';
 
 // Camera screens
 import CameraScreen from '../screens/camera/CameraScreen';
+import MediaPreview from '../screens/camera/MediaPreview';
+import FriendSelectorScreen from '../screens/snaps/FriendSelectorScreen';
+
+// Snap screens
+import SnapInboxScreen from '../screens/snaps/SnapInboxScreen';
+import SnapViewerScreen from '../screens/snaps/SnapViewerScreen';
+import SentSnapsScreen from '../screens/snaps/SentSnapsScreen';
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
 const FriendsStack = createStackNavigator<FriendsStackParamList>();
 const CameraStack = createStackNavigator<CameraStackParamList>();
+const InboxStack = createStackNavigator<InboxStackParamList>();
+const SentStack = createStackNavigator<SentStackParamList>();
 
 // Placeholder component for inactive tabs
 const ComingSoonScreen = ({ route }: any) => (
@@ -38,7 +47,24 @@ const FriendsStackNavigator = () => (
 const CameraStackNavigator = () => (
   <CameraStack.Navigator screenOptions={{ headerShown: false }}>
     <CameraStack.Screen name="CameraScreen" component={CameraScreen} />
+    <CameraStack.Screen name="MediaPreview" component={MediaPreview} />
+    <CameraStack.Screen name="FriendSelector" component={FriendSelectorScreen} />
   </CameraStack.Navigator>
+);
+
+// Inbox Stack Navigator
+const InboxStackNavigator = () => (
+  <InboxStack.Navigator screenOptions={{ headerShown: false }}>
+    <InboxStack.Screen name="SnapInbox" component={SnapInboxScreen} />
+    <InboxStack.Screen name="SnapViewer" component={SnapViewerScreen} />
+  </InboxStack.Navigator>
+);
+
+// Sent Stack Navigator
+const SentStackNavigator = () => (
+  <SentStack.Navigator screenOptions={{ headerShown: false }}>
+    <SentStack.Screen name="SentSnaps" component={SentSnapsScreen} />
+  </SentStack.Navigator>
 );
 
 export const TabNavigator = () => {
@@ -84,7 +110,7 @@ export const TabNavigator = () => {
       />
       <Tab.Screen 
         name="Inbox" 
-        component={ComingSoonScreen}
+        component={InboxStackNavigator}
         options={{
           tabBarIcon: ({ color, size }) => (
             <Text style={{ color, fontSize: size }}>📥</Text>
@@ -93,7 +119,7 @@ export const TabNavigator = () => {
       />
       <Tab.Screen 
         name="Sent" 
-        component={ComingSoonScreen}
+        component={SentStackNavigator}
         options={{
           tabBarIcon: ({ color, size }) => (
             <Text style={{ color, fontSize: size }}>📤</Text>

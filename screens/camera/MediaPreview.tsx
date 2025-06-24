@@ -1,17 +1,14 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   View,
   Text,
   TouchableOpacity,
   StyleSheet,
   Image,
-  Alert,
-  ActivityIndicator,
   Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { theme } from '../../constants/theme';
-import { uploadMedia } from '../../services/media';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
@@ -27,46 +24,18 @@ interface MediaPreviewProps {
 
 export default function MediaPreview({ route, navigation }: MediaPreviewProps) {
   const { mediaUri, mediaType } = route.params;
-  const [uploading, setUploading] = useState(false);
 
   const handleRetake = () => {
-    // Go back to camera tab
-    navigation.navigate('MainTabs', { screen: 'Camera' });
+    // Go back to camera screen
+    navigation.goBack();
   };
 
-  const handleUseMedia = async () => {
-    setUploading(true);
-    
-    try {
-      console.log('Uploading media to Supabase Storage...');
-      
-      // Upload to Supabase Storage
-      const result = await uploadMedia(mediaUri, mediaType);
-      
-      console.log('Upload successful:', result);
-      
-      Alert.alert(
-        'Success!',
-        `Photo uploaded successfully!\n\nURL: ${result.url}`,
-        [
-          {
-            text: 'OK',
-            onPress: () => {
-              // Go back to camera
-              navigation.navigate('MainTabs', { screen: 'Camera' });
-            },
-          },
-        ]
-      );
-    } catch (error: any) {
-      console.error('Error uploading media:', error);
-      Alert.alert(
-        'Upload Failed', 
-        error.message || 'Failed to upload photo. Please try again.'
-      );
-    } finally {
-      setUploading(false);
-    }
+  const handleSendSnap = () => {
+    // Navigate to friend selector with media
+    navigation.navigate('FriendSelector', {
+      mediaUri,
+      mediaType,
+    });
   };
 
   return (
@@ -81,21 +50,15 @@ export default function MediaPreview({ route, navigation }: MediaPreviewProps) {
         <TouchableOpacity
           style={[styles.button, styles.retakeButton]}
           onPress={handleRetake}
-          disabled={uploading}
         >
           <Text style={styles.retakeButtonText}>Retake</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[styles.button, styles.useButton, uploading && styles.buttonDisabled]}
-          onPress={handleUseMedia}
-          disabled={uploading}
+          style={[styles.button, styles.useButton]}
+          onPress={handleSendSnap}
         >
-          {uploading ? (
-            <ActivityIndicator size="small" color={theme.colors.secondary} />
-          ) : (
-            <Text style={styles.useButtonText}>Use Photo</Text>
-          )}
+          <Text style={styles.useButtonText}>Send Snap</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
@@ -148,8 +111,5 @@ const styles = StyleSheet.create({
     color: theme.colors.secondary,
     fontSize: 16,
     fontWeight: 'bold',
-  },
-  buttonDisabled: {
-    opacity: 0.6,
   },
 });

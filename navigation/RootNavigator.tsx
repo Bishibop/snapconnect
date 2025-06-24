@@ -6,7 +6,6 @@ import { useAuth } from '../contexts/AuthContext';
 import { LoginScreen } from '../screens/auth/LoginScreen';
 import { SignupScreen } from '../screens/auth/SignupScreen';
 import { TabNavigator } from './TabNavigator';
-import MediaPreview from '../screens/camera/MediaPreview';
 
 const Stack = createStackNavigator<RootStackParamList>();
 
@@ -32,14 +31,6 @@ export const RootNavigator = () => {
               name="MainTabs" 
               component={TabNavigator}
               options={{ headerShown: false }}
-            />
-            <Stack.Screen 
-              name="MediaPreview" 
-              component={MediaPreview}
-              options={{ 
-                headerShown: false,
-                presentation: 'modal',
-              }}
             />
           </>
         ) : (

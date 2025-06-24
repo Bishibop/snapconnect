@@ -39,10 +39,6 @@ export type RootStackParamList = {
   Login: undefined;
   Signup: undefined;
   MainTabs: undefined;
-  MediaPreview: {
-    mediaUri: string;
-    mediaType: 'photo' | 'video';
-  };
 };
 
 export type AuthStackParamList = {
@@ -57,6 +53,17 @@ export type MainTabParamList = {
   Sent: undefined;
 };
 
+export type InboxStackParamList = {
+  SnapInbox: undefined;
+  SnapViewer: {
+    snap: any; // Snap type from services
+  };
+};
+
+export type SentStackParamList = {
+  SentSnaps: undefined;
+};
+
 export type FriendsStackParamList = {
   FriendsList: undefined;
   AddFriends: undefined;
@@ -66,6 +73,10 @@ export type FriendsStackParamList = {
 export type CameraStackParamList = {
   CameraScreen: undefined;
   MediaPreview: {
+    mediaUri: string;
+    mediaType: 'photo' | 'video';
+  };
+  FriendSelector: {
     mediaUri: string;
     mediaType: 'photo' | 'video';
   };

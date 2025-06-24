@@ -57,7 +57,7 @@ export default function CameraScreen({ navigation }: any) {
 
       if (photo?.uri) {
         // Navigate to MediaPreview with the captured photo
-        navigation.getParent()?.navigate('MediaPreview', {
+        navigation.navigate('MediaPreview', {
           mediaUri: photo.uri,
           mediaType: 'photo',
         });
