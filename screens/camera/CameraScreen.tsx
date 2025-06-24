@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { CameraView, CameraType, useCameraPermissions } from 'expo-camera';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useFocusEffect } from '@react-navigation/native';
 import { theme } from '../../constants/theme';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
@@ -16,7 +17,25 @@ const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 export default function CameraScreen({ navigation }: any) {
   const [facing, setFacing] = useState<CameraType>('back');
   const [permission, requestPermission] = useCameraPermissions();
+  const [cameraKey, setCameraKey] = useState(0); // Force re-render camera
+  const [isCameraReady, setIsCameraReady] = useState(false);
   const cameraRef = useRef<CameraView>(null);
+
+  // Reset camera when screen comes into focus
+  useFocusEffect(
+    React.useCallback(() => {
+      // Reset camera state when screen is focused
+      setIsCameraReady(false);
+      setCameraKey(prev => prev + 1);
+      
+      // Small delay to ensure camera reinitializes properly
+      const timer = setTimeout(() => {
+        setIsCameraReady(true);
+      }, 100);
+
+      return () => clearTimeout(timer);
+    }, [])
+  );
 
   if (!permission) {
     // Camera permissions are still loading
@@ -43,11 +62,18 @@ export default function CameraScreen({ navigation }: any) {
   }
 
   const toggleCameraFacing = () => {
+    setIsCameraReady(false);
     setFacing(current => (current === 'back' ? 'front' : 'back'));
+    
+    // Reset camera ready state after facing change
+    setTimeout(() => {
+      setIsCameraReady(true);
+    }, 100);
   };
 
+
   const takePicture = async () => {
-    if (!cameraRef.current) return;
+    if (!cameraRef.current || !isCameraReady) return;
 
     try {
       const photo = await cameraRef.current.takePictureAsync({
@@ -71,6 +97,7 @@ export default function CameraScreen({ navigation }: any) {
   return (
     <SafeAreaView style={styles.container}>
       <CameraView
+        key={cameraKey} // Force re-render when key changes
         ref={cameraRef}
         style={styles.camera}
         facing={facing}
@@ -96,10 +123,17 @@ export default function CameraScreen({ navigation }: any) {
         {/* Bottom Controls */}
         <View style={styles.bottomControls}>
           <TouchableOpacity
-            style={styles.captureButton}
+            style={[
+              styles.captureButton,
+              !isCameraReady && styles.captureButtonDisabled
+            ]}
             onPress={takePicture}
+            disabled={!isCameraReady}
           >
-            <View style={styles.captureButtonInner} />
+            <View style={[
+              styles.captureButtonInner,
+              !isCameraReady && styles.captureButtonInnerDisabled
+            ]} />
           </TouchableOpacity>
         </View>
       </CameraView>
@@ -200,5 +234,11 @@ const styles = StyleSheet.create({
     height: 60,
     borderRadius: 30,
     backgroundColor: theme.colors.white,
+  },
+  captureButtonDisabled: {
+    opacity: 0.5,
+  },
+  captureButtonInnerDisabled: {
+    backgroundColor: theme.colors.gray,
   },
 });

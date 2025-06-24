@@ -11,6 +11,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { theme } from '../../constants/theme';
 import { markSnapOpened, Snap } from '../../services/snaps';
+import { Story, markStoryViewed } from '../../services/stories';
 import { supabase } from '../../lib/supabase';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
@@ -18,32 +19,46 @@ const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 interface SnapViewerProps {
   route: {
     params: {
-      snap: Snap;
+      snap?: Snap;
+      story?: Story;
     };
   };
   navigation: any;
 }
 
 export default function SnapViewerScreen({ route, navigation }: SnapViewerProps) {
-  const { snap } = route.params;
+  const { snap, story } = route.params;
+  const content = snap || story; // Use snap if available, otherwise story
+  const isStory = !!story;
+  
   const [timeLeft, setTimeLeft] = useState(5); // 5 seconds for photos
   const [mediaUrl, setMediaUrl] = useState<string>('');
 
   useEffect(() => {
-    // Mark snap as opened when viewer opens
-    markSnapOpened(snap.id).catch(console.error);
+    if (!content) return;
+    
+    // Mark snap as opened when viewer opens (only for snaps, not stories)
+    if (snap) {
+      markSnapOpened(snap.id).catch(console.error);
+    }
+    
+    // Mark story as viewed when viewer opens (only for stories, not snaps)
+    if (story && !story.is_viewed) {
+      markStoryViewed(story.id).catch(error => {
+        // Silently fail if already viewed or other non-critical error
+        console.log('Story view tracking:', error.message);
+      });
+    }
     
     // Get the public URL for the media
     getMediaUrl();
     
     // Start countdown for photos
-    if (snap.snap_type === 'photo') {
+    if (content.snap_type === 'photo') {
       const timer = setInterval(() => {
         setTimeLeft((prev) => {
           if (prev <= 1) {
             clearInterval(timer);
-            // Auto-close after countdown
-            navigation.goBack();
             return 0;
           }
           return prev - 1;
@@ -52,12 +67,21 @@ export default function SnapViewerScreen({ route, navigation }: SnapViewerProps)
 
       return () => clearInterval(timer);
     }
-  }, [snap.id, snap.snap_type, navigation]);
+  }, [content?.id, content?.snap_type, navigation]);
+
+  // Handle auto-close when timer reaches 0
+  useEffect(() => {
+    if (timeLeft === 0 && content?.snap_type === 'photo') {
+      navigation.goBack();
+    }
+  }, [timeLeft, content?.snap_type, navigation]);
 
   const getMediaUrl = () => {
+    if (!content) return;
+    
     const { data } = supabase.storage
       .from('media')
-      .getPublicUrl(snap.media_url);
+      .getPublicUrl(content.media_url);
     
     setMediaUrl(data.publicUrl);
   };
@@ -79,7 +103,7 @@ export default function SnapViewerScreen({ route, navigation }: SnapViewerProps)
       </TouchableOpacity>
 
       {/* Countdown timer for photos */}
-      {snap.snap_type === 'photo' && timeLeft > 0 && (
+      {content?.snap_type === 'photo' && timeLeft > 0 && (
         <View style={styles.timerContainer}>
           <Text style={styles.timerText}>{timeLeft}</Text>
         </View>
@@ -87,8 +111,18 @@ export default function SnapViewerScreen({ route, navigation }: SnapViewerProps)
 
       {/* Sender info */}
       <View style={styles.senderInfo}>
-        <Text style={styles.senderName}>{snap.sender_profile?.username}</Text>
-        <Text style={styles.snapType}>sent a {snap.snap_type}</Text>
+        <Text style={styles.senderName}>
+          {isStory 
+            ? (story as Story)?.user_profile?.username 
+            : (snap as Snap)?.sender_profile?.username
+          }
+        </Text>
+        <Text style={styles.snapType}>
+          {isStory 
+            ? `posted a ${content?.snap_type} story`
+            : `sent a ${content?.snap_type}`
+          }
+        </Text>
       </View>
 
       {/* Media content */}

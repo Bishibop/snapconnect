@@ -56,7 +56,8 @@ export type MainTabParamList = {
 export type InboxStackParamList = {
   SnapInbox: undefined;
   SnapViewer: {
-    snap: any; // Snap type from services
+    snap?: any; // Snap type from services
+    story?: any; // Story type from services
   };
 };
 

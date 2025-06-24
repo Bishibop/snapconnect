@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -6,9 +6,13 @@ import {
   StyleSheet,
   Image,
   Dimensions,
+  Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { theme } from '../../constants/theme';
+import { createStory } from '../../services/stories';
+import { uploadMedia } from '../../services/media';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
@@ -24,6 +28,7 @@ interface MediaPreviewProps {
 
 export default function MediaPreview({ route, navigation }: MediaPreviewProps) {
   const { mediaUri, mediaType } = route.params;
+  const [uploading, setUploading] = useState(false);
 
   const handleRetake = () => {
     // Go back to camera screen
@@ -38,6 +43,39 @@ export default function MediaPreview({ route, navigation }: MediaPreviewProps) {
     });
   };
 
+  const handleAddToStory = async () => {
+    setUploading(true);
+    
+    try {
+      // First upload the media
+      const uploadResult = await uploadMedia(mediaUri, mediaType);
+      
+      // Create the story
+      await createStory({
+        mediaUrl: uploadResult.path,
+        snapType: mediaType,
+      });
+      
+      Alert.alert(
+        'Story Posted!',
+        'Your story has been posted and is visible to all your friends.',
+        [
+          {
+            text: 'OK',
+            onPress: () => {
+              navigation.navigate('CameraScreen');
+            },
+          },
+        ]
+      );
+    } catch (error: any) {
+      console.error('Error creating story:', error);
+      Alert.alert('Failed to Post', error.message || 'Failed to post story. Please try again.');
+    } finally {
+      setUploading(false);
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       {/* Media Display */}
@@ -50,15 +88,29 @@ export default function MediaPreview({ route, navigation }: MediaPreviewProps) {
         <TouchableOpacity
           style={[styles.button, styles.retakeButton]}
           onPress={handleRetake}
+          disabled={uploading}
         >
           <Text style={styles.retakeButtonText}>Retake</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
+          style={[styles.button, styles.storyButton, uploading && styles.buttonDisabled]}
+          onPress={handleAddToStory}
+          disabled={uploading}
+        >
+          {uploading ? (
+            <ActivityIndicator size="small" color={theme.colors.white} />
+          ) : (
+            <Text style={styles.storyButtonText}>Story</Text>
+          )}
+        </TouchableOpacity>
+
+        <TouchableOpacity
           style={[styles.button, styles.useButton]}
           onPress={handleSendSnap}
+          disabled={uploading}
         >
-          <Text style={styles.useButtonText}>Send Snap</Text>
+          <Text style={styles.useButtonText}>Snap</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
@@ -88,11 +140,13 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.1)',
   },
   button: {
-    paddingHorizontal: theme.spacing.xl,
+    paddingHorizontal: theme.spacing.md,
     paddingVertical: theme.spacing.md,
     borderRadius: theme.borderRadius.lg,
-    minWidth: 120,
+    minWidth: 100,
     alignItems: 'center',
+    flex: 1,
+    marginHorizontal: theme.spacing.xs,
   },
   retakeButton: {
     backgroundColor: 'rgba(255, 255, 255, 0.2)',
@@ -104,12 +158,23 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
   },
+  storyButton: {
+    backgroundColor: theme.colors.primary,
+  },
+  storyButtonText: {
+    color: theme.colors.secondary,
+    fontSize: 14,
+    fontWeight: 'bold',
+  },
   useButton: {
     backgroundColor: theme.colors.primary,
   },
   useButtonText: {
     color: theme.colors.secondary,
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: 'bold',
+  },
+  buttonDisabled: {
+    opacity: 0.6,
   },
 });

@@ -12,7 +12,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { theme } from '../../constants/theme';
 import { getInboxSnaps, subscribeToInboxChanges, Snap } from '../../services/snaps';
+import { Story } from '../../services/stories';
 import { supabase } from '../../lib/supabase';
+import StoriesRow from '../../components/StoriesRow';
+import TabHeader from '../../components/TabHeader';
 
 interface SnapInboxProps {
   navigation: any;
@@ -72,6 +75,18 @@ export default function SnapInboxScreen({ navigation }: SnapInboxProps) {
     // Navigate to snap viewer
     navigation.navigate('SnapViewer', {
       snap,
+    });
+  };
+
+  const handleCreateStory = () => {
+    // Navigate to camera to create a story
+    navigation.navigate('Camera', { screen: 'CameraScreen' });
+  };
+
+  const handleViewStory = (story: Story) => {
+    // Navigate to story viewer (reuse SnapViewer with story data)
+    navigation.navigate('SnapViewer', {
+      story,
     });
   };
 
@@ -149,9 +164,12 @@ export default function SnapInboxScreen({ navigation }: SnapInboxProps) {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Inbox</Text>
-      </View>
+      <TabHeader title="Inbox" />
+      
+      <StoriesRow
+        onCreateStory={handleCreateStory}
+        onViewStory={handleViewStory}
+      />
       
       <FlatList
         data={snaps}
@@ -177,17 +195,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: theme.colors.background,
-  },
-  header: {
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border,
-  },
-  headerTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: theme.colors.text,
   },
   centerContainer: {
     flex: 1,

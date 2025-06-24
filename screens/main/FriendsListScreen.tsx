@@ -10,9 +10,12 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { getFriends, removeFriend, FriendWithProfile } from '../../services/friends';
+import { Story } from '../../services/stories';
 import { theme } from '../../constants/theme';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
+import StoriesRow from '../../components/StoriesRow';
+import TabHeader from '../../components/TabHeader';
 
 export default function FriendsListScreen({ navigation }: any) {
   const { user } = useAuth();
@@ -77,6 +80,16 @@ export default function FriendsListScreen({ navigation }: any) {
     };
   }, [user?.id]);
 
+  const handleCreateStory = () => {
+    // Navigate to camera to create a story
+    navigation.navigate('Camera', { screen: 'CameraScreen' });
+  };
+
+  const handleViewStory = (story: Story) => {
+    // Navigate to story viewer within Friends stack
+    navigation.navigate('SnapViewer', { story });
+  };
+
   const handleRemoveFriend = (friend: FriendWithProfile) => {
     Alert.alert(
       'Remove Friend',
@@ -127,15 +140,22 @@ export default function FriendsListScreen({ navigation }: any) {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Friends</Text>
-        <TouchableOpacity
-          style={styles.addButton}
-          onPress={() => navigation.navigate('AddFriends')}
-        >
-          <Text style={styles.addButtonText}>Add Friends</Text>
-        </TouchableOpacity>
-      </View>
+      <TabHeader 
+        title="Friends"
+        rightElement={
+          <TouchableOpacity
+            style={styles.addButton}
+            onPress={() => navigation.navigate('AddFriends')}
+          >
+            <Text style={styles.addButtonText}>Add Friends</Text>
+          </TouchableOpacity>
+        }
+      />
+
+      <StoriesRow
+        onCreateStory={handleCreateStory}
+        onViewStory={handleViewStory}
+      />
 
       <TouchableOpacity
         style={styles.requestsButton}
@@ -169,24 +189,10 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: theme.colors.white,
   },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.lightGray,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: theme.colors.secondary,
-  },
   addButton: {
     backgroundColor: theme.colors.primary,
     paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.sm,
+    paddingVertical: theme.spacing.xs,
     borderRadius: theme.borderRadius.sm,
   },
   addButtonText: {

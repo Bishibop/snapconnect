@@ -37,6 +37,51 @@ const subscription = supabase
 2. **Empty List Pull-to-refresh**: Only works when list has content
 3. **Migration Cleanup**: Remove `002_friendships.sql` when convenient
 
+### 🔧 Advanced Patterns Learned
+
+#### Real-time Subscription Optimization
+```typescript
+// ❌ Bad: Full reload on every change
+loadStories(); // Refetches everything
+
+// ✅ Good: Selective updates by event type
+const handleStoryChange = (payload) => {
+  if (eventType === 'INSERT') {
+    setStories(prev => [newStory, ...prev]);
+  } else if (eventType === 'UPDATE') {
+    setStories(prev => prev.map(story => 
+      story.id === newStory.id ? newStory : story
+    ));
+  }
+};
+```
+
+#### Navigation State Reset Pattern
+```typescript
+// ✅ Prevent stuck navigation states across tabs
+listeners={({ navigation }) => ({
+  tabPress: (e) => {
+    e.preventDefault();
+    navigation.dispatch(CommonActions.reset({
+      index: 0,
+      routes: [{ name: 'TabName' }],
+    }));
+  },
+})}
+```
+
+#### Component Reusability for Consistent UI
+```typescript
+// ✅ Extract shared components early to prevent style drift
+<TabHeader title="Title" rightElement={<Button />} />
+// Prevents header height inconsistencies across tabs
+```
+
+#### View Tracking with RLS Considerations
+- **Pattern**: Check existing record before INSERT to avoid upsert RLS issues
+- **Lesson**: RLS policies must cover all operations (INSERT + UPDATE for upsert)
+- **Solution**: Use conditional INSERT or ensure UPDATE policies exist
+
 ### ⚠️ Dependency Warnings (Camera System)
 1. **expo-av deprecation**: Will be removed in SDK 54, need to migrate to `expo-audio` and `expo-video`
 2. **CameraView children warning**: Current implementation puts controls as children inside CameraView, should use absolute positioning instead
@@ -55,10 +100,14 @@ const subscription = supabase
    - **✅ 5-second photo timer in viewer**
    - **✅ Complete end-to-end flow working**
 
-3. **Stories** 📰
-   - 24-hour expiration
-   - Unified feed with snaps
-   - Auto-cleanup with edge functions
+3. **✅ Stories** 📰
+   - **✅ 24-hour auto-expiration**
+   - **✅ Snapchat-style stories row in 3 tabs**
+   - **✅ Username initials in colored circles**
+   - **✅ Real-time story updates**
+   - **✅ One story per user (replaces old)**
+   - **✅ Reuse SnapViewer for story viewing**
+   - **✅ Complete end-to-end flow working**
 
 4. **Simple Filters** 🎭
    - `react-native-image-filter-kit`
@@ -100,6 +149,8 @@ const subscription = supabase
 - Real-time subscriptions have proper cleanup
 - Foreign key cascades prevent orphaned data
 - RLS policies secure all operations
+- **Selective real-time updates**: Update individual items instead of full reloads for better performance
+- **Navigation state management**: Use CommonActions.reset() to prevent stuck navigation states across tabs
 
 ### 📋 Development TODOs
 - **Add linting setup**: Configure ESLint + Prettier for code consistency and quality
@@ -107,6 +158,16 @@ const subscription = supabase
 - **Real-time subscription cleanup**: Fix potential memory leaks in inbox/sent screens
 
 ### 🚀 Ready for Next Feature
-The snap sharing system is now complete and working end-to-end. Next Phase 1 features to implement:
-1. **Stories** (24-hour posts) 
-2. **Simple Filters** (color effects)
+Both snap sharing and stories systems are now complete and working end-to-end! The core social functionality is fully implemented. Next Phase 1 feature to implement:
+1. **Simple Filters** (color effects for photos/videos)
+
+### 🎉 Major Milestone Achieved
+SnapConnect now has complete social functionality with polished UX:
+- ✅ **Friends Management**: Add, accept, remove friends
+- ✅ **Photo Capture**: Camera with photo taking and initialization fixes
+- ✅ **Snap Sharing**: Send photos to selected friends
+- ✅ **Stories**: 24-hour posts with read tracking and visual indicators
+- ✅ **Real-time Updates**: Optimized selective updates for all interactions
+- ✅ **4-Tab Navigation**: Consistent headers with proper state management
+- ✅ **Performance Optimized**: Selective real-time updates, proper navigation resets
+- ✅ **Visual Polish**: Story read indicators, aligned components, consistent styling

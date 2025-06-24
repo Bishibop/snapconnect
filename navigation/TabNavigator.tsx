@@ -2,6 +2,7 @@ import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
 import { View, Text, StyleSheet } from 'react-native';
+import { CommonActions } from '@react-navigation/native';
 import { MainTabParamList, FriendsStackParamList, CameraStackParamList, InboxStackParamList, SentStackParamList } from '../types';
 import { theme } from '../constants/theme';
 
@@ -40,6 +41,7 @@ const FriendsStackNavigator = () => (
     <FriendsStack.Screen name="FriendsList" component={FriendsListScreen} />
     <FriendsStack.Screen name="AddFriends" component={AddFriendsScreen} />
     <FriendsStack.Screen name="FriendRequests" component={FriendRequestsScreen} />
+    <FriendsStack.Screen name="SnapViewer" component={SnapViewerScreen} />
   </FriendsStack.Navigator>
 );
 
@@ -64,6 +66,7 @@ const InboxStackNavigator = () => (
 const SentStackNavigator = () => (
   <SentStack.Navigator screenOptions={{ headerShown: false }}>
     <SentStack.Screen name="SentSnaps" component={SentSnapsScreen} />
+    <SentStack.Screen name="SnapViewer" component={SnapViewerScreen} />
   </SentStack.Navigator>
 );
 
@@ -96,6 +99,17 @@ export const TabNavigator = () => {
             <Text style={{ color, fontSize: size }}>👥</Text>
           ),
         }}
+        listeners={({ navigation }) => ({
+          tabPress: (e) => {
+            e.preventDefault();
+            navigation.dispatch(
+              CommonActions.reset({
+                index: 0,
+                routes: [{ name: 'Friends' }],
+              })
+            );
+          },
+        })}
       />
       <Tab.Screen 
         name="Camera" 
@@ -116,6 +130,17 @@ export const TabNavigator = () => {
             <Text style={{ color, fontSize: size }}>📥</Text>
           ),
         }}
+        listeners={({ navigation }) => ({
+          tabPress: (e) => {
+            e.preventDefault();
+            navigation.dispatch(
+              CommonActions.reset({
+                index: 0,
+                routes: [{ name: 'Inbox' }],
+              })
+            );
+          },
+        })}
       />
       <Tab.Screen 
         name="Sent" 
@@ -125,6 +150,17 @@ export const TabNavigator = () => {
             <Text style={{ color, fontSize: size }}>📤</Text>
           ),
         }}
+        listeners={({ navigation }) => ({
+          tabPress: (e) => {
+            e.preventDefault();
+            navigation.dispatch(
+              CommonActions.reset({
+                index: 0,
+                routes: [{ name: 'Sent' }],
+              })
+            );
+          },
+        })}
       />
     </Tab.Navigator>
   );
