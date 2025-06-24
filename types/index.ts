@@ -39,6 +39,9 @@ export type RootStackParamList = {
   Login: undefined;
   Signup: undefined;
   Home: undefined;
+  FriendsList: undefined;
+  AddFriends: undefined;
+  FriendRequests: undefined;
 };
 
 export type AuthStackParamList = {
@@ -48,4 +51,7 @@ export type AuthStackParamList = {
 
 export type MainStackParamList = {
   Home: undefined;
+  FriendsList: undefined;
+  AddFriends: undefined;
+  FriendRequests: undefined;
 };

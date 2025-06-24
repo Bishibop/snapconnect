@@ -81,9 +81,10 @@
   - Type safety across the application
   - Better developer experience
 
-- **Zustand**
-  - Lightweight state management
-  - Simple API for global state
+- **React Built-in State**
+  - useState for local component state
+  - useContext for shared state (auth, theme)
+  - Simple and lightweight for MVP
 
 - **React Navigation**
   - Screen navigation and routing
@@ -212,18 +213,20 @@
 ```sql
 -- Profiles (extends auth.users with app-specific data)
 CREATE TABLE profiles (
-  id UUID PRIMARY KEY REFERENCES auth.users(id),
+  id UUID NOT NULL,
   username TEXT UNIQUE NOT NULL,
   avatar_url TEXT,
   created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW()
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  PRIMARY KEY (id),
+  CONSTRAINT profiles_id_fkey FOREIGN KEY (id) REFERENCES auth.users(id) ON DELETE CASCADE
 );
 
 -- Snaps
 CREATE TABLE snaps (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  sender_id UUID REFERENCES profiles(id) NOT NULL,
-  recipient_id UUID REFERENCES profiles(id) NOT NULL,
+  sender_id UUID NOT NULL,
+  recipient_id UUID NOT NULL,
   media_url TEXT NOT NULL, -- just the storage path
   snap_type TEXT NOT NULL CHECK (snap_type IN ('photo', 'video')),
   filter_type TEXT,
@@ -231,32 +234,38 @@ CREATE TABLE snaps (
   status TEXT NOT NULL DEFAULT 'sent' CHECK (status IN ('sent', 'delivered', 'opened', 'expired')),
   created_at TIMESTAMPTZ DEFAULT NOW(),
   delivered_at TIMESTAMPTZ,
-  opened_at TIMESTAMPTZ
+  opened_at TIMESTAMPTZ,
+  CONSTRAINT snaps_sender_id_fkey FOREIGN KEY (sender_id) REFERENCES profiles(id) ON DELETE CASCADE,
+  CONSTRAINT snaps_recipient_id_fkey FOREIGN KEY (recipient_id) REFERENCES profiles(id) ON DELETE CASCADE
 );
 
 -- Stories (with soft delete)
 CREATE TABLE stories (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID REFERENCES profiles(id) NOT NULL,
+  user_id UUID NOT NULL,
   media_url TEXT NOT NULL, -- just the storage path
   snap_type TEXT NOT NULL CHECK (snap_type IN ('photo', 'video')),
   filter_type TEXT,
   duration INTEGER,
   is_active BOOLEAN DEFAULT true, -- for soft delete
   created_at TIMESTAMPTZ DEFAULT NOW(),
-  expires_at TIMESTAMPTZ NOT NULL DEFAULT NOW() + INTERVAL '24 hours'
+  expires_at TIMESTAMPTZ NOT NULL DEFAULT NOW() + INTERVAL '24 hours',
+  CONSTRAINT stories_user_id_fkey FOREIGN KEY (user_id) REFERENCES profiles(id) ON DELETE CASCADE
 );
 
 -- Friendships (bidirectional - 2 records per friendship)
 CREATE TABLE friendships (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID REFERENCES profiles(id) NOT NULL,
-  friend_id UUID REFERENCES profiles(id) NOT NULL,
+  user_id UUID NOT NULL,
+  friend_id UUID NOT NULL,
   status TEXT NOT NULL CHECK (status IN ('pending', 'accepted')),
-  requested_by UUID REFERENCES profiles(id) NOT NULL,
+  requested_by UUID NOT NULL,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW(),
-  UNIQUE(user_id, friend_id)
+  UNIQUE(user_id, friend_id),
+  CONSTRAINT friendships_user_id_fkey FOREIGN KEY (user_id) REFERENCES profiles(id) ON DELETE CASCADE,
+  CONSTRAINT friendships_friend_id_fkey FOREIGN KEY (friend_id) REFERENCES profiles(id) ON DELETE CASCADE,
+  CONSTRAINT friendships_requested_by_fkey FOREIGN KEY (requested_by) REFERENCES profiles(id) ON DELETE CASCADE
 );
 
 -- Performance Indexes
@@ -267,6 +276,68 @@ CREATE INDEX idx_snaps_sent ON snaps(sender_id, status, created_at DESC);
 CREATE INDEX idx_stories_active ON stories(user_id, is_active, expires_at);
 CREATE INDEX idx_friendships_users ON friendships(user_id, status);
 CREATE INDEX idx_friendships_pending ON friendships(friend_id, status) WHERE status = 'pending';
+
+-- Enable Realtime for all tables
+ALTER PUBLICATION supabase_realtime ADD TABLE profiles;
+ALTER PUBLICATION supabase_realtime ADD TABLE snaps;
+ALTER PUBLICATION supabase_realtime ADD TABLE stories;
+ALTER PUBLICATION supabase_realtime ADD TABLE friendships;
+```
+
+### Service Query Patterns with Foreign Key Constraints
+
+When querying related data using Supabase, use the explicit constraint names:
+
+```typescript
+// Friends list - get friend profiles
+const { data } = await supabase
+  .from('friendships')
+  .select(`
+    *,
+    friend_profile:profiles!friendships_friend_id_fkey(*)
+  `)
+  .eq('user_id', userId)
+  .eq('status', 'accepted');
+
+// Snaps - get sender and recipient profiles  
+const { data } = await supabase
+  .from('snaps')
+  .select(`
+    *,
+    sender_profile:profiles!snaps_sender_id_fkey(*),
+    recipient_profile:profiles!snaps_recipient_id_fkey(*)
+  `)
+  .eq('recipient_id', userId);
+
+// Stories - get user profiles
+const { data } = await supabase
+  .from('stories')
+  .select(`
+    *,
+    user_profile:profiles!stories_user_id_fkey(*)
+  `)
+  .eq('is_active', true);
+```
+
+### Realtime Subscription Patterns
+
+```typescript
+// Listen to friendship changes for a user
+const subscription = supabase
+  .channel('friendships-changes')
+  .on('postgres_changes', 
+    { 
+      event: '*', 
+      schema: 'public', 
+      table: 'friendships',
+      filter: `user_id=eq.${userId}` 
+    }, 
+    (payload) => {
+      // Handle friendship changes
+      console.log('Friendship change:', payload);
+    }
+  )
+  .subscribe();
 ```
 
 ### Security Considerations
