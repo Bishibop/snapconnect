@@ -33,3 +33,19 @@ export interface Friendship {
   status: 'pending' | 'accepted' | 'blocked';
   created_at: string;
 }
+
+// Navigation Types
+export type RootStackParamList = {
+  Login: undefined;
+  Signup: undefined;
+  Home: undefined;
+};
+
+export type AuthStackParamList = {
+  Login: undefined;
+  Signup: undefined;
+};
+
+export type MainStackParamList = {
+  Home: undefined;
+};

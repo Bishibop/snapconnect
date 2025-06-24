@@ -11,13 +11,15 @@ import {
 } from 'react-native';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigation } from '@react-navigation/native';
+import type { NavigationProp } from '@react-navigation/native';
+import { AuthStackParamList } from '../../types';
 
 export const SignupScreen = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [username, setUsername] = useState('');
   const { signUp, loading } = useAuth();
-  const navigation = useNavigation();
+  const navigation = useNavigation<NavigationProp<AuthStackParamList>>();
 
   const handleSignup = async () => {
     if (!email || !password || !username) {

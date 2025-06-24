@@ -11,12 +11,14 @@ import {
 } from 'react-native';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigation } from '@react-navigation/native';
+import type { NavigationProp } from '@react-navigation/native';
+import { AuthStackParamList } from '../../types';
 
 export const LoginScreen = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const { signIn, loading } = useAuth();
-  const navigation = useNavigation();
+  const navigation = useNavigation<NavigationProp<AuthStackParamList>>();
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -66,7 +68,7 @@ export const LoginScreen = () => {
           </TouchableOpacity>
           
           <TouchableOpacity 
-            onPress={() => navigation.navigate('Signup' as never)}
+            onPress={() => navigation.navigate('Signup')}
             disabled={loading}
           >
             <Text style={styles.linkText}>
