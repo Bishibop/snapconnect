@@ -38,6 +38,11 @@ export class AuthErrorBoundary extends Component<Props, State> {
       'Network request failed',
     ];
     
+    // Handle case where error.message might be undefined
+    if (!error.message) {
+      return false;
+    }
+    
     return authErrorMessages.some(msg => 
       error.message.toLowerCase().includes(msg.toLowerCase())
     );

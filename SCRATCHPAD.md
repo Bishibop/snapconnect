@@ -37,11 +37,15 @@ const subscription = supabase
 2. **Empty List Pull-to-refresh**: Only works when list has content
 3. **Migration Cleanup**: Remove `002_friendships.sql` when convenient
 
+### ⚠️ Dependency Warnings (Camera System)
+1. **expo-av deprecation**: Will be removed in SDK 54, need to migrate to `expo-audio` and `expo-video`
+2. **CameraView children warning**: Current implementation puts controls as children inside CameraView, should use absolute positioning instead
+
 ### 📋 Next Phase 1 Features (in order)
-1. **Camera System** 📸
-   - `expo-camera` for capture
-   - `expo-av` for video preview
-   - Media compression before upload
+1. **✅ Camera System** 📸
+   - **✅ Photo capture working**
+   - **❌ Video recording** (deferred - Android permission issues)
+   - **📝 Next: Media compression before upload**
 
 2. **Snap Sharing** 📱
    - Supabase Storage for media files
@@ -56,6 +60,11 @@ const subscription = supabase
 4. **Simple Filters** 🎭
    - `react-native-image-filter-kit`
    - Post-capture only for MVP
+
+### 🎥 Video Recording - Deferred
+- **Issue**: Android microphone permissions causing "Recording was stopped before any data could be produced"
+- **Decision**: Focus on photo-only MVP first, revisit video later
+- **Files to clean up later**: `CaptureButton.tsx`, `TestRecording.tsx`
 
 ### 🏗️ Architecture Decisions Made
 - **State Management**: React built-in (useState/useContext) instead of Zustand

@@ -38,10 +38,11 @@ export interface Friendship {
 export type RootStackParamList = {
   Login: undefined;
   Signup: undefined;
-  Home: undefined;
-  FriendsList: undefined;
-  AddFriends: undefined;
-  FriendRequests: undefined;
+  MainTabs: undefined;
+  MediaPreview: {
+    mediaUri: string;
+    mediaType: 'photo' | 'video';
+  };
 };
 
 export type AuthStackParamList = {
@@ -49,9 +50,23 @@ export type AuthStackParamList = {
   Signup: undefined;
 };
 
-export type MainStackParamList = {
-  Home: undefined;
+export type MainTabParamList = {
+  Friends: undefined;
+  Camera: undefined;
+  Inbox: undefined;
+  Sent: undefined;
+};
+
+export type FriendsStackParamList = {
   FriendsList: undefined;
   AddFriends: undefined;
   FriendRequests: undefined;
+};
+
+export type CameraStackParamList = {
+  CameraScreen: undefined;
+  MediaPreview: {
+    mediaUri: string;
+    mediaType: 'photo' | 'video';
+  };
 };
