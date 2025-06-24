@@ -1,34 +1,59 @@
-# SnapConnect Tech Stack - Final Architecture
+# SnapConnect Tech Stack - Phase 1 Architecture
 
 ## Core Features
 
-### Phase 1: Core
-1. **Ephemeral Messaging**
-   - Real-time photo/video sharing
-   - Disappearing messages with timers
-   - Basic screenshot detection
+### Phase 1: MVP Features
+1. **Visual Snap Messaging**
+   - Photo/video capture and sharing
+   - Visual-only communication (no text messages)
+   - Real-time delivery via Supabase Realtime
+   - Sent snaps tracking with status updates
 
-2. **Camera & Filters**
-   - Simple AR filters (client-side)
-   - Basic camera effects
-   - Photo/video capture
+2. **Disappearing Messages**
+   - 5-second timer for photos
+   - Full duration playback for videos
+   - One-time viewing only
+   - Complete removal after viewing
 
-3. **Authentication & Social**
-   - User registration/login
-   - Friend management (add, remove, search)
-   - User profiles
+3. **Friend Management**
+   - User search by username
+   - Friend requests (send/receive/accept/decline)
+   - Friends list management
+   - Real-time request updates
 
 4. **Stories**
-   - 24-hour expiring posts
-   - View friends' stories
-   - Story replies
+   - 24-hour visual posts
+   - One story per user at a time
+   - Mixed with snaps in unified inbox feed
+   - Same disappearing behavior as snaps
 
-5. **Group Messaging**
-   - Create group chats
-   - Share media in groups
-   - Real-time messaging
+5. **Multi-Friend Snap Sending**
+   - Select multiple recipients when sending
+   - Individual snap copies (not group chats)
+   - Same disappearing rules apply
 
-### Phase 2: RAG Enhancement
+6. **Simple Color Filters**
+   - Post-capture filters only
+   - 6 basic color effects
+   - Applied before sending snaps
+
+## Navigation Structure
+
+### 4-Tab Navigation System
+1. **Friends Tab** - Friend list, requests, add friends
+2. **Camera Tab** (Default) - Capture photos/videos
+3. **Inbox Tab** - Received snaps and stories feed
+4. **Sent Tab** - Sent snaps with delivery/opened status
+
+### Key Navigation Principles
+- Camera-first experience (default tab)
+- No deep navigation hierarchies
+- Full-screen modal viewers
+- Auto-return after timed events
+
+---
+
+## Future Phase 2: RAG Enhancement
 1. **Personalized Content Generation**
    - AI-powered caption suggestions
    - Context-aware story ideas
@@ -66,15 +91,16 @@
 
 - **Core Expo Packages**
   - `expo-camera` - Photo/video capture
-  - `expo-notifications` - Push notifications
+  - `expo-av` - Video playback in preview
   - `expo-media-library` - Media access
   - `expo-secure-store` - Secure token storage
+  - `react-native-image-filter-kit` - Color filters
 
 ### Backend (Supabase)
 - **PostgreSQL Database**
-  - Users, messages, friendships, stories tables
+  - profiles, snaps, friendships, stories tables
   - Row Level Security (RLS) for authorization
-  - Triggers for automated tasks
+  - Triggers for automated tasks (story expiration)
 
 - **Supabase Auth**
   - User authentication
@@ -89,14 +115,14 @@
 - **Supabase Realtime**
   - WebSocket connections for live updates
   - Database change notifications
-  - Presence tracking (online status)
-  - Broadcast for typing indicators
+  - Real-time snap delivery
+  - Live status updates (delivered/opened)
 
 - **Edge Functions**
-  - Push notifications via Expo Push API
   - Scheduled cleanup of expired content
-  - Media processing tasks
-  - RAG API integration (Phase 2)
+  - Story expiration management
+  - Future: Push notifications (Phase 2)
+  - Future: RAG API integration (Phase 2)
 
 ### Development & Tooling
 - **Git + GitHub**
@@ -117,11 +143,11 @@
   - Performance optimized
   - Theme constants file for consistency
 
-### Push Notifications
-- **Expo Push Service**
-  - Free push notification delivery
-  - Works with Supabase Edge Functions
-  - No additional setup required
+### Phase 1 Limitations
+- **No Push Notifications**
+  - Real-time updates only when app is open
+  - Users must manually check for new snaps
+  - Simplified implementation
 
 ### Media Handling
 - **Client-side compression**
@@ -159,15 +185,16 @@
 
 ### Data Flow Examples
 
-**Sending a Snap:**
+**Sending a Snap (Phase 1):**
 ```
 1. User captures photo/video (expo-camera)
-2. Compress media client-side
-3. Upload to Supabase Storage
-4. Insert message record in PostgreSQL
-5. Realtime notifies recipient (if online)
-6. Edge Function sends push (if offline)
-7. Auto-delete after viewing
+2. Optional: Apply color filter
+3. Select friend(s) from list
+4. Compress media client-side
+5. Upload to Supabase Storage
+6. Insert snap record(s) in PostgreSQL
+7. Realtime notifies recipient (if app open)
+8. Auto-delete after viewing
 ```
 
 **RAG-Enhanced Caption:**
@@ -181,31 +208,72 @@
 
 ## Implementation Notes
 
-### Database Schema (Key Tables)
+### Database Schema (Phase 1)
 ```sql
--- Users
-profiles (id, username, avatar_url, push_token)
+-- Profiles (extends auth.users with app-specific data)
+CREATE TABLE profiles (
+  id UUID PRIMARY KEY REFERENCES auth.users(id),
+  username TEXT UNIQUE NOT NULL,
+  avatar_url TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
 
--- Messages
-messages (id, sender_id, recipient_id, media_url,
-          expires_at, viewed_at, message_type)
+-- Snaps
+CREATE TABLE snaps (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  sender_id UUID REFERENCES profiles(id) NOT NULL,
+  recipient_id UUID REFERENCES profiles(id) NOT NULL,
+  media_url TEXT NOT NULL, -- just the storage path
+  snap_type TEXT NOT NULL CHECK (snap_type IN ('photo', 'video')),
+  filter_type TEXT,
+  duration INTEGER, -- video duration in seconds
+  status TEXT NOT NULL DEFAULT 'sent' CHECK (status IN ('sent', 'delivered', 'opened', 'expired')),
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  delivered_at TIMESTAMPTZ,
+  opened_at TIMESTAMPTZ
+);
 
--- Stories
-stories (id, user_id, media_url, created_at, expires_at)
+-- Stories (with soft delete)
+CREATE TABLE stories (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES profiles(id) NOT NULL,
+  media_url TEXT NOT NULL, -- just the storage path
+  snap_type TEXT NOT NULL CHECK (snap_type IN ('photo', 'video')),
+  filter_type TEXT,
+  duration INTEGER,
+  is_active BOOLEAN DEFAULT true, -- for soft delete
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  expires_at TIMESTAMPTZ NOT NULL DEFAULT NOW() + INTERVAL '24 hours'
+);
 
--- Friendships
-friendships (user_id, friend_id, created_at)
+-- Friendships (bidirectional - 2 records per friendship)
+CREATE TABLE friendships (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES profiles(id) NOT NULL,
+  friend_id UUID REFERENCES profiles(id) NOT NULL,
+  status TEXT NOT NULL CHECK (status IN ('pending', 'accepted')),
+  requested_by UUID REFERENCES profiles(id) NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(user_id, friend_id)
+);
 
--- Groups
-groups (id, name, created_by)
-group_members (group_id, user_id)
+-- Performance Indexes
+CREATE INDEX idx_snaps_recipient ON snaps(recipient_id, created_at DESC);
+CREATE INDEX idx_snaps_sender ON snaps(sender_id, created_at DESC);
+CREATE INDEX idx_snaps_inbox ON snaps(recipient_id, status, created_at DESC);
+CREATE INDEX idx_snaps_sent ON snaps(sender_id, status, created_at DESC);
+CREATE INDEX idx_stories_active ON stories(user_id, is_active, expires_at);
+CREATE INDEX idx_friendships_users ON friendships(user_id, status);
+CREATE INDEX idx_friendships_pending ON friendships(friend_id, status) WHERE status = 'pending';
 ```
 
 ### Security Considerations
 - Row Level Security on all tables
-- Client-side screenshot detection
 - Ephemeral design (auto-deletion)
 - Rate limiting on Edge Functions
+- Media URLs with expiration
 
 ### Scaling Considerations
 - Monitor storage usage closely
