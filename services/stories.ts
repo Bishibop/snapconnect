@@ -67,8 +67,11 @@ export async function getStoriesFromFriends(): Promise<Story[]> {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error('User not authenticated');
 
-  // Get stories from friends with view status
-  const { data, error } = await supabase
+  // Get friend IDs
+  const friendIds = await getFriendIds(user.id);
+  
+  // Build the query based on whether user has friends
+  let query = supabase
     .from('stories')
     .select(`
       *,
@@ -76,9 +79,17 @@ export async function getStoriesFromFriends(): Promise<Story[]> {
       story_views!story_views_story_id_fkey(viewer_id)
     `)
     .eq('is_active', true)
-    .gt('expires_at', new Date().toISOString())
-    .or(`user_id.eq.${user.id},user_id.in.(${await getFriendIds(user.id)})`)
-    .order('created_at', { ascending: false });
+    .gt('expires_at', new Date().toISOString());
+
+  // Add user filter - include user's own stories and friends' stories if any
+  if (friendIds) {
+    query = query.or(`user_id.eq.${user.id},user_id.in.(${friendIds})`);
+  } else {
+    // If no friends, only show user's own stories
+    query = query.eq('user_id', user.id);
+  }
+
+  const { data, error } = await query.order('created_at', { ascending: false });
 
   if (error) {
     console.error('Error fetching stories:', error);
@@ -95,7 +106,7 @@ export async function getStoriesFromFriends(): Promise<Story[]> {
 }
 
 // Helper function to get friend IDs for the current user
-async function getFriendIds(userId: string): Promise<string> {
+async function getFriendIds(userId: string): Promise<string | null> {
   const { data, error } = await supabase
     .from('friendships')
     .select('friend_id')
@@ -104,11 +115,11 @@ async function getFriendIds(userId: string): Promise<string> {
 
   if (error) {
     console.error('Error fetching friend IDs:', error);
-    return '';
+    return null;
   }
 
   const friendIds = data.map(f => f.friend_id).join(',');
-  return friendIds || 'null'; // Return 'null' if no friends to avoid SQL error
+  return friendIds || null; // Return null if no friends
 }
 
 // Get current user's active story
