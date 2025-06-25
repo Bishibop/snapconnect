@@ -13,12 +13,14 @@ import { theme } from '../../constants/theme';
 import { getFriends, FriendWithProfile } from '../../services/friends';
 import { createSnap } from '../../services/snaps';
 import { uploadMedia } from '../../services/media';
+import { Filter, FILTERS } from '../../types/filters';
 
 interface FriendSelectorProps {
   route: {
     params: {
       mediaUri: string;
       mediaType: 'photo' | 'video';
+      filter?: Filter;
     };
   };
   navigation: any;
@@ -29,7 +31,7 @@ interface SelectableFriend extends FriendWithProfile {
 }
 
 export default function FriendSelectorScreen({ route, navigation }: FriendSelectorProps) {
-  const { mediaUri, mediaType } = route.params;
+  const { mediaUri, mediaType, filter } = route.params;
   const [friends, setFriends] = useState<SelectableFriend[]>([]);
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
@@ -85,6 +87,7 @@ export default function FriendSelectorScreen({ route, navigation }: FriendSelect
           recipientId: friend.friend_id, // Use the friend's profile ID, not the friendship ID
           mediaUrl: uploadResult.path, // Use the storage path, not the public URL
           snapType: mediaType,
+          filterType: filter?.id || 'original',
         })
       );
       
@@ -112,7 +115,7 @@ export default function FriendSelectorScreen({ route, navigation }: FriendSelect
 
   const renderFriendItem = ({ item }: { item: SelectableFriend }) => (
     <TouchableOpacity
-      style={[styles.friendItem, item.selected && styles.friendItemSelected]}
+      style={styles.friendItem}
       onPress={() => toggleFriendSelection(item.id)}
     >
       <View style={styles.friendInfo}>
@@ -179,7 +182,7 @@ export default function FriendSelectorScreen({ route, navigation }: FriendSelect
               <ActivityIndicator size="small" color={theme.colors.white} />
             ) : (
               <Text style={styles.sendButtonText}>
-                Send to {selectedCount} friend{selectedCount > 1 ? 's' : ''}
+                {selectedCount === 1 ? 'Send' : `Send to ${selectedCount} friends`}
               </Text>
             )}
           </TouchableOpacity>
@@ -205,10 +208,14 @@ const styles = StyleSheet.create({
   },
   cancelButton: {
     paddingVertical: theme.spacing.xs,
+    paddingHorizontal: theme.spacing.sm,
+    backgroundColor: theme.colors.primary,
+    borderRadius: theme.borderRadius.sm,
   },
   cancelButtonText: {
-    color: theme.colors.primary,
+    color: '#000000',
     fontSize: 16,
+    fontWeight: '600',
   },
   headerTitle: {
     fontSize: 18,
@@ -257,9 +264,6 @@ const styles = StyleSheet.create({
     borderRadius: theme.borderRadius.md,
     marginVertical: theme.spacing.xs,
   },
-  friendItemSelected: {
-    backgroundColor: theme.colors.primaryLight,
-  },
   friendInfo: {
     flex: 1,
   },
@@ -283,7 +287,7 @@ const styles = StyleSheet.create({
     borderColor: theme.colors.primary,
   },
   checkmark: {
-    color: theme.colors.white,
+    color: '#000000',
     fontSize: 14,
     fontWeight: 'bold',
   },
@@ -302,7 +306,7 @@ const styles = StyleSheet.create({
     opacity: 0.6,
   },
   sendButtonText: {
-    color: theme.colors.white,
+    color: '#000000',
     fontSize: 16,
     fontWeight: 'bold',
   },

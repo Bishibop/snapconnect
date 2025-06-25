@@ -151,9 +151,7 @@ export default function SnapInboxScreen({ navigation }: SnapInboxProps) {
   if (loading) {
     return (
       <SafeAreaView style={styles.container}>
-        <View style={styles.header}>
-          <Text style={styles.headerTitle}>Inbox</Text>
-        </View>
+        <TabHeader title="Inbox" />
         <View style={styles.centerContainer}>
           <ActivityIndicator size="large" color={theme.colors.primary} />
           <Text style={styles.loadingText}>Loading snaps...</Text>

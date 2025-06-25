@@ -9,22 +9,16 @@ SnapConnect is an ephemeral messaging app similar to Snapchat, built with React 
 ## Development Commands
 
 ```bash
-# Install dependencies (preferred)
-pnpm install
+# Install dependencies
+npm install
 
 # Start development server
-pnpm start
+npm start
 
 # Platform-specific commands
-pnpm android   # Run on Android
-pnpm ios       # Run on iOS  
-pnpm web       # Run in browser
-
-# Alternative with npm
-npm start
-npm run android
-npm run ios
-npm run web
+npm run android   # Run on Android
+npm run ios       # Run on iOS  
+npm run web       # Run in browser
 ```
 
 ## Architecture Overview

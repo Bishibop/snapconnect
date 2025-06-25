@@ -63,12 +63,20 @@ export type InboxStackParamList = {
 
 export type SentStackParamList = {
   SentSnaps: undefined;
+  SnapViewer: {
+    snap?: any;
+    story?: any;
+  };
 };
 
 export type FriendsStackParamList = {
   FriendsList: undefined;
   AddFriends: undefined;
   FriendRequests: undefined;
+  SnapViewer: {
+    snap?: any;
+    story?: any;
+  };
 };
 
 export type CameraStackParamList = {

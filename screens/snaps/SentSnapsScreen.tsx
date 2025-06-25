@@ -172,9 +172,7 @@ export default function SentSnapsScreen({ navigation }: SentSnapsProps) {
   if (loading) {
     return (
       <SafeAreaView style={styles.container}>
-        <View style={styles.header}>
-          <Text style={styles.headerTitle}>Sent</Text>
-        </View>
+        <TabHeader title="Sent" />
         <View style={styles.centerContainer}>
           <ActivityIndicator size="large" color={theme.colors.primary} />
           <Text style={styles.loadingText}>Loading sent snaps...</Text>

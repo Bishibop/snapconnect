@@ -73,8 +73,9 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.xs,
   },
   unviewedBorder: {
-    borderWidth: 3,
-    borderColor: theme.colors.primary,
+    borderWidth: 4,
+    borderColor: '#000000',
+    borderStyle: 'dotted',
   },
   circle: {
     width: 60,

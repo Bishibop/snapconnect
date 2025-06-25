@@ -13,6 +13,8 @@ import { theme } from '../../constants/theme';
 import { markSnapOpened, Snap } from '../../services/snaps';
 import { Story, markStoryViewed } from '../../services/stories';
 import { supabase } from '../../lib/supabase';
+import { Filter, FILTERS } from '../../types/filters';
+import FilteredImage from '../../components/FilteredImage';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
@@ -132,8 +134,9 @@ export default function SnapViewerScreen({ route, navigation }: SnapViewerProps)
         onPress={handleTap}
       >
         {mediaUrl ? (
-          <Image 
-            source={{ uri: mediaUrl }} 
+          <FilteredImage 
+            imageUri={mediaUrl}
+            filter={FILTERS.find(f => f.id === content?.filter_type) || FILTERS[0]}
             style={styles.media} 
             resizeMode="contain"
           />

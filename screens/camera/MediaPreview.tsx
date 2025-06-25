@@ -4,7 +4,6 @@ import {
   Text,
   TouchableOpacity,
   StyleSheet,
-  Image,
   Dimensions,
   Alert,
   ActivityIndicator,
@@ -13,6 +12,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { theme } from '../../constants/theme';
 import { createStory } from '../../services/stories';
 import { uploadMedia } from '../../services/media';
+import { Filter, FILTERS } from '../../types/filters';
+import FilteredImage from '../../components/FilteredImage';
+import FilterSelector from '../../components/FilterSelector';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
@@ -29,6 +31,8 @@ interface MediaPreviewProps {
 export default function MediaPreview({ route, navigation }: MediaPreviewProps) {
   const { mediaUri, mediaType } = route.params;
   const [uploading, setUploading] = useState(false);
+  const [selectedFilter, setSelectedFilter] = useState<Filter>(FILTERS[0]); // Start with Original
+  const [showFilters, setShowFilters] = useState(false);
 
   const handleRetake = () => {
     // Go back to camera screen
@@ -36,11 +40,20 @@ export default function MediaPreview({ route, navigation }: MediaPreviewProps) {
   };
 
   const handleSendSnap = () => {
-    // Navigate to friend selector with media
+    // Navigate to friend selector with media and filter
     navigation.navigate('FriendSelector', {
       mediaUri,
       mediaType,
+      filter: selectedFilter,
     });
+  };
+
+  const handleToggleFilters = () => {
+    setShowFilters(!showFilters);
+  };
+
+  const handleFilterSelect = (filter: Filter) => {
+    setSelectedFilter(filter);
   };
 
   const handleAddToStory = async () => {
@@ -50,10 +63,11 @@ export default function MediaPreview({ route, navigation }: MediaPreviewProps) {
       // First upload the media
       const uploadResult = await uploadMedia(mediaUri, mediaType);
       
-      // Create the story
+      // Create the story with filter
       await createStory({
         mediaUrl: uploadResult.path,
         snapType: mediaType,
+        filterType: selectedFilter.id,
       });
       
       Alert.alert(
@@ -80,7 +94,12 @@ export default function MediaPreview({ route, navigation }: MediaPreviewProps) {
     <SafeAreaView style={styles.container}>
       {/* Media Display */}
       <View style={styles.mediaContainer}>
-        <Image source={{ uri: mediaUri }} style={styles.media} resizeMode="contain" />
+        <FilteredImage 
+          imageUri={mediaUri}
+          filter={selectedFilter}
+          style={styles.media}
+          resizeMode="contain"
+        />
       </View>
 
       {/* Controls */}
@@ -91,6 +110,16 @@ export default function MediaPreview({ route, navigation }: MediaPreviewProps) {
           disabled={uploading}
         >
           <Text style={styles.retakeButtonText}>Retake</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.button, styles.filterButton, showFilters && styles.filterButtonActive]}
+          onPress={handleToggleFilters}
+          disabled={uploading}
+        >
+          <Text style={[styles.filterButtonText, showFilters && styles.filterButtonTextActive]}>
+            Filters
+          </Text>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -113,6 +142,15 @@ export default function MediaPreview({ route, navigation }: MediaPreviewProps) {
           <Text style={styles.useButtonText}>Snap</Text>
         </TouchableOpacity>
       </View>
+
+      {/* Filter Selector */}
+      {showFilters && (
+        <FilterSelector
+          imageUri={mediaUri}
+          selectedFilter={selectedFilter}
+          onFilterSelect={handleFilterSelect}
+        />
+      )}
     </SafeAreaView>
   );
 }
@@ -140,10 +178,10 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.1)',
   },
   button: {
-    paddingHorizontal: theme.spacing.md,
+    paddingHorizontal: theme.spacing.sm,
     paddingVertical: theme.spacing.md,
     borderRadius: theme.borderRadius.lg,
-    minWidth: 100,
+    minWidth: 80,
     alignItems: 'center',
     flex: 1,
     marginHorizontal: theme.spacing.xs,
@@ -155,8 +193,25 @@ const styles = StyleSheet.create({
   },
   retakeButtonText: {
     color: theme.colors.white,
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: 'bold',
+  },
+  filterButton: {
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    borderWidth: 2,
+    borderColor: theme.colors.white,
+  },
+  filterButtonActive: {
+    backgroundColor: theme.colors.primary,
+    borderColor: theme.colors.primary,
+  },
+  filterButtonText: {
+    color: theme.colors.white,
+    fontSize: 14,
+    fontWeight: 'bold',
+  },
+  filterButtonTextActive: {
+    color: theme.colors.secondary,
   },
   storyButton: {
     backgroundColor: theme.colors.primary,
