@@ -1,50 +1,41 @@
 # SnapConnect
 
-An ephemeral messaging app with AI-powered features.
+An ephemeral messaging app similar to Snapchat, built with React Native, Expo, and Supabase. Features photo/video sharing with disappearing messages, image filters, friend management, and stories.
 
-## Features
+## Prerequisites
 
-### Phase 1: Core
-- Photo/video sharing with disappearing messages
-- AR filters and camera effects
-- Friend management
-- Stories (24-hour posts)
-- Group messaging
+- **Node.js** (v18 or later) - [Download here](https://nodejs.org/)
+- **Expo Go app** on your phone ([iOS](https://apps.apple.com/app/expo-go/id982107779) | [Android](https://play.google.com/store/apps/details?id=host.exp.exponent))
 
-### Phase 2: AI Features
-- AI-powered caption suggestions
-- Personalized content recommendations
-- Smart filter suggestions
+## Installation
 
-## Tech Stack
-
-- **Frontend:** React Native + Expo + TypeScript
-- **Backend:** Supabase
-- **AI:** OpenAI API + pgvector
-
-See [docs/TECH_STACK.md](docs/TECH_STACK.md) for details.
-
-## Getting Started
-
-1. Install dependencies
+1. Clone the repository:
 ```bash
-pnpm install
+git clone https://github.com/Bishibop/snapconnect.git
+cd snapconnect
 ```
 
-2. Set up environment variables
+2. Install dependencies:
+```bash
+npm install
+```
+
+3. Set up environment variables:
 ```bash
 cp .env.example .env.local
-# Add your Supabase credentials
+# Edit .env.local and add your Supabase credentials
 ```
 
-3. Start development
+## Running the App
+
+Start the Expo development server:
 ```bash
-pnpm start
+npm start
 ```
 
-## Scripts
+This will display a QR code in your terminal. Open the **Expo Go** app on your phone and scan the QR code to run the app.
 
-- `pnpm start` - Start Expo
-- `pnpm android` - Run on Android
-- `pnpm ios` - Run on iOS
-- `pnpm web` - Run in browser
+### Alternative Commands
+- `npm run android` - Run on Android emulator
+- `npm run ios` - Run on iOS simulator  
+- `npm run web` - Run in web browser
