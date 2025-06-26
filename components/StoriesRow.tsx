@@ -109,30 +109,53 @@ export default function StoriesRow({ onCreateStory, onViewStory }: StoriesRowPro
     const { eventType, new: newStory, old: oldStory } = payload;
 
     if (eventType === 'INSERT') {
-      // Add new story to the list
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (newStory.user_id === user?.id) {
-        // Update user's story
-        setUserStory(newStory);
-      } else {
-        // Add friend's story
-        setStories(prev => [{ ...newStory, is_viewed: false }, ...prev]);
+      // Fetch complete story data with profile information
+      const { data: storyWithProfile } = await supabase
+        .from('stories')
+        .select(`
+          *,
+          user_profile:profiles!stories_user_id_fkey(*)
+        `)
+        .eq('id', newStory.id)
+        .single();
+
+      if (storyWithProfile) {
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+        
+        if (newStory.user_id === user?.id) {
+          // Update user's story
+          setUserStory(storyWithProfile);
+        } else {
+          // Add friend's story with profile data
+          setStories(prev => [{ ...storyWithProfile, is_viewed: false }, ...prev]);
+        }
       }
     } else if (eventType === 'UPDATE') {
-      // Update existing story
-      if (newStory.user_id === userStory?.user_id) {
-        setUserStory(newStory.is_active ? newStory : null);
-      } else {
-        setStories(
-          prev =>
-            prev
-              .map(story =>
-                story.id === newStory.id ? { ...newStory, is_viewed: story.is_viewed } : story
-              )
-              .filter(story => story.is_active) // Remove deactivated stories
-        );
+      // Fetch complete story data with profile information
+      const { data: storyWithProfile } = await supabase
+        .from('stories')
+        .select(`
+          *,
+          user_profile:profiles!stories_user_id_fkey(*)
+        `)
+        .eq('id', newStory.id)
+        .single();
+
+      if (storyWithProfile) {
+        if (newStory.user_id === userStory?.user_id) {
+          setUserStory(newStory.is_active ? storyWithProfile : null);
+        } else {
+          setStories(
+            prev =>
+              prev
+                .map(story =>
+                  story.id === newStory.id ? { ...storyWithProfile, is_viewed: story.is_viewed } : story
+                )
+                .filter(story => story.is_active) // Remove deactivated stories
+          );
+        }
       }
     } else if (eventType === 'DELETE') {
       // Remove deleted story
