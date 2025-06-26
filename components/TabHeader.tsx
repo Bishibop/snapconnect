@@ -30,7 +30,7 @@ const styles = StyleSheet.create({
     paddingVertical: theme.spacing.md,
     borderBottomWidth: 1,
     borderBottomColor: theme.colors.border,
-    minHeight: 60,
+    minHeight: 72,
   },
   titleContainer: {
     flexDirection: 'row',
