@@ -101,10 +101,7 @@ export default function CameraScreen({ navigation }: CameraScreenProps) {
       >
         {/* Top Controls */}
         <View style={styles.topControls}>
-          <TouchableOpacity
-            style={styles.closeButton}
-            onPress={navHelpers.navigateToFriendsTab}
-          >
+          <TouchableOpacity style={styles.closeButton} onPress={navHelpers.navigateToFriendsTab}>
             <Text style={styles.closeButtonText}>✕</Text>
           </TouchableOpacity>
 

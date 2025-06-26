@@ -79,25 +79,25 @@ export function isExpired(dateString: string): boolean {
 export function formatMessageTime(dateString: string): string {
   const messageTime = new Date(dateString);
   const now = new Date();
-  
+
   // If today, show time
   if (messageTime.toDateString() === now.toDateString()) {
-    return messageTime.toLocaleTimeString([], { 
-      hour: '2-digit', 
-      minute: '2-digit' 
+    return messageTime.toLocaleTimeString([], {
+      hour: '2-digit',
+      minute: '2-digit',
     });
   }
-  
+
   // If this week, show day
   const daysDiff = Math.floor((now.getTime() - messageTime.getTime()) / (1000 * 60 * 60 * 24));
   if (daysDiff < 7) {
     return messageTime.toLocaleDateString([], { weekday: 'short' });
   }
-  
+
   // Otherwise show date
-  return messageTime.toLocaleDateString([], { 
-    month: 'short', 
-    day: 'numeric' 
+  return messageTime.toLocaleDateString([], {
+    month: 'short',
+    day: 'numeric',
   });
 }
 
@@ -147,7 +147,7 @@ export const TIME_CONSTANTS = {
   HOUR: 60 * 60 * 1000,
   DAY: 24 * 60 * 60 * 1000,
   WEEK: 7 * 24 * 60 * 60 * 1000,
-  
+
   // Snap expiration times
   SNAP_EXPIRY_DEFAULT: 10, // seconds
   STORY_EXPIRY_DEFAULT: 24 * 60 * 60, // 24 hours in seconds

@@ -50,9 +50,7 @@ export default function FriendsListScreen({ navigation }: FriendsListProps) {
     <View style={styles.friendItem}>
       <View style={styles.friendInfo}>
         <Text style={styles.username}>{item.friend_profile.username}</Text>
-        <Text style={styles.joinDate}>
-          Friends since {formatFriendsSinceDate(item.created_at)}
-        </Text>
+        <Text style={styles.joinDate}>Friends since {formatFriendsSinceDate(item.created_at)}</Text>
       </View>
       <ActionButton
         title="Remove"
@@ -62,7 +60,6 @@ export default function FriendsListScreen({ navigation }: FriendsListProps) {
       />
     </View>
   );
-
 
   return (
     <SafeAreaView style={styles.container}>

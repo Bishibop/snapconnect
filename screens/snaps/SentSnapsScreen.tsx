@@ -12,7 +12,12 @@ import { useSnaps } from '../../hooks/useSnaps';
 import { useStories } from '../../hooks/useStories';
 import { useNavigationHelpers, SentNavigation } from '../../utils/navigation';
 import { formatTimeAgo } from '../../utils/dateTime';
-import { getStatusIcon, getStatusColor, getSnapTypeIcon, getEmptyStateIcon } from '../../utils/status';
+import {
+  getStatusIcon,
+  getStatusColor,
+  getSnapTypeIcon,
+  getEmptyStateIcon,
+} from '../../utils/status';
 
 interface SentSnapsProps {
   navigation: SentNavigation;
@@ -30,8 +35,6 @@ export default function SentSnapsScreen({ navigation }: SentSnapsProps) {
   const handleViewStory = (story: Story) => {
     navHelpers.navigateToStoryViewer(story);
   };
-
-
 
   const renderSnapItem = ({ item }: { item: Snap }) => (
     <View style={styles.snapItem}>
@@ -62,7 +65,6 @@ export default function SentSnapsScreen({ navigation }: SentSnapsProps) {
       subtitle="When you send snaps to friends, you'll see them here with their status"
     />
   );
-
 
   return (
     <SafeAreaView style={styles.container}>

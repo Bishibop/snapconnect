@@ -35,8 +35,6 @@ export default function SnapInboxScreen({ navigation }: SnapInboxProps) {
     navHelpers.navigateToStoryViewer(story);
   };
 
-
-
   const renderSnapItem = ({ item }: { item: Snap }) => (
     <TouchableOpacity style={styles.snapItem} onPress={() => handleSnapPress(item)}>
       <View style={styles.snapIcon}>

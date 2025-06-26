@@ -28,14 +28,14 @@ class CacheManager {
   get<T>(key: string, userId?: string, maxAge?: number): T | null {
     const cacheKey = userId ? `${key}:${userId}` : key;
     const entry = this.cache.get(cacheKey);
-    
+
     if (!entry) {
       return null;
     }
 
     const age = Date.now() - entry.timestamp;
     const maxAgeToUse = maxAge ?? this.DEFAULT_MAX_AGE;
-    
+
     if (age > maxAgeToUse) {
       this.cache.delete(cacheKey);
       return null;
@@ -57,6 +57,21 @@ class CacheManager {
       timestamp: Date.now(),
       userId,
     });
+  }
+
+  /**
+   * Atomically update cache and return the updated data
+   * Ensures cache and state updates are consistent
+   * @param key - Cache key
+   * @param updateFn - Function to update the data
+   * @param userId - User ID for user-specific cache
+   * @returns Updated data
+   */
+  update<T>(key: string, updateFn: (current: T | null) => T, userId?: string): T {
+    const current = this.get<T>(key, userId);
+    const updated = updateFn(current);
+    this.set(key, updated, userId);
+    return updated;
   }
 
   /**
@@ -112,7 +127,7 @@ class CacheManager {
   cleanup(maxAge?: number): void {
     const maxAgeToUse = maxAge ?? this.DEFAULT_MAX_AGE;
     const now = Date.now();
-    
+
     for (const [key, entry] of this.cache.entries()) {
       if (now - entry.timestamp > maxAgeToUse) {
         this.cache.delete(key);
@@ -137,8 +152,8 @@ export const CACHE_KEYS = {
 // Cache durations
 export const CACHE_DURATIONS = {
   FRIENDS: 10 * 60 * 1000, // 10 minutes
-  STORIES: 2 * 60 * 1000,  // 2 minutes (stories change frequently)
-  SNAPS: 5 * 60 * 1000,    // 5 minutes
+  STORIES: 2 * 60 * 1000, // 2 minutes (stories change frequently)
+  SNAPS: 5 * 60 * 1000, // 5 minutes
   PROFILE: 30 * 60 * 1000, // 30 minutes
 } as const;
 
@@ -152,7 +167,7 @@ export const CACHE_DURATIONS = {
 export function useCachedData<T>(
   key: string,
   fetchFn: () => Promise<T>,
-  options: CacheOptions & { 
+  options: CacheOptions & {
     userId?: string;
     enabled?: boolean;
     dependencies?: any[];
@@ -163,7 +178,7 @@ export function useCachedData<T>(
     userSpecific = true,
     userId,
     enabled = true,
-    dependencies = [],
+    dependencies: _dependencies = [],
   } = options;
 
   // Get cached data immediately
@@ -181,7 +196,7 @@ export function useCachedData<T>(
   // Fetch and cache data
   const fetchAndCache = async (silent = false): Promise<T | null> => {
     if (!enabled) return null;
-    
+
     try {
       const data = await fetchFn();
       cache.set(key, data, userSpecific ? userId : undefined);
@@ -221,11 +236,13 @@ export function invalidateCache(userId?: string, keys?: string[]): void {
  * Cache warming utility - pre-fetch data in background
  * @param entries - Array of cache entries to warm
  */
-export async function warmCache(entries: Array<{
-  key: string;
-  fetchFn: () => Promise<any>;
-  userId?: string;
-}>): Promise<void> {
+export async function warmCache(
+  entries: Array<{
+    key: string;
+    fetchFn: () => Promise<any>;
+    userId?: string;
+  }>
+): Promise<void> {
   const promises = entries.map(async ({ key, fetchFn, userId }) => {
     try {
       const data = await fetchFn();
@@ -238,7 +255,5 @@ export async function warmCache(entries: Array<{
   await Promise.allSettled(promises);
 }
 
-// Automatic cleanup every 10 minutes
-setInterval(() => {
-  cache.cleanup();
-}, 10 * 60 * 1000);
+// Note: Cache cleanup is now handled by AppState listeners in useAppStateCleanup hook
+// to prevent memory leaks and ensure proper cleanup when app backgrounds/foregrounds

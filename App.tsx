@@ -6,6 +6,19 @@ import { AuthProvider } from './contexts/AuthContext';
 import { RootNavigator } from './navigation/RootNavigator';
 import { ErrorBoundary } from './components/common/ErrorBoundary';
 import { AuthErrorBoundary } from './components/common/AuthErrorBoundary';
+import { useAppStateCleanup } from './hooks/useAppStateCleanup';
+
+function AppContent() {
+  // Initialize app-level cache cleanup
+  useAppStateCleanup();
+
+  return (
+    <>
+      <RootNavigator />
+      <StatusBar style="auto" />
+    </>
+  );
+}
 
 export default function App() {
   return (
@@ -13,8 +26,7 @@ export default function App() {
       <SafeAreaProvider>
         <AuthErrorBoundary>
           <AuthProvider>
-            <RootNavigator />
-            <StatusBar style="auto" />
+            <AppContent />
           </AuthProvider>
         </AuthErrorBoundary>
       </SafeAreaProvider>

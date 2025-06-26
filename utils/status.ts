@@ -19,23 +19,23 @@ export const ICONS = {
   DELIVERED: '📬',
   OPENED: '👁️',
   EXPIRED: '💨',
-  
+
   // Snap type icons
   PHOTO: '📸',
   VIDEO: '🎥',
-  
+
   // Tab icons
   FRIENDS: '👥',
   CAMERA: '📸',
   INBOX: '📥',
   SENT_TAB: '📤',
-  
+
   // Empty state icons
   INBOX_EMPTY: '📥',
   SENT_EMPTY: '📤',
   FRIENDS_EMPTY: '👥',
   STORIES_EMPTY: '🎬',
-  
+
   // General purpose icons
   ADD: '➕',
   CLOSE: '✕',
@@ -123,7 +123,7 @@ export function getStatusText(status: SnapStatus): string {
 export function getFriendshipStatusColor(status: FriendshipStatus): string {
   switch (status) {
     case 'pending':
-      return theme.colors.warning;
+      return theme.colors.primary;
     case 'accepted':
       return theme.colors.success;
     case 'blocked':

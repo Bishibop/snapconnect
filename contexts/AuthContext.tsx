@@ -2,6 +2,7 @@ import React, { createContext, useState, useEffect, useContext } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 import { Alert } from 'react-native';
+import { cache } from '../utils/cache';
 
 interface AuthContextType {
   session: Session | null;
@@ -34,12 +35,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
+    } = supabase.auth.onAuthStateChange((_event, newSession) => {
+      const previousSession = session;
+      setSession(newSession);
+
+      // Clear cache when user logs out for security
+      if (previousSession && !newSession) {
+        // User logged out - clear all cached data
+        cache.clearAll();
+      } else if (!previousSession && newSession) {
+        // User logged in - clear any stale cache from previous session
+        cache.clearAll();
+      } else if (previousSession?.user?.id !== newSession?.user?.id) {
+        // Different user - clear previous user's cache
+        if (previousSession?.user?.id) {
+          cache.clearUser(previousSession.user.id);
+        }
+      }
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [session]);
 
   const signUp = async (email: string, password: string, username: string) => {
     try {
@@ -85,6 +101,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signOut = async () => {
     try {
       setLoading(true);
+
+      // Clear cache before signing out for security
+      if (session?.user?.id) {
+        cache.clearUser(session.user.id);
+      } else {
+        cache.clearAll();
+      }
+
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
     } catch (error: unknown) {

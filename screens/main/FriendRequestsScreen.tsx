@@ -24,7 +24,7 @@ export default function FriendRequestsScreen({ navigation }: any) {
   const [receivedRequests, setReceivedRequests] = useState<FriendRequest[]>([]);
   const [sentRequests, setSentRequests] = useState<FriendRequest[]>([]);
   const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
+  const [_refreshing, _setRefreshing] = useState(false);
   const [processingRequests, setProcessingRequests] = useState<Set<string>>(new Set());
 
   const loadRequests = async () => {
@@ -37,7 +37,7 @@ export default function FriendRequestsScreen({ navigation }: any) {
       Alert.alert('Error', 'Failed to load friend requests');
     } finally {
       setLoading(false);
-      setRefreshing(false);
+      _setRefreshing(false);
     }
   };
 

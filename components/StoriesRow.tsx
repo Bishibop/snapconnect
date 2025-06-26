@@ -95,9 +95,4 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: theme.spacing.md,
   },
-  loadingContainer: {
-    height: 90, // Same height as story circles
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
 });

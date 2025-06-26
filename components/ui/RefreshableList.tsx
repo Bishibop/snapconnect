@@ -35,7 +35,6 @@ export default function RefreshableList<T>({
   ListHeaderComponent,
   ListFooterComponent,
 }: RefreshableListProps<T>) {
-
   return (
     <FlatList
       data={data}

@@ -2,12 +2,12 @@ import { CommonActions } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { CompositeNavigationProp } from '@react-navigation/native';
-import { 
-  MainTabParamList, 
-  CameraStackParamList, 
-  InboxStackParamList, 
-  SentStackParamList, 
-  FriendsStackParamList 
+import {
+  MainTabParamList,
+  CameraStackParamList,
+  InboxStackParamList,
+  SentStackParamList,
+  FriendsStackParamList,
 } from '../types';
 
 // Common navigation prop types
@@ -38,8 +38,15 @@ export class NavigationUtils {
   /**
    * Navigate to camera screen for story creation
    */
-  static navigateToCamera(navigation: MainTabNavigation | CameraNavigation | InboxNavigation | SentNavigation | FriendsNavigation) {
-    navigation.navigate('Camera');
+  static navigateToCamera(
+    navigation:
+      | MainTabNavigation
+      | CameraNavigation
+      | InboxNavigation
+      | SentNavigation
+      | FriendsNavigation
+  ) {
+    (navigation as any).navigate('Camera');
   }
 
   /**
@@ -56,7 +63,7 @@ export class NavigationUtils {
     navigation: InboxNavigation | SentNavigation | FriendsNavigation,
     snap: InboxStackParamList['SnapViewer']['snap']
   ) {
-    navigation.navigate('SnapViewer', { snap });
+    (navigation as any).navigate('SnapViewer', { snap });
   }
 
   /**
@@ -66,7 +73,7 @@ export class NavigationUtils {
     navigation: InboxNavigation | SentNavigation | FriendsNavigation,
     story: InboxStackParamList['SnapViewer']['story']
   ) {
-    navigation.navigate('SnapViewer', { story });
+    (navigation as any).navigate('SnapViewer', { story });
   }
 
   /**
@@ -160,13 +167,13 @@ export function useNavigationHelpers(navigation: any) {
   return {
     navigateToCamera: () => NavigationUtils.navigateToCamera(navigation),
     navigateToCameraForStory: () => NavigationUtils.navigateToCameraForStory(navigation),
-    navigateToSnapViewer: (snap: InboxStackParamList['SnapViewer']['snap']) => 
+    navigateToSnapViewer: (snap: InboxStackParamList['SnapViewer']['snap']) =>
       NavigationUtils.navigateToSnapViewer(navigation, snap),
-    navigateToStoryViewer: (story: InboxStackParamList['SnapViewer']['story']) => 
+    navigateToStoryViewer: (story: InboxStackParamList['SnapViewer']['story']) =>
       NavigationUtils.navigateToStoryViewer(navigation, story),
-    navigateToMediaPreview: (mediaUri: string, mediaType: 'photo' | 'video') => 
+    navigateToMediaPreview: (mediaUri: string, mediaType: 'photo' | 'video') =>
       NavigationUtils.navigateToMediaPreview(navigation, mediaUri, mediaType),
-    navigateToFriendSelector: (params: CameraStackParamList['FriendSelector']) => 
+    navigateToFriendSelector: (params: CameraStackParamList['FriendSelector']) =>
       NavigationUtils.navigateToFriendSelector(navigation, params),
     navigateToAddFriends: () => NavigationUtils.navigateToAddFriends(navigation),
     navigateToFriendRequests: () => NavigationUtils.navigateToFriendRequests(navigation),

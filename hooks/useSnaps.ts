@@ -1,15 +1,15 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Alert } from 'react-native';
-import { 
-  getInboxSnaps, 
-  getSentSnaps, 
-  markSnapOpened, 
+import {
+  getInboxSnaps,
+  getSentSnaps,
+  markSnapOpened,
   subscribeToInboxChanges,
   subscribeToSentSnapsChanges,
-  Snap 
+  Snap,
 } from '../services/snaps';
 import { useAuth } from '../contexts/AuthContext';
 import { cache, CACHE_KEYS, CACHE_DURATIONS } from '../utils/cache';
+import { ErrorHandler, StandardError, createErrorState } from '../utils/errorHandler';
 
 interface UseSnapsOptions {
   type: 'inbox' | 'sent';
@@ -18,71 +18,77 @@ interface UseSnapsOptions {
 export function useSnaps({ type }: UseSnapsOptions) {
   const { user } = useAuth();
   const cacheKey = type === 'inbox' ? CACHE_KEYS.INBOX_SNAPS : CACHE_KEYS.SENT_SNAPS;
-  
+
   // Initialize with cached data synchronously
   const [snaps, setSnaps] = useState<Snap[]>(() => {
     if (!user?.id) return [];
     return cache.get<Snap[]>(cacheKey, user.id, CACHE_DURATIONS.SNAPS) || [];
   });
-  
+
   const [refreshing, setRefreshing] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<StandardError | null>(null);
+  const { handleError, clearError } = createErrorState(setError, `${type} Snaps`);
 
-  const loadSnaps = useCallback(async (silent = false) => {
-    if (!user?.id) return;
+  const loadSnaps = useCallback(
+    async (silent = false) => {
+      if (!user?.id) return;
 
-    try {
-      setError(null);
-      if (!silent) setRefreshing(true);
-      
-      const snapsList = type === 'inbox' 
-        ? await getInboxSnaps() 
-        : await getSentSnaps();
-      setSnaps(snapsList);
-      
-      // Cache the new data
-      cache.set(cacheKey, snapsList, user.id);
-    } catch (error) {
-      console.error(`Error loading ${type} snaps:`, error);
-      setError(`Failed to load ${type} snaps`);
-      if (!silent) {
-        Alert.alert('Error', `Failed to load ${type} snaps`);
+      try {
+        clearError();
+        if (!silent) setRefreshing(true);
+
+        const snapsList = type === 'inbox' ? await getInboxSnaps() : await getSentSnaps();
+        setSnaps(snapsList);
+
+        // Cache the new data
+        cache.set(cacheKey, snapsList, user.id);
+      } catch (error) {
+        ErrorHandler.handleApiError(error, `load ${type} snaps`, silent);
+        if (!silent) {
+          handleError(error, { context: `Loading ${type} snaps` });
+        }
+      } finally {
+        setRefreshing(false);
       }
-    } finally {
-      setRefreshing(false);
-    }
-  }, [user?.id, type, cacheKey]);
+    },
+    [user?.id, type, cacheKey, handleError, clearError]
+  );
 
   const refresh = useCallback(async () => {
     await loadSnaps(false); // Not silent for manual refresh
   }, [loadSnaps]);
 
-  const markOpened = useCallback(async (snapId: string) => {
-    if (type !== 'inbox') return;
+  const markOpened = useCallback(
+    async (snapId: string) => {
+      if (type !== 'inbox' || !user?.id) return;
 
-    try {
-      await markSnapOpened(snapId);
-      // Update local state
-      const updatedSnaps = snaps.map(snap =>
-        snap.id === snapId 
-          ? { ...snap, opened_at: new Date().toISOString() } 
-          : snap
-      );
-      setSnaps(updatedSnaps);
-      
-      // Update cache
-      if (user?.id) {
-        cache.set(cacheKey, updatedSnaps, user.id);
+      try {
+        await markSnapOpened(snapId);
+
+        // Atomically update both cache and state
+        const updatedSnaps = cache.update<Snap[]>(
+          cacheKey,
+          current => {
+            const snaps = current || [];
+            return snaps.map(snap =>
+              snap.id === snapId ? { ...snap, opened_at: new Date().toISOString() } : snap
+            );
+          },
+          user.id
+        );
+
+        setSnaps(updatedSnaps);
+      } catch (error) {
+        ErrorHandler.handleApiError(error, 'mark snap as opened', true);
       }
-    } catch (error) {
-      console.error('Error marking snap as opened:', error);
-    }
-  }, [type, snaps, user?.id, cacheKey]);
+    },
+    [type, user?.id, cacheKey]
+  );
 
   // Background fetch for fresh data
   useEffect(() => {
     if (!user?.id) return;
-    
+
     // Check if we need fresh data
     const hasValidCache = cache.has(cacheKey, user.id, CACHE_DURATIONS.SNAPS);
     if (!hasValidCache) {
@@ -94,9 +100,10 @@ export function useSnaps({ type }: UseSnapsOptions) {
   useEffect(() => {
     if (!user?.id) return;
 
-    const subscription = type === 'inbox'
-      ? subscribeToInboxChanges(user.id, () => loadSnaps(true)) // Silent reload on real-time updates
-      : subscribeToSentSnapsChanges(user.id, () => loadSnaps(true));
+    const subscription =
+      type === 'inbox'
+        ? subscribeToInboxChanges(user.id, () => loadSnaps(true)) // Silent reload on real-time updates
+        : subscribeToSentSnapsChanges(user.id, () => loadSnaps(true));
 
     return () => {
       subscription.unsubscribe();

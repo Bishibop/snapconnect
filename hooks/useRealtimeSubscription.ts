@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { supabase } from '../lib/supabase';
 
 interface SubscriptionConfig {
@@ -14,6 +14,8 @@ interface UseRealtimeSubscriptionOptions {
   dependencies?: any[];
 }
 
+type SubscriptionStatus = 'disconnected' | 'connecting' | 'connected' | 'error';
+
 export function useRealtimeSubscription(
   configs: SubscriptionConfig | SubscriptionConfig[],
   callback: (payload: any) => void,
@@ -27,68 +29,101 @@ export function useRealtimeSubscription(
 
   const subscriptionRef = useRef<any>(null);
   const callbackRef = useRef(callback);
+  const [status, setStatus] = useState<SubscriptionStatus>('disconnected');
+  const [error, setError] = useState<string | null>(null);
 
   // Update callback ref when it changes
   useEffect(() => {
     callbackRef.current = callback;
   }, [callback]);
 
-  useEffect(() => {
-    if (!enabled) return;
-
-    // Clean up existing subscription
+  // Safe cleanup function
+  const cleanupSubscription = () => {
     if (subscriptionRef.current) {
-      subscriptionRef.current.unsubscribe();
+      try {
+        subscriptionRef.current.unsubscribe();
+      } catch (err) {
+        console.warn('Error unsubscribing from realtime channel:', err);
+      } finally {
+        subscriptionRef.current = null;
+        setStatus('disconnected');
+      }
+    }
+  };
+
+  useEffect(() => {
+    if (!enabled) {
+      cleanupSubscription();
+      return;
     }
 
-    // Create new subscription
-    let channel = supabase.channel(channelName);
+    setStatus('connecting');
+    setError(null);
 
-    // Handle both single config and array of configs
-    const configArray = Array.isArray(configs) ? configs : [configs];
+    try {
+      // Clean up existing subscription
+      cleanupSubscription();
 
-    configArray.forEach(config => {
-      channel = channel.on(
-        'postgres_changes' as any,
-        {
-          event: config.event || '*',
-          schema: config.schema || 'public',
-          table: config.table,
-          ...(config.filter && { filter: config.filter }),
-        },
-        (payload: any) => {
-          callbackRef.current(payload);
+      // Create new subscription
+      let channel = supabase.channel(channelName);
+
+      // Handle both single config and array of configs
+      const configArray = Array.isArray(configs) ? configs : [configs];
+
+      configArray.forEach(config => {
+        channel = channel.on(
+          'postgres_changes' as any,
+          {
+            event: config.event || '*',
+            schema: config.schema || 'public',
+            table: config.table,
+            ...(config.filter && { filter: config.filter }),
+          },
+          (payload: any) => {
+            try {
+              callbackRef.current(payload);
+            } catch (err) {
+              console.error('Error in realtime callback:', err);
+              setError('Callback execution failed');
+            }
+          }
+        );
+      });
+
+      // Subscribe with state tracking
+      const subscription = channel.subscribe((status: string) => {
+        if (status === 'SUBSCRIBED') {
+          setStatus('connected');
+          setError(null);
+        } else if (status === 'CHANNEL_ERROR') {
+          setStatus('error');
+          setError('Channel subscription failed');
+        } else if (status === 'TIMED_OUT') {
+          setStatus('error');
+          setError('Subscription timed out');
         }
-      );
-    });
+      });
 
-    subscriptionRef.current = channel.subscribe();
+      subscriptionRef.current = subscription;
 
-    // Cleanup function
-    return () => {
-      if (subscriptionRef.current) {
-        subscriptionRef.current.unsubscribe();
-        subscriptionRef.current = null;
-      }
-    };
+      // Cleanup function
+      return cleanupSubscription;
+    } catch (err) {
+      console.error('Error setting up realtime subscription:', err);
+      setStatus('error');
+      setError(err instanceof Error ? err.message : 'Subscription setup failed');
+    }
   }, [channelName, enabled, ...dependencies]);
 
-  // Cleanup on unmount
+  // Cleanup on unmount - ensure no memory leaks
   useEffect(() => {
-    return () => {
-      if (subscriptionRef.current) {
-        subscriptionRef.current.unsubscribe();
-      }
-    };
+    return cleanupSubscription;
   }, []);
 
   return {
-    unsubscribe: () => {
-      if (subscriptionRef.current) {
-        subscriptionRef.current.unsubscribe();
-        subscriptionRef.current = null;
-      }
-    },
+    status,
+    error,
+    unsubscribe: cleanupSubscription,
   };
 }
 
