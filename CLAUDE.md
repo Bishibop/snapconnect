@@ -17,7 +17,7 @@ npm start
 
 # Platform-specific commands
 npm run android   # Run on Android
-npm run ios       # Run on iOS  
+npm run ios       # Run on iOS
 npm run web       # Run in browser
 
 # Code quality
@@ -30,6 +30,7 @@ npm run typecheck  # Check TypeScript types
 ## Architecture Overview
 
 ### Frontend Structure
+
 - **Entry Point**: `App.tsx` → Main application component
 - **Registration**: `index.ts` → Expo root component registration
 - **State Management**: Zustand (planned)
@@ -37,6 +38,7 @@ npm run typecheck  # Check TypeScript types
 - **UI**: React Native StyleSheet with theme constants
 
 ### Backend Architecture (Supabase)
+
 - **Database**: PostgreSQL with Row Level Security
 - **Auth**: Supabase Auth for user management
 - **Storage**: Supabase Storage for media files
@@ -44,12 +46,14 @@ npm run typecheck  # Check TypeScript types
 - **Edge Functions**: Server-side logic for notifications and scheduled tasks
 
 ### Key Technical Decisions
+
 1. **Client-Heavy Design**: AR filters and media compression happen on device
 2. **Ephemeral by Design**: Auto-deletion with minimal storage
 3. **Realtime First**: WebSocket connections for instant updates
 4. **TypeScript**: Strict mode enabled for type safety
 
 ### Environment Configuration
+
 - Copy `.env.example` to `.env.local`
 - Use `EXPO_PUBLIC_` prefix for client-accessible variables
 - Required: Supabase URL and anon key
@@ -58,6 +62,7 @@ npm run typecheck  # Check TypeScript types
 ## Database Schema (Planned)
 
 Key tables:
+
 - `profiles`: User information and push tokens
 - `messages`: Ephemeral messages with expiration
 - `stories`: 24-hour posts
@@ -67,6 +72,7 @@ Key tables:
 ## Current State
 
 The project is a fresh React Native Expo setup. Core features to be implemented:
+
 - Phase 1: Camera, messaging, stories, AR filters
 - Phase 2: AI-powered captions, recommendations using OpenAI + pgvector
 

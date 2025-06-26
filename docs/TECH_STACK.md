@@ -3,6 +3,7 @@
 ## Core Features
 
 ### Phase 1: MVP Features
+
 1. **Visual Snap Messaging**
    - Photo/video capture and sharing
    - Visual-only communication (no text messages)
@@ -40,12 +41,14 @@
 ## Navigation Structure
 
 ### 4-Tab Navigation System
+
 1. **Friends Tab** - Friend list, requests, add friends
 2. **Camera Tab** (Default) - Capture photos/videos
 3. **Inbox Tab** - Received snaps and stories feed
 4. **Sent Tab** - Sent snaps with delivery/opened status
 
 ### Key Navigation Principles
+
 - Camera-first experience (default tab)
 - No deep navigation hierarchies
 - Full-screen modal viewers
@@ -54,6 +57,7 @@
 ---
 
 ## Future Phase 2: RAG Enhancement
+
 1. **Personalized Content Generation**
    - AI-powered caption suggestions
    - Context-aware story ideas
@@ -72,6 +76,7 @@
 ## Final Tech Stack
 
 ### Frontend
+
 - **React Native + Expo**
   - Cross-platform mobile development
   - Managed workflow for faster development
@@ -98,6 +103,7 @@
   - `react-native-image-filter-kit` - Color filters
 
 ### Backend (Supabase)
+
 - **PostgreSQL Database**
   - profiles, snaps, friendships, stories tables
   - Row Level Security (RLS) for authorization
@@ -126,6 +132,7 @@
   - Future: RAG API integration (Phase 2)
 
 ### Development & Tooling
+
 - **Git + GitHub**
   - Version control
   - Collaboration
@@ -139,18 +146,21 @@
   - Network inspection
 
 ### Styling
+
 - **React Native StyleSheet**
   - Built-in styling solution
   - Performance optimized
   - Theme constants file for consistency
 
 ### Phase 1 Limitations
+
 - **No Push Notifications**
   - Real-time updates only when app is open
   - Users must manually check for new snaps
   - Simplified implementation
 
 ### Media Handling
+
 - **Client-side compression**
   - `react-native-image-resizer`
   - Reduce upload sizes
@@ -160,6 +170,7 @@
   - Manage storage limits
 
 ### Phase 2: RAG Infrastructure
+
 - **OpenAI API**
   - GPT-4 for content generation
   - Text embeddings
@@ -173,12 +184,14 @@
 ## Architecture Decisions
 
 ### Why This Stack?
+
 1. **Rapid Development**: Expo + Supabase provides most features out-of-box
 2. **Cost Effective**: Generous free tiers for MVP
 3. **Scalable**: Can grow with user base
 4. **RAG Ready**: PostgreSQL + pgvector perfect for AI features
 
 ### Key Architectural Patterns
+
 1. **Client-Heavy**: AR filters, media compression on device
 2. **Realtime First**: WebSockets for instant updates
 3. **Ephemeral by Design**: Aggressive deletion, minimal storage
@@ -187,6 +200,7 @@
 ### Data Flow Examples
 
 **Sending a Snap (Phase 1):**
+
 ```
 1. User captures photo/video (expo-camera)
 2. Optional: Apply color filter
@@ -199,6 +213,7 @@
 ```
 
 **RAG-Enhanced Caption:**
+
 ```
 1. User uploads photo
 2. Edge Function analyzes image
@@ -210,6 +225,7 @@
 ## Implementation Notes
 
 ### Database Schema (Phase 1)
+
 ```sql
 -- Profiles (extends auth.users with app-specific data)
 CREATE TABLE profiles (
@@ -292,30 +308,36 @@ When querying related data using Supabase, use the explicit constraint names:
 // Friends list - get friend profiles
 const { data } = await supabase
   .from('friendships')
-  .select(`
+  .select(
+    `
     *,
     friend_profile:profiles!friendships_friend_id_fkey(*)
-  `)
+  `
+  )
   .eq('user_id', userId)
   .eq('status', 'accepted');
 
-// Snaps - get sender and recipient profiles  
+// Snaps - get sender and recipient profiles
 const { data } = await supabase
   .from('snaps')
-  .select(`
+  .select(
+    `
     *,
     sender_profile:profiles!snaps_sender_id_fkey(*),
     recipient_profile:profiles!snaps_recipient_id_fkey(*)
-  `)
+  `
+  )
   .eq('recipient_id', userId);
 
 // Stories - get user profiles
 const { data } = await supabase
   .from('stories')
-  .select(`
+  .select(
+    `
     *,
     user_profile:profiles!stories_user_id_fkey(*)
-  `)
+  `
+  )
   .eq('is_active', true);
 ```
 
@@ -325,14 +347,15 @@ const { data } = await supabase
 // Listen to friendship changes for a user
 const subscription = supabase
   .channel('friendships-changes')
-  .on('postgres_changes', 
-    { 
-      event: '*', 
-      schema: 'public', 
+  .on(
+    'postgres_changes',
+    {
+      event: '*',
+      schema: 'public',
       table: 'friendships',
-      filter: `user_id=eq.${userId}` 
-    }, 
-    (payload) => {
+      filter: `user_id=eq.${userId}`,
+    },
+    payload => {
       // Handle friendship changes
       console.log('Friendship change:', payload);
     }
@@ -341,12 +364,14 @@ const subscription = supabase
 ```
 
 ### Security Considerations
+
 - Row Level Security on all tables
 - Ephemeral design (auto-deletion)
 - Rate limiting on Edge Functions
 - Media URLs with expiration
 
 ### Scaling Considerations
+
 - Monitor storage usage closely
 - Implement CDN when needed (Cloudinary)
 - Database indexes on frequently queried fields

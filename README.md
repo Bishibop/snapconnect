@@ -10,17 +10,20 @@ An ephemeral messaging app similar to Snapchat, built with React Native, Expo, a
 ## Installation
 
 1. Clone the repository:
+
 ```bash
 git clone https://github.com/Bishibop/snapconnect.git
 cd snapconnect
 ```
 
 2. Install dependencies:
+
 ```bash
 npm install
 ```
 
 3. Set up environment variables:
+
 ```bash
 cp .env.example .env.local
 # Edit .env.local and add your Supabase credentials
@@ -29,6 +32,7 @@ cp .env.example .env.local
 ## Running the App
 
 Start the Expo development server:
+
 ```bash
 npm start
 ```
@@ -36,6 +40,7 @@ npm start
 This will display a QR code in your terminal. Open the **Expo Go** app on your phone and scan the QR code to run the app.
 
 ### Alternative Commands
+
 - `npm run android` - Run on Android emulator
-- `npm run ios` - Run on iOS simulator  
+- `npm run ios` - Run on iOS simulator
 - `npm run web` - Run in web browser
