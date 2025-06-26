@@ -53,6 +53,9 @@ export function useSnaps({ type }: UseSnapsOptions) {
     }
   }, [user?.id, type, cacheKey]);
 
+  const refresh = useCallback(async () => {
+    await loadSnaps(false); // Not silent for manual refresh
+  }, [loadSnaps]);
 
   const markOpened = useCallback(async (snapId: string) => {
     if (type !== 'inbox') return;
@@ -104,6 +107,7 @@ export function useSnaps({ type }: UseSnapsOptions) {
     snaps,
     refreshing,
     error,
+    refresh,
     markOpened,
     reload: loadSnaps,
   };

@@ -7,7 +7,7 @@ import { theme } from '../../constants/theme';
 import StoriesRow from '../../components/StoriesRow';
 import TabHeader from '../../components/TabHeader';
 import EmptyState from '../../components/ui/EmptyState';
-import SimpleList from '../../components/ui/SimpleList';
+import RefreshableList from '../../components/ui/RefreshableList';
 import ActionButton from '../../components/ui/ActionButton';
 import { useFriends } from '../../hooks/useFriends';
 import { useStories } from '../../hooks/useStories';
@@ -19,8 +19,8 @@ interface FriendsListProps {
 }
 
 export default function FriendsListScreen({ navigation }: FriendsListProps) {
-  const { friends, remove } = useFriends();
-  const { refreshing } = useStories();
+  const { friends, refreshing: friendsRefreshing, refresh: refreshFriends, remove } = useFriends();
+  const { refreshing: storiesRefreshing } = useStories();
   const navHelpers = useNavigationHelpers(navigation);
 
   const handleCreateStory = () => {
@@ -68,7 +68,7 @@ export default function FriendsListScreen({ navigation }: FriendsListProps) {
     <SafeAreaView style={styles.container}>
       <TabHeader
         title="Friends"
-        showLoading={refreshing}
+        showLoading={storiesRefreshing}
         rightElement={
           <ActionButton
             title="Add Friends"
@@ -93,11 +93,13 @@ export default function FriendsListScreen({ navigation }: FriendsListProps) {
       {friends.length === 0 ? (
         <EmptyState title="No friends yet" subtitle="Add some friends to start sharing snaps!" />
       ) : (
-        <SimpleList
+        <RefreshableList
           data={friends}
           renderItem={renderFriendItem}
           keyExtractor={item => item.id}
           style={styles.list}
+          refreshing={friendsRefreshing}
+          onRefresh={refreshFriends}
         />
       )}
     </SafeAreaView>

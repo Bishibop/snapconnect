@@ -1,10 +1,13 @@
 import React from 'react';
-import { FlatList, StyleSheet, ViewStyle } from 'react-native';
+import { FlatList, RefreshControl, StyleSheet, ViewStyle } from 'react-native';
+import { theme } from '../../constants/theme';
 
-interface SimpleListProps<T> {
+interface RefreshableListProps<T> {
   data: T[];
   renderItem: ({ item, index }: { item: T; index: number }) => React.ReactElement;
   keyExtractor: (item: T, index: number) => string;
+  refreshing?: boolean;
+  onRefresh?: () => void;
   ListEmptyComponent?: React.ComponentType | React.ReactElement | null;
   style?: ViewStyle;
   contentContainerStyle?: ViewStyle;
@@ -16,10 +19,12 @@ interface SimpleListProps<T> {
   ListFooterComponent?: React.ComponentType | React.ReactElement | null;
 }
 
-export default function SimpleList<T>({
+export default function RefreshableList<T>({
   data,
   renderItem,
   keyExtractor,
+  refreshing = false,
+  onRefresh,
   ListEmptyComponent,
   style,
   contentContainerStyle,
@@ -29,7 +34,7 @@ export default function SimpleList<T>({
   ItemSeparatorComponent,
   ListHeaderComponent,
   ListFooterComponent,
-}: SimpleListProps<T>) {
+}: RefreshableListProps<T>) {
 
   return (
     <FlatList
@@ -41,6 +46,15 @@ export default function SimpleList<T>({
       showsVerticalScrollIndicator={showsVerticalScrollIndicator}
       horizontal={horizontal}
       numColumns={numColumns}
+      refreshControl={
+        onRefresh ? (
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={theme.colors.primary}
+          />
+        ) : undefined
+      }
       ListEmptyComponent={ListEmptyComponent}
       ItemSeparatorComponent={ItemSeparatorComponent}
       ListHeaderComponent={ListHeaderComponent}

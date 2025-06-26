@@ -40,6 +40,9 @@ export function useFriends() {
     }
   }, [user?.id]);
 
+  const refresh = useCallback(async () => {
+    await loadFriends(false); // Not silent for manual refresh
+  }, [loadFriends]);
 
   const remove = useCallback(async (friend: FriendWithProfile) => {
     try {
@@ -78,6 +81,7 @@ export function useFriends() {
     friends,
     refreshing,
     error,
+    refresh,
     remove,
     reload: loadFriends,
   };

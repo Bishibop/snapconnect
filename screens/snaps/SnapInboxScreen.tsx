@@ -7,7 +7,7 @@ import { Story } from '../../services/stories';
 import StoriesRow from '../../components/StoriesRow';
 import TabHeader from '../../components/TabHeader';
 import EmptyState from '../../components/ui/EmptyState';
-import SimpleList from '../../components/ui/SimpleList';
+import RefreshableList from '../../components/ui/RefreshableList';
 import { useSnaps } from '../../hooks/useSnaps';
 import { useStories } from '../../hooks/useStories';
 import { useNavigationHelpers, InboxNavigation } from '../../utils/navigation';
@@ -19,8 +19,8 @@ interface SnapInboxProps {
 }
 
 export default function SnapInboxScreen({ navigation }: SnapInboxProps) {
-  const { snaps } = useSnaps({ type: 'inbox' });
-  const { refreshing } = useStories();
+  const { snaps, refreshing: snapsRefreshing, refresh: refreshSnaps } = useSnaps({ type: 'inbox' });
+  const { refreshing: storiesRefreshing } = useStories();
   const navHelpers = useNavigationHelpers(navigation);
 
   const handleSnapPress = (snap: Snap) => {
@@ -65,15 +65,17 @@ export default function SnapInboxScreen({ navigation }: SnapInboxProps) {
 
   return (
     <SafeAreaView style={styles.container}>
-      <TabHeader title="Inbox" showLoading={refreshing} />
+      <TabHeader title="Inbox" showLoading={storiesRefreshing} />
 
       <StoriesRow onCreateStory={handleCreateStory} onViewStory={handleViewStory} />
 
-      <SimpleList
+      <RefreshableList
         data={snaps}
         renderItem={renderSnapItem}
         keyExtractor={item => item.id}
         style={styles.snapsList}
+        refreshing={snapsRefreshing}
+        onRefresh={refreshSnaps}
         ListEmptyComponent={renderEmptyState}
       />
     </SafeAreaView>

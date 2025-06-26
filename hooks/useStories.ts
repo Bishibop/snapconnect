@@ -52,6 +52,9 @@ export function useStories() {
     }
   }, [user?.id]);
 
+  const refresh = useCallback(async () => {
+    await loadStories(false); // Not silent for manual refresh
+  }, [loadStories]);
 
   const markViewed = useCallback(async (storyId: string) => {
     if (!user?.id) return;
@@ -165,6 +168,7 @@ export function useStories() {
     myStory,
     refreshing,
     error,
+    refresh,
     markViewed,
     reload: loadStories,
   };
