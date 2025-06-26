@@ -5,13 +5,19 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { theme } from '../../constants/theme';
 import ActionButton from '../../components/ui/ActionButton';
+import { useNavigationHelpers, CameraNavigation } from '../../utils/navigation';
 
-export default function CameraScreen({ navigation }: any) {
+interface CameraScreenProps {
+  navigation: CameraNavigation;
+}
+
+export default function CameraScreen({ navigation }: CameraScreenProps) {
   const [facing, setFacing] = useState<CameraType>('back');
   const [permission, requestPermission] = useCameraPermissions();
   const [cameraKey, setCameraKey] = useState(0); // Force re-render camera
   const [isCameraReady, setIsCameraReady] = useState(false);
   const cameraRef = useRef<CameraView>(null);
+  const navHelpers = useNavigationHelpers(navigation);
 
   // Reset camera when screen comes into focus
   useFocusEffect(
@@ -76,11 +82,7 @@ export default function CameraScreen({ navigation }: any) {
       });
 
       if (photo?.uri) {
-        // Navigate to MediaPreview with the captured photo
-        navigation.navigate('MediaPreview', {
-          mediaUri: photo.uri,
-          mediaType: 'photo',
-        });
+        navHelpers.navigateToMediaPreview(photo.uri, 'photo');
       }
     } catch (error) {
       console.error('Error taking picture:', error);
@@ -101,7 +103,7 @@ export default function CameraScreen({ navigation }: any) {
         <View style={styles.topControls}>
           <TouchableOpacity
             style={styles.closeButton}
-            onPress={() => navigation.navigate('Friends')}
+            onPress={navHelpers.navigateToFriendsTab}
           >
             <Text style={styles.closeButtonText}>✕</Text>
           </TouchableOpacity>

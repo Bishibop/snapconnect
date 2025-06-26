@@ -1,54 +1,32 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { View, Text, StyleSheet, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { getFriends, removeFriend, FriendWithProfile } from '../../services/friends';
+import { FriendWithProfile } from '../../services/friends';
 import { Story } from '../../services/stories';
 import { theme } from '../../constants/theme';
-import { useAuth } from '../../contexts/AuthContext';
 import StoriesRow from '../../components/StoriesRow';
 import TabHeader from '../../components/TabHeader';
 import EmptyState from '../../components/ui/EmptyState';
 import RefreshableList from '../../components/ui/RefreshableList';
 import ActionButton from '../../components/ui/ActionButton';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
-import { useFriendshipsSubscription } from '../../hooks/useRealtimeSubscription';
+import { useFriends } from '../../hooks/useFriends';
+import { useNavigationHelpers, FriendsNavigation } from '../../utils/navigation';
 
-export default function FriendsListScreen({ navigation }: any) {
-  const { user } = useAuth();
-  const [friends, setFriends] = useState<FriendWithProfile[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
+interface FriendsListProps {
+  navigation: FriendsNavigation;
+}
 
-  const loadFriends = async () => {
-    try {
-      const friendsList = await getFriends();
-      setFriends(friendsList);
-    } catch (error) {
-      console.error('Error loading friends:', error);
-      Alert.alert('Error', 'Failed to load friends list');
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  };
-
-  useEffect(() => {
-    loadFriends();
-  }, []);
-
-  // Real-time subscription for friendship changes
-  useFriendshipsSubscription(user?.id, () => {
-    loadFriends(); // Refresh friends list
-  });
+export default function FriendsListScreen({ navigation }: FriendsListProps) {
+  const { friends, loading, refreshing, refresh, remove } = useFriends();
+  const navHelpers = useNavigationHelpers(navigation);
 
   const handleCreateStory = () => {
-    // Navigate to camera to create a story
-    navigation.navigate('Camera', { screen: 'CameraScreen' });
+    navHelpers.navigateToCamera();
   };
 
   const handleViewStory = (story: Story) => {
-    // Navigate to story viewer within Friends stack
-    navigation.navigate('SnapViewer', { story });
+    navHelpers.navigateToStoryViewer(story);
   };
 
   const handleRemoveFriend = (friend: FriendWithProfile) => {
@@ -60,15 +38,7 @@ export default function FriendsListScreen({ navigation }: any) {
         {
           text: 'Remove',
           style: 'destructive',
-          onPress: async () => {
-            try {
-              await removeFriend(friend.id);
-              setFriends(prev => prev.filter(f => f.id !== friend.id));
-            } catch (error) {
-              console.error('Error removing friend:', error);
-              Alert.alert('Error', 'Failed to remove friend');
-            }
-          },
+          onPress: () => remove(friend),
         },
       ]
     );
@@ -107,7 +77,7 @@ export default function FriendsListScreen({ navigation }: any) {
         rightElement={
           <ActionButton
             title="Add Friends"
-            onPress={() => navigation.navigate('AddFriends')}
+            onPress={navHelpers.navigateToAddFriends}
             variant="primary"
             size="small"
           />
@@ -119,7 +89,7 @@ export default function FriendsListScreen({ navigation }: any) {
       <View style={styles.requestsContainer}>
         <ActionButton
           title="Friend Requests"
-          onPress={() => navigation.navigate('FriendRequests')}
+          onPress={navHelpers.navigateToFriendRequests}
           variant="secondary"
           fullWidth
         />
@@ -133,7 +103,7 @@ export default function FriendsListScreen({ navigation }: any) {
           renderItem={renderFriendItem}
           keyExtractor={item => item.id}
           refreshing={refreshing}
-          onRefresh={loadFriends}
+          onRefresh={refresh}
           style={styles.list}
         />
       )}

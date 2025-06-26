@@ -1,98 +1,45 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useCallback } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
-import { StackNavigationProp } from '@react-navigation/stack';
-import { CompositeNavigationProp } from '@react-navigation/native';
-import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { theme } from '../../constants/theme';
-import { getInboxSnaps, subscribeToInboxChanges, Snap } from '../../services/snaps';
+import { Snap } from '../../services/snaps';
 import { Story } from '../../services/stories';
-import { supabase } from '../../lib/supabase';
 import StoriesRow from '../../components/StoriesRow';
 import TabHeader from '../../components/TabHeader';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
 import EmptyState from '../../components/ui/EmptyState';
 import RefreshableList from '../../components/ui/RefreshableList';
-import { InboxStackParamList, MainTabParamList } from '../../types';
-
-type SnapInboxScreenNavigationProp = CompositeNavigationProp<
-  StackNavigationProp<InboxStackParamList, 'SnapInbox'>,
-  BottomTabNavigationProp<MainTabParamList>
->;
+import { useSnaps } from '../../hooks/useSnaps';
+import { useNavigationHelpers, InboxNavigation } from '../../utils/navigation';
 
 interface SnapInboxProps {
-  navigation: SnapInboxScreenNavigationProp;
+  navigation: InboxNavigation;
 }
 
 export default function SnapInboxScreen({ navigation }: SnapInboxProps) {
-  const [snaps, setSnaps] = useState<Snap[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-
-  useEffect(() => {
-    loadSnaps();
-    setupRealtimeSubscription();
-  }, []);
+  const { snaps, loading, refreshing, refresh, reload } = useSnaps({ type: 'inbox' });
+  const navHelpers = useNavigationHelpers(navigation);
 
   useFocusEffect(
     useCallback(() => {
       // Refresh when screen comes into focus
       if (!loading) {
-        loadSnaps();
+        reload();
       }
-    }, [loading])
+    }, [loading, reload])
   );
 
-  const loadSnaps = async () => {
-    try {
-      const snapsList = await getInboxSnaps();
-      setSnaps(snapsList);
-    } catch (error: unknown) {
-      console.error('Error loading snaps:', error);
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  };
-
-  const setupRealtimeSubscription = async () => {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) return;
-
-    const subscription = subscribeToInboxChanges(user.id, _payload => {
-      loadSnaps(); // Refresh the list when changes occur
-    });
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  };
-
-  const onRefresh = () => {
-    setRefreshing(true);
-    loadSnaps();
-  };
-
   const handleSnapPress = (snap: Snap) => {
-    // Navigate to snap viewer
-    navigation.navigate('SnapViewer', {
-      snap,
-    });
+    navHelpers.navigateToSnapViewer(snap);
   };
 
   const handleCreateStory = () => {
-    // Navigate to camera to create a story
-    navigation.navigate('Camera');
+    navHelpers.navigateToCamera();
   };
 
   const handleViewStory = (story: Story) => {
-    // Navigate to story viewer (reuse SnapViewer with story data)
-    navigation.navigate('SnapViewer', {
-      story,
-    });
+    navHelpers.navigateToStoryViewer(story);
   };
 
   const formatTimeAgo = (dateString: string) => {
@@ -168,7 +115,7 @@ export default function SnapInboxScreen({ navigation }: SnapInboxProps) {
         keyExtractor={item => item.id}
         style={styles.snapsList}
         refreshing={refreshing}
-        onRefresh={onRefresh}
+        onRefresh={refresh}
         ListEmptyComponent={renderEmptyState}
       />
     </SafeAreaView>

@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { View, ScrollView, StyleSheet } from 'react-native';
 import { theme } from '../constants/theme';
-import { getStoriesFromFriends, getCurrentUserStory, Story } from '../services/stories';
+import { Story } from '../services/stories';
 import { supabase } from '../lib/supabase';
 import StoryCircle from './StoryCircle';
 import YourStoryCircle from './YourStoryCircle';
 import LoadingSpinner from './ui/LoadingSpinner';
-import { useStoriesSubscription } from '../hooks/useRealtimeSubscription';
+import { useStories } from '../hooks/useStories';
 
 interface StoriesRowProps {
   onCreateStory: () => void;
@@ -14,51 +14,12 @@ interface StoriesRowProps {
 }
 
 export default function StoriesRow({ onCreateStory, onViewStory }: StoriesRowProps) {
-  const [stories, setStories] = useState<Story[]>([]);
-  const [userStory, setUserStory] = useState<Story | null>(null);
+  const { friendStories: stories, myStory: userStory, loading } = useStories();
   const [username, setUsername] = useState<string>('');
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    loadStories();
     loadUserProfile();
   }, []);
-
-  // Handle realtime changes for both stories and story_views
-  const handleRealtimeChange = async (payload: any) => {
-    const { table } = payload;
-
-    if (table === 'stories') {
-      await handleStoryChange(payload);
-    } else if (table === 'story_views') {
-      await handleStoryViewChange(payload);
-    }
-  };
-
-  // Use the stories subscription hook
-  useStoriesSubscription(handleRealtimeChange);
-
-  const loadStories = async () => {
-    try {
-      const [friendStories, currentUserStory] = await Promise.all([
-        getStoriesFromFriends(),
-        getCurrentUserStory(),
-      ]);
-
-      // Filter out current user's story from friends list (it's shown separately)
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      const filteredStories = friendStories.filter(story => story.user_id !== user?.id);
-
-      setStories(filteredStories);
-      setUserStory(currentUserStory);
-    } catch (error: unknown) {
-      console.error('Error loading stories:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const loadUserProfile = async () => {
     try {
@@ -81,88 +42,6 @@ export default function StoriesRow({ onCreateStory, onViewStory }: StoriesRowPro
     }
   };
 
-  const handleStoryChange = async (payload: any) => {
-    const { eventType, new: newStory, old: oldStory } = payload;
-
-    if (eventType === 'INSERT') {
-      // Fetch complete story data with profile information
-      const { data: storyWithProfile } = await supabase
-        .from('stories')
-        .select(
-          `
-          *,
-          user_profile:profiles!stories_user_id_fkey(*)
-        `
-        )
-        .eq('id', newStory.id)
-        .single();
-
-      if (storyWithProfile) {
-        const {
-          data: { user },
-        } = await supabase.auth.getUser();
-
-        if (newStory.user_id === user?.id) {
-          // Update user's story
-          setUserStory(storyWithProfile);
-        } else {
-          // Add friend's story with profile data
-          setStories(prev => [{ ...storyWithProfile, is_viewed: false }, ...prev]);
-        }
-      }
-    } else if (eventType === 'UPDATE') {
-      // Fetch complete story data with profile information
-      const { data: storyWithProfile } = await supabase
-        .from('stories')
-        .select(
-          `
-          *,
-          user_profile:profiles!stories_user_id_fkey(*)
-        `
-        )
-        .eq('id', newStory.id)
-        .single();
-
-      if (storyWithProfile) {
-        if (newStory.user_id === userStory?.user_id) {
-          setUserStory(newStory.is_active ? storyWithProfile : null);
-        } else {
-          setStories(
-            prev =>
-              prev
-                .map(story =>
-                  story.id === newStory.id
-                    ? { ...storyWithProfile, is_viewed: story.is_viewed }
-                    : story
-                )
-                .filter(story => story.is_active) // Remove deactivated stories
-          );
-        }
-      }
-    } else if (eventType === 'DELETE') {
-      // Remove deleted story
-      if (oldStory.user_id === userStory?.user_id) {
-        setUserStory(null);
-      } else {
-        setStories(prev => prev.filter(story => story.id !== oldStory.id));
-      }
-    }
-  };
-
-  const handleStoryViewChange = async (payload: any) => {
-    const { eventType, new: newView } = payload;
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (eventType === 'INSERT' && newView.viewer_id === user?.id) {
-      // Current user viewed a story - mark it as viewed
-      setStories(prev =>
-        prev.map(story => (story.id === newView.story_id ? { ...story, is_viewed: true } : story))
-      );
-    }
-  };
-
   if (loading) {
     return (
       <View style={styles.container}>
@@ -173,7 +52,7 @@ export default function StoriesRow({ onCreateStory, onViewStory }: StoriesRowPro
     );
   }
 
-  // Don't show the stories row if there are no stories and user hasn't created one
+  // Always show stories row for consistency
   if (stories.length === 0 && !userStory) {
     return (
       <View style={styles.container}>
