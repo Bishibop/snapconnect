@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, FlatList, ActivityIndicator, RefreshControl } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -11,6 +11,9 @@ import { Story } from '../../services/stories';
 import { supabase } from '../../lib/supabase';
 import StoriesRow from '../../components/StoriesRow';
 import TabHeader from '../../components/TabHeader';
+import LoadingSpinner from '../../components/ui/LoadingSpinner';
+import EmptyState from '../../components/ui/EmptyState';
+import RefreshableList from '../../components/ui/RefreshableList';
 import { SentStackParamList, MainTabParamList } from '../../types';
 
 type SentSnapsScreenNavigationProp = CompositeNavigationProp<
@@ -161,13 +164,11 @@ export default function SentSnapsScreen({ navigation }: SentSnapsProps) {
   );
 
   const renderEmptyState = () => (
-    <View style={styles.emptyContainer}>
-      <Text style={styles.emptyIcon}>📤</Text>
-      <Text style={styles.emptyTitle}>No snaps sent yet!</Text>
-      <Text style={styles.emptySubtext}>
-        When you send snaps to friends, you&apos;ll see them here with their status
-      </Text>
-    </View>
+    <EmptyState
+      icon="📤"
+      title="No snaps sent yet!"
+      subtitle="When you send snaps to friends, you'll see them here with their status"
+    />
   );
 
   if (loading) {
@@ -175,7 +176,7 @@ export default function SentSnapsScreen({ navigation }: SentSnapsProps) {
       <SafeAreaView style={styles.container}>
         <TabHeader title="Sent" />
         <View style={styles.centerContainer}>
-          <ActivityIndicator size="large" color={theme.colors.primary} />
+          <LoadingSpinner size="large" />
           <Text style={styles.loadingText}>Loading sent snaps...</Text>
         </View>
       </SafeAreaView>
@@ -188,20 +189,13 @@ export default function SentSnapsScreen({ navigation }: SentSnapsProps) {
 
       <StoriesRow onCreateStory={handleCreateStory} onViewStory={handleViewStory} />
 
-      <FlatList
+      <RefreshableList
         data={snaps}
         renderItem={renderSnapItem}
         keyExtractor={item => item.id}
         style={styles.snapsList}
-        contentContainerStyle={snaps.length === 0 ? styles.emptyListContainer : undefined}
-        showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            tintColor={theme.colors.primary}
-          />
-        }
+        refreshing={refreshing}
+        onRefresh={onRefresh}
         ListEmptyComponent={renderEmptyState}
       />
     </SafeAreaView>
@@ -224,9 +218,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   snapsList: {
-    flex: 1,
-  },
-  emptyListContainer: {
     flex: 1,
   },
   snapItem: {
@@ -274,28 +265,5 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '500',
     textTransform: 'capitalize',
-  },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: theme.spacing.xl,
-  },
-  emptyIcon: {
-    fontSize: 64,
-    marginBottom: theme.spacing.lg,
-  },
-  emptyTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: theme.colors.text,
-    marginBottom: theme.spacing.sm,
-    textAlign: 'center',
-  },
-  emptySubtext: {
-    fontSize: 16,
-    color: theme.colors.textSecondary,
-    textAlign: 'center',
-    lineHeight: 22,
   },
 });

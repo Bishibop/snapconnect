@@ -1,13 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  FlatList,
-  ActivityIndicator,
-  Alert,
-} from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RouteProp } from '@react-navigation/native';
@@ -17,8 +9,14 @@ import { createSnap } from '../../services/snaps';
 import { uploadMedia } from '../../services/media';
 import { Filter } from '../../types/filters';
 import { CameraStackParamList } from '../../types';
+import LoadingSpinner from '../../components/ui/LoadingSpinner';
+import RefreshableList from '../../components/ui/RefreshableList';
+import ActionButton from '../../components/ui/ActionButton';
 
-type FriendSelectorScreenNavigationProp = StackNavigationProp<CameraStackParamList, 'FriendSelector'>;
+type FriendSelectorScreenNavigationProp = StackNavigationProp<
+  CameraStackParamList,
+  'FriendSelector'
+>;
 type FriendSelectorScreenRouteProp = RouteProp<CameraStackParamList, 'FriendSelector'>;
 
 interface FriendSelectorProps {
@@ -111,7 +109,11 @@ export default function FriendSelectorScreen({ route, navigation }: FriendSelect
       );
     } catch (error: unknown) {
       console.error('Error sending snap:', error);
-      Alert.alert('Send Failed', (error instanceof Error ? error.message : String(error)) || 'Failed to send snap. Please try again.');
+      Alert.alert(
+        'Send Failed',
+        (error instanceof Error ? error.message : String(error)) ||
+          'Failed to send snap. Please try again.'
+      );
     } finally {
       setSending(false);
     }
@@ -132,7 +134,7 @@ export default function FriendSelectorScreen({ route, navigation }: FriendSelect
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.centerContainer}>
-          <ActivityIndicator size="large" color={theme.colors.primary} />
+          <LoadingSpinner size="large" />
           <Text style={styles.loadingText}>Loading friends...</Text>
         </View>
       </SafeAreaView>
@@ -143,47 +145,43 @@ export default function FriendSelectorScreen({ route, navigation }: FriendSelect
     <SafeAreaView style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity style={styles.cancelButton} onPress={() => navigation.goBack()}>
-          <Text style={styles.cancelButtonText}>Cancel</Text>
-        </TouchableOpacity>
+        <ActionButton
+          title="Cancel"
+          onPress={() => navigation.goBack()}
+          variant="secondary"
+          size="small"
+        />
         <Text style={styles.headerTitle}>Send to...</Text>
         <View style={styles.placeholder} />
       </View>
 
       {/* Friends List */}
       <View style={styles.content}>
-        {friends.length === 0 ? (
-          <View style={styles.centerContainer}>
-            <Text style={styles.emptyText}>No friends yet!</Text>
-            <Text style={styles.emptySubtext}>Add some friends to start sending snaps</Text>
-          </View>
-        ) : (
-          <FlatList
-            data={friends}
-            renderItem={renderFriendItem}
-            keyExtractor={item => item.id}
-            style={styles.friendsList}
-            showsVerticalScrollIndicator={false}
-          />
-        )}
+        <RefreshableList
+          data={friends}
+          renderItem={renderFriendItem}
+          keyExtractor={item => item.id}
+          style={styles.friendsList}
+          ListEmptyComponent={() => (
+            <View style={styles.centerContainer}>
+              <Text style={styles.emptyText}>No friends yet!</Text>
+              <Text style={styles.emptySubtext}>Add some friends to start sending snaps</Text>
+            </View>
+          )}
+        />
       </View>
 
       {/* Send Button */}
       {selectedCount > 0 && (
         <View style={styles.sendContainer}>
-          <TouchableOpacity
-            style={[styles.sendButton, sending && styles.sendButtonDisabled]}
+          <ActionButton
+            title={selectedCount === 1 ? 'Send' : `Send to ${selectedCount} friends`}
             onPress={handleSendSnap}
+            loading={sending}
             disabled={sending}
-          >
-            {sending ? (
-              <ActivityIndicator size="small" color={theme.colors.white} />
-            ) : (
-              <Text style={styles.sendButtonText}>
-                {selectedCount === 1 ? 'Send' : `Send to ${selectedCount} friends`}
-              </Text>
-            )}
-          </TouchableOpacity>
+            variant="primary"
+            fullWidth
+          />
         </View>
       )}
     </SafeAreaView>
@@ -203,17 +201,6 @@ const styles = StyleSheet.create({
     paddingVertical: theme.spacing.sm,
     borderBottomWidth: 1,
     borderBottomColor: theme.colors.border,
-  },
-  cancelButton: {
-    paddingVertical: theme.spacing.xs,
-    paddingHorizontal: theme.spacing.sm,
-    backgroundColor: theme.colors.primary,
-    borderRadius: theme.borderRadius.sm,
-  },
-  cancelButtonText: {
-    color: '#000000',
-    fontSize: 16,
-    fontWeight: '600',
   },
   headerTitle: {
     fontSize: 18,
@@ -293,19 +280,5 @@ const styles = StyleSheet.create({
     padding: theme.spacing.md,
     borderTopWidth: 1,
     borderTopColor: theme.colors.border,
-  },
-  sendButton: {
-    backgroundColor: theme.colors.primary,
-    paddingVertical: theme.spacing.md,
-    borderRadius: theme.borderRadius.lg,
-    alignItems: 'center',
-  },
-  sendButtonDisabled: {
-    opacity: 0.6,
-  },
-  sendButtonText: {
-    color: '#000000',
-    fontSize: 16,
-    fontWeight: 'bold',
   },
 });

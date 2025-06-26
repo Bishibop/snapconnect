@@ -4,6 +4,7 @@ import { CameraView, CameraType, useCameraPermissions } from 'expo-camera';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { theme } from '../../constants/theme';
+import ActionButton from '../../components/ui/ActionButton';
 
 export default function CameraScreen({ navigation }: any) {
   const [facing, setFacing] = useState<CameraType>('back');
@@ -45,9 +46,12 @@ export default function CameraScreen({ navigation }: any) {
         <Text style={styles.permissionText}>
           SnapConnect needs access to your camera to take photos
         </Text>
-        <TouchableOpacity style={styles.permissionButton} onPress={requestPermission}>
-          <Text style={styles.permissionButtonText}>Grant Permission</Text>
-        </TouchableOpacity>
+        <ActionButton
+          title="Grant Permission"
+          onPress={requestPermission}
+          variant="primary"
+          size="large"
+        />
       </View>
     );
   }
@@ -156,17 +160,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 24,
     marginBottom: theme.spacing.xl,
-  },
-  permissionButton: {
-    backgroundColor: theme.colors.primary,
-    paddingHorizontal: theme.spacing.xl,
-    paddingVertical: theme.spacing.md,
-    borderRadius: theme.borderRadius.lg,
-  },
-  permissionButtonText: {
-    color: theme.colors.secondary,
-    fontSize: 16,
-    fontWeight: 'bold',
   },
   topControls: {
     flexDirection: 'row',

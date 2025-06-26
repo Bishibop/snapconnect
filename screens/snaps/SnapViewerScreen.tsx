@@ -22,9 +22,10 @@ type SnapViewerNavigationProp = CompositeNavigationProp<
   >
 >;
 
-type SnapViewerRouteProp = RouteProp<InboxStackParamList, 'SnapViewer'> | 
-                         RouteProp<SentStackParamList, 'SnapViewer'> |
-                         RouteProp<FriendsStackParamList, 'SnapViewer'>;
+type SnapViewerRouteProp =
+  | RouteProp<InboxStackParamList, 'SnapViewer'>
+  | RouteProp<SentStackParamList, 'SnapViewer'>
+  | RouteProp<FriendsStackParamList, 'SnapViewer'>;
 
 interface SnapViewerProps {
   route: SnapViewerRouteProp;

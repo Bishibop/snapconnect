@@ -1,21 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import {
-  View,
-  Text,
-  FlatList,
-  TouchableOpacity,
-  StyleSheet,
-  Alert,
-  RefreshControl,
-} from 'react-native';
+import { View, Text, StyleSheet, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { getFriends, removeFriend, FriendWithProfile } from '../../services/friends';
 import { Story } from '../../services/stories';
 import { theme } from '../../constants/theme';
-import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import StoriesRow from '../../components/StoriesRow';
 import TabHeader from '../../components/TabHeader';
+import EmptyState from '../../components/ui/EmptyState';
+import RefreshableList from '../../components/ui/RefreshableList';
+import ActionButton from '../../components/ui/ActionButton';
+import LoadingSpinner from '../../components/ui/LoadingSpinner';
+import { useFriendshipsSubscription } from '../../hooks/useRealtimeSubscription';
 
 export default function FriendsListScreen({ navigation }: any) {
   const { user } = useAuth();
@@ -41,41 +37,9 @@ export default function FriendsListScreen({ navigation }: any) {
   }, []);
 
   // Real-time subscription for friendship changes
-  useEffect(() => {
-    if (!user?.id) return;
-
-    const subscription = supabase
-      .channel('friendships-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'friendships',
-          filter: `user_id=eq.${user.id}`,
-        },
-        _payload => {
-          loadFriends(); // Refresh friends list
-        }
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'friendships',
-          filter: `friend_id=eq.${user.id}`,
-        },
-        _payload => {
-          loadFriends(); // Refresh friends list
-        }
-      )
-      .subscribe();
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, [user?.id]);
+  useFriendshipsSubscription(user?.id, () => {
+    loadFriends(); // Refresh friends list
+  });
 
   const handleCreateStory = () => {
     // Navigate to camera to create a story
@@ -118,15 +82,19 @@ export default function FriendsListScreen({ navigation }: any) {
           Friends since {new Date(item.created_at).toLocaleDateString()}
         </Text>
       </View>
-      <TouchableOpacity style={styles.removeButton} onPress={() => handleRemoveFriend(item)}>
-        <Text style={styles.removeButtonText}>Remove</Text>
-      </TouchableOpacity>
+      <ActionButton
+        title="Remove"
+        onPress={() => handleRemoveFriend(item)}
+        variant="danger"
+        size="small"
+      />
     </View>
   );
 
   if (loading) {
     return (
       <SafeAreaView style={styles.container}>
+        <LoadingSpinner centered size="large" />
         <Text style={styles.loadingText}>Loading friends...</Text>
       </SafeAreaView>
     );
@@ -137,35 +105,35 @@ export default function FriendsListScreen({ navigation }: any) {
       <TabHeader
         title="Friends"
         rightElement={
-          <TouchableOpacity
-            style={styles.addButton}
+          <ActionButton
+            title="Add Friends"
             onPress={() => navigation.navigate('AddFriends')}
-          >
-            <Text style={styles.addButtonText}>Add Friends</Text>
-          </TouchableOpacity>
+            variant="primary"
+            size="small"
+          />
         }
       />
 
       <StoriesRow onCreateStory={handleCreateStory} onViewStory={handleViewStory} />
 
-      <TouchableOpacity
-        style={styles.requestsButton}
-        onPress={() => navigation.navigate('FriendRequests')}
-      >
-        <Text style={styles.requestsButtonText}>Friend Requests</Text>
-      </TouchableOpacity>
+      <View style={styles.requestsContainer}>
+        <ActionButton
+          title="Friend Requests"
+          onPress={() => navigation.navigate('FriendRequests')}
+          variant="secondary"
+          fullWidth
+        />
+      </View>
 
       {friends.length === 0 ? (
-        <View style={styles.emptyState}>
-          <Text style={styles.emptyText}>No friends yet</Text>
-          <Text style={styles.emptySubtext}>Add some friends to start sharing snaps!</Text>
-        </View>
+        <EmptyState title="No friends yet" subtitle="Add some friends to start sharing snaps!" />
       ) : (
-        <FlatList
+        <RefreshableList
           data={friends}
           renderItem={renderFriendItem}
           keyExtractor={item => item.id}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={loadFriends} />}
+          refreshing={refreshing}
+          onRefresh={loadFriends}
           style={styles.list}
         />
       )}
@@ -178,27 +146,8 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: theme.colors.white,
   },
-  addButton: {
-    backgroundColor: theme.colors.primary,
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.xs,
-    borderRadius: theme.borderRadius.sm,
-  },
-  addButtonText: {
-    color: theme.colors.secondary,
-    fontWeight: '600',
-  },
-  requestsButton: {
+  requestsContainer: {
     margin: theme.spacing.md,
-    padding: theme.spacing.md,
-    backgroundColor: theme.colors.lightGray,
-    borderRadius: theme.borderRadius.sm,
-    alignItems: 'center',
-  },
-  requestsButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: theme.colors.secondary,
   },
   list: {
     flex: 1,
@@ -224,38 +173,10 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: theme.colors.gray,
   },
-  removeButton: {
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.sm,
-    borderRadius: theme.borderRadius.sm,
-    borderWidth: 1,
-    borderColor: theme.colors.error,
-  },
-  removeButtonText: {
-    color: theme.colors.error,
-    fontWeight: '600',
-  },
   loadingText: {
     textAlign: 'center',
     marginTop: 50,
     fontSize: 16,
     color: theme.colors.gray,
-  },
-  emptyState: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: theme.spacing.xl,
-  },
-  emptyText: {
-    fontSize: 18,
-    fontWeight: '600',
-    marginBottom: theme.spacing.sm,
-    color: theme.colors.secondary,
-  },
-  emptySubtext: {
-    fontSize: 16,
-    color: theme.colors.gray,
-    textAlign: 'center',
   },
 });

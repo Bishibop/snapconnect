@@ -1,13 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  FlatList,
-  ActivityIndicator,
-  RefreshControl,
-} from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -19,6 +11,9 @@ import { Story } from '../../services/stories';
 import { supabase } from '../../lib/supabase';
 import StoriesRow from '../../components/StoriesRow';
 import TabHeader from '../../components/TabHeader';
+import LoadingSpinner from '../../components/ui/LoadingSpinner';
+import EmptyState from '../../components/ui/EmptyState';
+import RefreshableList from '../../components/ui/RefreshableList';
 import { InboxStackParamList, MainTabParamList } from '../../types';
 
 type SnapInboxScreenNavigationProp = CompositeNavigationProp<
@@ -142,11 +137,11 @@ export default function SnapInboxScreen({ navigation }: SnapInboxProps) {
   );
 
   const renderEmptyState = () => (
-    <View style={styles.emptyContainer}>
-      <Text style={styles.emptyIcon}>📥</Text>
-      <Text style={styles.emptyTitle}>No snaps yet!</Text>
-      <Text style={styles.emptySubtext}>When friends send you snaps, they&apos;ll appear here</Text>
-    </View>
+    <EmptyState
+      icon="📥"
+      title="No snaps yet!"
+      subtitle="When friends send you snaps, they'll appear here"
+    />
   );
 
   if (loading) {
@@ -154,7 +149,7 @@ export default function SnapInboxScreen({ navigation }: SnapInboxProps) {
       <SafeAreaView style={styles.container}>
         <TabHeader title="Inbox" />
         <View style={styles.centerContainer}>
-          <ActivityIndicator size="large" color={theme.colors.primary} />
+          <LoadingSpinner size="large" />
           <Text style={styles.loadingText}>Loading snaps...</Text>
         </View>
       </SafeAreaView>
@@ -167,20 +162,13 @@ export default function SnapInboxScreen({ navigation }: SnapInboxProps) {
 
       <StoriesRow onCreateStory={handleCreateStory} onViewStory={handleViewStory} />
 
-      <FlatList
+      <RefreshableList
         data={snaps}
         renderItem={renderSnapItem}
         keyExtractor={item => item.id}
         style={styles.snapsList}
-        contentContainerStyle={snaps.length === 0 ? styles.emptyListContainer : undefined}
-        showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            tintColor={theme.colors.primary}
-          />
-        }
+        refreshing={refreshing}
+        onRefresh={onRefresh}
         ListEmptyComponent={renderEmptyState}
       />
     </SafeAreaView>
@@ -203,9 +191,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   snapsList: {
-    flex: 1,
-  },
-  emptyListContainer: {
     flex: 1,
   },
   snapItem: {
@@ -253,28 +238,5 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-  },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: theme.spacing.xl,
-  },
-  emptyIcon: {
-    fontSize: 64,
-    marginBottom: theme.spacing.lg,
-  },
-  emptyTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: theme.colors.text,
-    marginBottom: theme.spacing.sm,
-    textAlign: 'center',
-  },
-  emptySubtext: {
-    fontSize: 16,
-    color: theme.colors.textSecondary,
-    textAlign: 'center',
-    lineHeight: 22,
   },
 });

@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { View, ScrollView, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, ScrollView, StyleSheet } from 'react-native';
 import { theme } from '../constants/theme';
 import { getStoriesFromFriends, getCurrentUserStory, Story } from '../services/stories';
 import { supabase } from '../lib/supabase';
 import StoryCircle from './StoryCircle';
 import YourStoryCircle from './YourStoryCircle';
+import LoadingSpinner from './ui/LoadingSpinner';
+import { useStoriesSubscription } from '../hooks/useRealtimeSubscription';
 
 interface StoriesRowProps {
   onCreateStory: () => void;
@@ -20,12 +22,21 @@ export default function StoriesRow({ onCreateStory, onViewStory }: StoriesRowPro
   useEffect(() => {
     loadStories();
     loadUserProfile();
-
-    // Setup realtime subscription with proper cleanup
-    const cleanup = setupRealtimeSubscription();
-
-    return cleanup; // This will unsubscribe when component unmounts
   }, []);
+
+  // Handle realtime changes for both stories and story_views
+  const handleRealtimeChange = async (payload: any) => {
+    const { table } = payload;
+
+    if (table === 'stories') {
+      await handleStoryChange(payload);
+    } else if (table === 'story_views') {
+      await handleStoryViewChange(payload);
+    }
+  };
+
+  // Use the stories subscription hook
+  useStoriesSubscription(handleRealtimeChange);
 
   const loadStories = async () => {
     try {
@@ -70,41 +81,6 @@ export default function StoriesRow({ onCreateStory, onViewStory }: StoriesRowPro
     }
   };
 
-  const setupRealtimeSubscription = () => {
-    // Create a unique channel name to avoid conflicts between multiple StoriesRow instances
-    const channelName = `stories-changes-${Math.random().toString(36).substring(2, 9)}`;
-
-    const subscription = supabase
-      .channel(channelName)
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'stories',
-        },
-        payload => {
-          handleStoryChange(payload);
-        }
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'story_views',
-        },
-        payload => {
-          handleStoryViewChange(payload);
-        }
-      )
-      .subscribe();
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  };
-
   const handleStoryChange = async (payload: any) => {
     const { eventType, new: newStory, old: oldStory } = payload;
 
@@ -112,10 +88,12 @@ export default function StoriesRow({ onCreateStory, onViewStory }: StoriesRowPro
       // Fetch complete story data with profile information
       const { data: storyWithProfile } = await supabase
         .from('stories')
-        .select(`
+        .select(
+          `
           *,
           user_profile:profiles!stories_user_id_fkey(*)
-        `)
+        `
+        )
         .eq('id', newStory.id)
         .single();
 
@@ -123,7 +101,7 @@ export default function StoriesRow({ onCreateStory, onViewStory }: StoriesRowPro
         const {
           data: { user },
         } = await supabase.auth.getUser();
-        
+
         if (newStory.user_id === user?.id) {
           // Update user's story
           setUserStory(storyWithProfile);
@@ -136,10 +114,12 @@ export default function StoriesRow({ onCreateStory, onViewStory }: StoriesRowPro
       // Fetch complete story data with profile information
       const { data: storyWithProfile } = await supabase
         .from('stories')
-        .select(`
+        .select(
+          `
           *,
           user_profile:profiles!stories_user_id_fkey(*)
-        `)
+        `
+        )
         .eq('id', newStory.id)
         .single();
 
@@ -151,7 +131,9 @@ export default function StoriesRow({ onCreateStory, onViewStory }: StoriesRowPro
             prev =>
               prev
                 .map(story =>
-                  story.id === newStory.id ? { ...storyWithProfile, is_viewed: story.is_viewed } : story
+                  story.id === newStory.id
+                    ? { ...storyWithProfile, is_viewed: story.is_viewed }
+                    : story
                 )
                 .filter(story => story.is_active) // Remove deactivated stories
           );
@@ -185,7 +167,7 @@ export default function StoriesRow({ onCreateStory, onViewStory }: StoriesRowPro
     return (
       <View style={styles.container}>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="small" color={theme.colors.primary} />
+          <LoadingSpinner size="small" />
         </View>
       </View>
     );

@@ -1,14 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import {
-  View,
-  Text,
-  FlatList,
-  TouchableOpacity,
-  StyleSheet,
-  Alert,
-  RefreshControl,
-  ActivityIndicator,
-} from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   getPendingRequests,
@@ -18,8 +9,12 @@ import {
   FriendRequest,
 } from '../../services/friends';
 import { theme } from '../../constants/theme';
-import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
+import { useFriendshipsSubscription } from '../../hooks/useRealtimeSubscription';
+import ActionButton from '../../components/ui/ActionButton';
+import LoadingSpinner from '../../components/ui/LoadingSpinner';
+import EmptyState from '../../components/ui/EmptyState';
+import RefreshableList from '../../components/ui/RefreshableList';
 
 type TabType = 'received' | 'sent';
 
@@ -51,41 +46,9 @@ export default function FriendRequestsScreen({ navigation }: any) {
   }, []);
 
   // Real-time subscription for friend request changes
-  useEffect(() => {
-    if (!user?.id) return;
-
-    const subscription = supabase
-      .channel('friend-requests-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'friendships',
-          filter: `user_id=eq.${user.id}`,
-        },
-        _payload => {
-          loadRequests(); // Refresh both lists
-        }
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'friendships',
-          filter: `friend_id=eq.${user.id}`,
-        },
-        _payload => {
-          loadRequests(); // Refresh both lists
-        }
-      )
-      .subscribe();
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, [user?.id]);
+  useFriendshipsSubscription(user?.id, () => {
+    loadRequests(); // Refresh both lists
+  });
 
   const handleAcceptRequest = async (request: FriendRequest) => {
     setProcessingRequests(prev => new Set(prev).add(request.id));
@@ -134,24 +97,23 @@ export default function FriendRequestsScreen({ navigation }: any) {
           <Text style={styles.requestDate}>{new Date(item.created_at).toLocaleDateString()}</Text>
         </View>
         <View style={styles.requestActions}>
-          <TouchableOpacity
-            style={[styles.acceptButton, isProcessing && styles.buttonDisabled]}
+          <ActionButton
+            title="Accept"
             onPress={() => handleAcceptRequest(item)}
+            loading={isProcessing}
             disabled={isProcessing}
-          >
-            {isProcessing ? (
-              <ActivityIndicator size="small" color={theme.colors.white} />
-            ) : (
-              <Text style={styles.acceptButtonText}>Accept</Text>
-            )}
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.declineButton, isProcessing && styles.buttonDisabled]}
+            variant="primary"
+            size="small"
+            style={styles.acceptButton}
+          />
+          <ActionButton
+            title="Decline"
             onPress={() => handleDeclineRequest(item)}
             disabled={isProcessing}
-          >
-            <Text style={styles.declineButtonText}>Decline</Text>
-          </TouchableOpacity>
+            variant="secondary"
+            size="small"
+            style={styles.declineButton}
+          />
         </View>
       </View>
     );
@@ -176,6 +138,7 @@ export default function FriendRequestsScreen({ navigation }: any) {
   if (loading) {
     return (
       <SafeAreaView style={styles.container}>
+        <LoadingSpinner centered size="large" />
         <Text style={styles.loadingText}>Loading requests...</Text>
       </SafeAreaView>
     );
@@ -184,9 +147,12 @@ export default function FriendRequestsScreen({ navigation }: any) {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-          <Text style={styles.backButtonText}>← Back</Text>
-        </TouchableOpacity>
+        <ActionButton
+          title="← Back"
+          onPress={() => navigation.goBack()}
+          variant="ghost"
+          size="small"
+        />
         <Text style={styles.title}>Friend Requests</Text>
       </View>
 
@@ -209,26 +175,25 @@ export default function FriendRequestsScreen({ navigation }: any) {
         </TouchableOpacity>
       </View>
 
-      {currentRequests.length === 0 ? (
-        <View style={styles.emptyState}>
-          <Text style={styles.emptyText}>
-            {activeTab === 'received' ? 'No friend requests' : 'No pending requests'}
-          </Text>
-          <Text style={styles.emptySubtext}>
-            {activeTab === 'received'
-              ? 'Friend requests will appear here'
-              : 'Requests you send will appear here'}
-          </Text>
-        </View>
-      ) : (
-        <FlatList
-          data={currentRequests}
-          renderItem={activeTab === 'received' ? renderReceivedRequest : renderSentRequest}
-          keyExtractor={item => item.id}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={loadRequests} />}
-          style={styles.list}
-        />
-      )}
+      <RefreshableList
+        data={currentRequests}
+        renderItem={activeTab === 'received' ? renderReceivedRequest : renderSentRequest}
+        keyExtractor={item => item.id}
+        refreshing={refreshing}
+        onRefresh={loadRequests}
+        style={styles.list}
+        ListEmptyComponent={() => (
+          <EmptyState
+            icon={activeTab === 'received' ? '👥' : '📤'}
+            title={activeTab === 'received' ? 'No friend requests' : 'No pending requests'}
+            subtitle={
+              activeTab === 'received'
+                ? 'Friend requests will appear here'
+                : 'Requests you send will appear here'
+            }
+          />
+        )}
+      />
     </SafeAreaView>
   );
 }
@@ -245,14 +210,6 @@ const styles = StyleSheet.create({
     paddingVertical: theme.spacing.md,
     borderBottomWidth: 1,
     borderBottomColor: theme.colors.lightGray,
-  },
-  backButton: {
-    marginRight: theme.spacing.md,
-  },
-  backButtonText: {
-    fontSize: 16,
-    color: theme.colors.primary,
-    fontWeight: '600',
   },
   title: {
     fontSize: 20,
@@ -310,33 +267,10 @@ const styles = StyleSheet.create({
     gap: theme.spacing.sm,
   },
   acceptButton: {
-    backgroundColor: theme.colors.success,
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.sm,
-    borderRadius: theme.borderRadius.sm,
     minWidth: 80,
-    alignItems: 'center',
   },
   declineButton: {
-    backgroundColor: theme.colors.white,
-    borderWidth: 1,
-    borderColor: theme.colors.error,
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.sm,
-    borderRadius: theme.borderRadius.sm,
     minWidth: 80,
-    alignItems: 'center',
-  },
-  buttonDisabled: {
-    opacity: 0.6,
-  },
-  acceptButtonText: {
-    color: theme.colors.white,
-    fontWeight: '600',
-  },
-  declineButtonText: {
-    color: theme.colors.error,
-    fontWeight: '600',
   },
   pendingBadge: {
     backgroundColor: theme.colors.lightGray,
@@ -353,22 +287,5 @@ const styles = StyleSheet.create({
     marginTop: 50,
     fontSize: 16,
     color: theme.colors.gray,
-  },
-  emptyState: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: theme.spacing.xl,
-  },
-  emptyText: {
-    fontSize: 18,
-    fontWeight: '600',
-    marginBottom: theme.spacing.sm,
-    color: theme.colors.secondary,
-  },
-  emptySubtext: {
-    fontSize: 16,
-    color: theme.colors.gray,
-    textAlign: 'center',
   },
 });

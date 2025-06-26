@@ -1,20 +1,16 @@
-import React, { useState, useEffect } from 'react';
-import {
-  View,
-  Text,
-  TextInput,
-  FlatList,
-  TouchableOpacity,
-  StyleSheet,
-  Alert,
-  ActivityIndicator,
-} from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { searchUsers, sendFriendRequest } from '../../services/friends';
 import { Profile } from '../../types';
 import { theme } from '../../constants/theme';
-import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
+import { useRealtimeSubscription } from '../../hooks/useRealtimeSubscription';
+import ActionButton from '../../components/ui/ActionButton';
+import FormInput from '../../components/ui/FormInput';
+import LoadingSpinner from '../../components/ui/LoadingSpinner';
+import EmptyState from '../../components/ui/EmptyState';
+import RefreshableList from '../../components/ui/RefreshableList';
 
 export default function AddFriendsScreen({ navigation }: any) {
   const { user } = useAuth();
@@ -44,29 +40,20 @@ export default function AddFriendsScreen({ navigation }: any) {
   };
 
   // Real-time subscription for sent friend requests feedback
-  useEffect(() => {
-    if (!user?.id) return;
-
-    const subscription = supabase
-      .channel('add-friends-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'friendships',
-          filter: `requested_by=eq.${user.id}`,
-        },
-        _payload => {
-          // Could show a toast notification here
-        }
-      )
-      .subscribe();
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, [user?.id]);
+  useRealtimeSubscription(
+    {
+      table: 'friendships',
+      event: 'INSERT',
+      filter: user?.id ? `requested_by=eq.${user.id}` : undefined,
+    },
+    _payload => {
+      // Could show a toast notification here
+    },
+    {
+      enabled: !!user?.id,
+      dependencies: [user?.id],
+    }
+  );
 
   const handleSendFriendRequest = async (userProfile: Profile) => {
     setSendingRequests(prev => new Set(prev).add(userProfile.id));
@@ -78,7 +65,10 @@ export default function AddFriendsScreen({ navigation }: any) {
       setSearchResults(prev => prev.filter(u => u.id !== userProfile.id));
     } catch (error: unknown) {
       console.error('Error sending friend request:', error);
-      Alert.alert('Error', (error instanceof Error ? error.message : String(error)) || 'Failed to send friend request');
+      Alert.alert(
+        'Error',
+        (error instanceof Error ? error.message : String(error)) || 'Failed to send friend request'
+      );
     } finally {
       setSendingRequests(prev => {
         const newSet = new Set(prev);
@@ -99,17 +89,14 @@ export default function AddFriendsScreen({ navigation }: any) {
             Joined {new Date(item.created_at).toLocaleDateString()}
           </Text>
         </View>
-        <TouchableOpacity
-          style={[styles.addButton, isSending && styles.addButtonDisabled]}
+        <ActionButton
+          title="Add Friend"
           onPress={() => handleSendFriendRequest(item)}
+          loading={isSending}
           disabled={isSending}
-        >
-          {isSending ? (
-            <ActivityIndicator size="small" color={theme.colors.secondary} />
-          ) : (
-            <Text style={styles.addButtonText}>Add Friend</Text>
-          )}
-        </TouchableOpacity>
+          variant="primary"
+          size="small"
+        />
       </View>
     );
   };
@@ -117,15 +104,18 @@ export default function AddFriendsScreen({ navigation }: any) {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-          <Text style={styles.backButtonText}>← Back</Text>
-        </TouchableOpacity>
+        <ActionButton
+          title="← Back"
+          onPress={() => navigation.goBack()}
+          variant="ghost"
+          size="small"
+        />
         <Text style={styles.title}>Add Friends</Text>
       </View>
 
       <View style={styles.searchContainer}>
-        <TextInput
-          style={styles.searchInput}
+        <FormInput
+          variant="search"
           placeholder="Search by username..."
           value={searchQuery}
           onChangeText={handleSearch}
@@ -136,26 +126,28 @@ export default function AddFriendsScreen({ navigation }: any) {
 
       {loading && (
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={theme.colors.primary} />
+          <LoadingSpinner size="large" centered />
           <Text style={styles.loadingText}>Searching...</Text>
         </View>
       )}
 
       {!loading && searchQuery && searchResults.length === 0 && (
-        <View style={styles.emptyState}>
-          <Text style={styles.emptyText}>No users found</Text>
-          <Text style={styles.emptySubtext}>Try searching for a different username</Text>
-        </View>
+        <EmptyState
+          icon="🔍"
+          title="No users found"
+          subtitle="Try searching for a different username"
+        />
       )}
 
       {!loading && searchQuery === '' && (
-        <View style={styles.emptyState}>
-          <Text style={styles.emptyText}>Search for friends</Text>
-          <Text style={styles.emptySubtext}>Enter a username to find and add friends</Text>
-        </View>
+        <EmptyState
+          icon="👥"
+          title="Search for friends"
+          subtitle="Enter a username to find and add friends"
+        />
       )}
 
-      <FlatList
+      <RefreshableList
         data={searchResults}
         renderItem={renderUserItem}
         keyExtractor={item => item.id}
@@ -178,14 +170,6 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: theme.colors.lightGray,
   },
-  backButton: {
-    marginRight: theme.spacing.md,
-  },
-  backButtonText: {
-    fontSize: 16,
-    color: theme.colors.primary,
-    fontWeight: '600',
-  },
   title: {
     fontSize: 20,
     fontWeight: 'bold',
@@ -193,13 +177,6 @@ const styles = StyleSheet.create({
   },
   searchContainer: {
     padding: theme.spacing.md,
-  },
-  searchInput: {
-    backgroundColor: theme.colors.lightGray,
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.sm,
-    borderRadius: theme.borderRadius.sm,
-    fontSize: 16,
   },
   loadingContainer: {
     flex: 1,
@@ -234,37 +211,5 @@ const styles = StyleSheet.create({
   joinDate: {
     fontSize: 14,
     color: theme.colors.gray,
-  },
-  addButton: {
-    backgroundColor: theme.colors.primary,
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.sm,
-    borderRadius: theme.borderRadius.sm,
-    minWidth: 100,
-    alignItems: 'center',
-  },
-  addButtonDisabled: {
-    opacity: 0.6,
-  },
-  addButtonText: {
-    color: theme.colors.secondary,
-    fontWeight: '600',
-  },
-  emptyState: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: theme.spacing.xl,
-  },
-  emptyText: {
-    fontSize: 18,
-    fontWeight: '600',
-    marginBottom: theme.spacing.sm,
-    color: theme.colors.secondary,
-  },
-  emptySubtext: {
-    fontSize: 16,
-    color: theme.colors.gray,
-    textAlign: 'center',
   },
 });

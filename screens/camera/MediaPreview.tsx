@@ -85,7 +85,11 @@ export default function MediaPreview({ route, navigation }: MediaPreviewProps) {
       );
     } catch (error: unknown) {
       console.error('Error creating story:', error);
-      Alert.alert('Failed to Post', (error instanceof Error ? error.message : String(error)) || 'Failed to post story. Please try again.');
+      Alert.alert(
+        'Failed to Post',
+        (error instanceof Error ? error.message : String(error)) ||
+          'Failed to post story. Please try again.'
+      );
     } finally {
       setUploading(false);
     }

@@ -1,18 +1,12 @@
 import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  StyleSheet,
-  KeyboardAvoidingView,
-  Platform,
-  ActivityIndicator,
-} from 'react-native';
+import { Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigation } from '@react-navigation/native';
 import type { NavigationProp } from '@react-navigation/native';
 import { AuthStackParamList } from '../../types';
+import AuthForm from '../../components/ui/AuthForm';
+import FormInput from '../../components/ui/FormInput';
+import ActionButton from '../../components/ui/ActionButton';
 
 export const SignupScreen = () => {
   const [email, setEmail] = useState('');
@@ -29,100 +23,48 @@ export const SignupScreen = () => {
   };
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      style={styles.container}
-    >
-      <View style={styles.content}>
-        <Text style={styles.title}>Join SnapConnect</Text>
+    <AuthForm title="Join SnapConnect">
+      <FormInput
+        placeholder="Username"
+        value={username}
+        onChangeText={setUsername}
+        autoCapitalize="none"
+      />
 
-        <View style={styles.form}>
-          <TextInput
-            style={styles.input}
-            placeholder="Username"
-            value={username}
-            onChangeText={setUsername}
-            autoCapitalize="none"
-            placeholderTextColor="#666"
-          />
+      <FormInput
+        placeholder="Email"
+        value={email}
+        onChangeText={setEmail}
+        autoCapitalize="none"
+        keyboardType="email-address"
+      />
 
-          <TextInput
-            style={styles.input}
-            placeholder="Email"
-            value={email}
-            onChangeText={setEmail}
-            autoCapitalize="none"
-            keyboardType="email-address"
-            placeholderTextColor="#666"
-          />
+      <FormInput
+        placeholder="Password"
+        value={password}
+        onChangeText={setPassword}
+        secureTextEntry
+      />
 
-          <TextInput
-            style={styles.input}
-            placeholder="Password"
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry
-            placeholderTextColor="#666"
-          />
+      <ActionButton
+        title="Sign Up"
+        onPress={handleSignup}
+        loading={loading}
+        fullWidth
+        style={styles.button}
+      />
 
-          <TouchableOpacity style={styles.button} onPress={handleSignup} disabled={loading}>
-            {loading ? (
-              <ActivityIndicator color="white" />
-            ) : (
-              <Text style={styles.buttonText}>Sign Up</Text>
-            )}
-          </TouchableOpacity>
-
-          <TouchableOpacity onPress={() => navigation.goBack()} disabled={loading}>
-            <Text style={styles.linkText}>Already have an account? Login</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-    </KeyboardAvoidingView>
+      <TouchableOpacity onPress={() => navigation.goBack()} disabled={loading}>
+        <Text style={styles.linkText}>Already have an account? Login</Text>
+      </TouchableOpacity>
+    </AuthForm>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#FFFC00',
-  },
-  content: {
-    flex: 1,
-    justifyContent: 'center',
-    paddingHorizontal: 20,
-  },
-  title: {
-    fontSize: 36,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    marginBottom: 50,
-    color: '#000',
-  },
-  form: {
-    width: '100%',
-  },
-  input: {
-    backgroundColor: 'white',
-    paddingHorizontal: 20,
-    paddingVertical: 15,
-    borderRadius: 25,
-    marginBottom: 15,
-    fontSize: 16,
-    color: '#000',
-  },
   button: {
-    backgroundColor: '#000',
-    paddingVertical: 15,
-    borderRadius: 25,
-    alignItems: 'center',
     marginTop: 10,
     marginBottom: 20,
-  },
-  buttonText: {
-    color: 'white',
-    fontSize: 18,
-    fontWeight: 'bold',
   },
   linkText: {
     textAlign: 'center',

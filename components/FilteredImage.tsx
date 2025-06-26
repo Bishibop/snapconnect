@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, Image, View, ViewStyle, ImageStyle } from 'react-native';
+import { StyleSheet, Image, View, ViewStyle } from 'react-native';
 import { Filter } from '../types/filters';
 
 interface FilteredImageProps {
@@ -17,9 +17,7 @@ export default function FilteredImage({
 }: FilteredImageProps) {
   if (filter.id === 'original') {
     // Original - no filter
-    return (
-      <Image source={{ uri: imageUri }} style={styles.image} resizeMode={resizeMode} />
-    );
+    return <Image source={{ uri: imageUri }} style={styles.image} resizeMode={resizeMode} />;
   }
 
   // Apply filter using overlay technique

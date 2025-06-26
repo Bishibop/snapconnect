@@ -1,18 +1,12 @@
 import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  StyleSheet,
-  KeyboardAvoidingView,
-  Platform,
-  ActivityIndicator,
-} from 'react-native';
+import { Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigation } from '@react-navigation/native';
 import type { NavigationProp } from '@react-navigation/native';
 import { AuthStackParamList } from '../../types';
+import AuthForm from '../../components/ui/AuthForm';
+import FormInput from '../../components/ui/FormInput';
+import ActionButton from '../../components/ui/ActionButton';
 
 export const LoginScreen = () => {
   const [email, setEmail] = useState('');
@@ -28,91 +22,41 @@ export const LoginScreen = () => {
   };
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      style={styles.container}
-    >
-      <View style={styles.content}>
-        <Text style={styles.title}>SnapConnect</Text>
+    <AuthForm title="SnapConnect">
+      <FormInput
+        placeholder="Email"
+        value={email}
+        onChangeText={setEmail}
+        autoCapitalize="none"
+        keyboardType="email-address"
+      />
 
-        <View style={styles.form}>
-          <TextInput
-            style={styles.input}
-            placeholder="Email"
-            value={email}
-            onChangeText={setEmail}
-            autoCapitalize="none"
-            keyboardType="email-address"
-            placeholderTextColor="#666"
-          />
+      <FormInput
+        placeholder="Password"
+        value={password}
+        onChangeText={setPassword}
+        secureTextEntry
+      />
 
-          <TextInput
-            style={styles.input}
-            placeholder="Password"
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry
-            placeholderTextColor="#666"
-          />
+      <ActionButton
+        title="Login"
+        onPress={handleLogin}
+        loading={loading}
+        fullWidth
+        style={styles.button}
+      />
 
-          <TouchableOpacity style={styles.button} onPress={handleLogin} disabled={loading}>
-            {loading ? (
-              <ActivityIndicator color="white" />
-            ) : (
-              <Text style={styles.buttonText}>Login</Text>
-            )}
-          </TouchableOpacity>
-
-          <TouchableOpacity onPress={() => navigation.navigate('Signup')} disabled={loading}>
-            <Text style={styles.linkText}>Don&apos;t have an account? Sign up</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-    </KeyboardAvoidingView>
+      <TouchableOpacity onPress={() => navigation.navigate('Signup')} disabled={loading}>
+        <Text style={styles.linkText}>Don&apos;t have an account? Sign up</Text>
+      </TouchableOpacity>
+    </AuthForm>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#FFFC00',
-  },
-  content: {
-    flex: 1,
-    justifyContent: 'center',
-    paddingHorizontal: 20,
-  },
-  title: {
-    fontSize: 48,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    marginBottom: 50,
-    color: '#000',
-  },
-  form: {
-    width: '100%',
-  },
-  input: {
-    backgroundColor: 'white',
-    paddingHorizontal: 20,
-    paddingVertical: 15,
-    borderRadius: 25,
-    marginBottom: 15,
-    fontSize: 16,
-    color: '#000',
-  },
   button: {
-    backgroundColor: '#000',
-    paddingVertical: 15,
-    borderRadius: 25,
-    alignItems: 'center',
     marginTop: 10,
     marginBottom: 20,
-  },
-  buttonText: {
-    color: 'white',
-    fontSize: 18,
-    fontWeight: 'bold',
   },
   linkText: {
     textAlign: 'center',
