@@ -92,14 +92,16 @@ export default function CameraScreen({ navigation }: CameraScreenProps) {
 
   return (
     <SafeAreaView style={styles.container}>
-      <CameraView
-        key={cameraKey} // Force re-render when key changes
-        ref={cameraRef}
-        style={styles.camera}
-        facing={facing}
-        ratio="16:9"
-      >
-        {/* Top Controls */}
+      <View style={styles.cameraContainer}>
+        <CameraView
+          key={cameraKey} // Force re-render when key changes
+          ref={cameraRef}
+          style={styles.camera}
+          facing={facing}
+          ratio="16:9"
+        />
+
+        {/* Top Controls Overlay */}
         <View style={styles.topControls}>
           <TouchableOpacity style={styles.closeButton} onPress={navHelpers.navigateToFriendsTab}>
             <Text style={styles.closeButtonText}>✕</Text>
@@ -110,7 +112,7 @@ export default function CameraScreen({ navigation }: CameraScreenProps) {
           </TouchableOpacity>
         </View>
 
-        {/* Bottom Controls */}
+        {/* Bottom Controls Overlay */}
         <View style={styles.bottomControls}>
           <TouchableOpacity
             style={[styles.captureButton, !isCameraReady && styles.captureButtonDisabled]}
@@ -125,7 +127,7 @@ export default function CameraScreen({ navigation }: CameraScreenProps) {
             />
           </TouchableOpacity>
         </View>
-      </CameraView>
+      </View>
     </SafeAreaView>
   );
 }
@@ -135,9 +137,12 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: theme.colors.secondary,
   },
+  cameraContainer: {
+    flex: 1,
+    position: 'relative',
+  },
   camera: {
     flex: 1,
-    justifyContent: 'space-between',
   },
   permissionContainer: {
     flex: 1,
@@ -161,10 +166,13 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.xl,
   },
   topControls: {
+    position: 'absolute',
+    top: theme.spacing.md,
+    left: theme.spacing.md,
+    right: theme.spacing.md,
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingTop: theme.spacing.md,
-    paddingHorizontal: theme.spacing.md,
+    zIndex: 1,
   },
   closeButton: {
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
@@ -191,11 +199,14 @@ const styles = StyleSheet.create({
     fontSize: 20,
   },
   bottomControls: {
+    position: 'absolute',
+    bottom: theme.spacing.xl,
+    left: 0,
+    right: 0,
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    paddingBottom: theme.spacing.xl,
-    paddingHorizontal: theme.spacing.md,
+    zIndex: 1,
   },
   captureButton: {
     width: 80,
