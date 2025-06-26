@@ -12,6 +12,7 @@ import ActionButton from '../../components/ui/ActionButton';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
 import { useFriends } from '../../hooks/useFriends';
 import { useNavigationHelpers, FriendsNavigation } from '../../utils/navigation';
+import { formatFriendsSinceDate } from '../../utils/dateTime';
 
 interface FriendsListProps {
   navigation: FriendsNavigation;
@@ -49,7 +50,7 @@ export default function FriendsListScreen({ navigation }: FriendsListProps) {
       <View style={styles.friendInfo}>
         <Text style={styles.username}>{item.friend_profile.username}</Text>
         <Text style={styles.joinDate}>
-          Friends since {new Date(item.created_at).toLocaleDateString()}
+          Friends since {formatFriendsSinceDate(item.created_at)}
         </Text>
       </View>
       <ActionButton

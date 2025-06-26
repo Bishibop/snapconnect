@@ -12,6 +12,8 @@ import EmptyState from '../../components/ui/EmptyState';
 import RefreshableList from '../../components/ui/RefreshableList';
 import { useSnaps } from '../../hooks/useSnaps';
 import { useNavigationHelpers, SentNavigation } from '../../utils/navigation';
+import { formatTimeAgo } from '../../utils/dateTime';
+import { getStatusIcon, getStatusColor, getSnapTypeIcon, getEmptyStateIcon } from '../../utils/status';
 
 interface SentSnapsProps {
   navigation: SentNavigation;
@@ -38,58 +40,7 @@ export default function SentSnapsScreen({ navigation }: SentSnapsProps) {
     navHelpers.navigateToStoryViewer(story);
   };
 
-  const formatTimeAgo = (dateString: string) => {
-    const now = new Date();
-    const snapTime = new Date(dateString);
-    const diffInSeconds = Math.floor((now.getTime() - snapTime.getTime()) / 1000);
 
-    if (diffInSeconds < 60) {
-      return 'now';
-    } else if (diffInSeconds < 3600) {
-      const minutes = Math.floor(diffInSeconds / 60);
-      return `${minutes}m`;
-    } else if (diffInSeconds < 86400) {
-      const hours = Math.floor(diffInSeconds / 3600);
-      return `${hours}h`;
-    } else {
-      const days = Math.floor(diffInSeconds / 86400);
-      return `${days}d`;
-    }
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'sent':
-        return theme.colors.textSecondary;
-      case 'delivered':
-        return theme.colors.primary;
-      case 'opened':
-        return theme.colors.success;
-      case 'expired':
-        return theme.colors.error;
-      default:
-        return theme.colors.textSecondary;
-    }
-  };
-
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'sent':
-        return '📤';
-      case 'delivered':
-        return '📬';
-      case 'opened':
-        return '👁️';
-      case 'expired':
-        return '💨';
-      default:
-        return '📤';
-    }
-  };
-
-  const getSnapTypeIcon = (snapType: string) => {
-    return snapType === 'photo' ? '📸' : '🎥';
-  };
 
   const renderSnapItem = ({ item }: { item: Snap }) => (
     <View style={styles.snapItem}>
@@ -115,7 +66,7 @@ export default function SentSnapsScreen({ navigation }: SentSnapsProps) {
 
   const renderEmptyState = () => (
     <EmptyState
-      icon="📤"
+      icon={getEmptyStateIcon('sent')}
       title="No snaps sent yet!"
       subtitle="When you send snaps to friends, you'll see them here with their status"
     />

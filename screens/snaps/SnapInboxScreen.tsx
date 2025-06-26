@@ -12,6 +12,8 @@ import EmptyState from '../../components/ui/EmptyState';
 import RefreshableList from '../../components/ui/RefreshableList';
 import { useSnaps } from '../../hooks/useSnaps';
 import { useNavigationHelpers, InboxNavigation } from '../../utils/navigation';
+import { formatTimeAgo } from '../../utils/dateTime';
+import { getSnapTypeIcon, getEmptyStateIcon } from '../../utils/status';
 
 interface SnapInboxProps {
   navigation: InboxNavigation;
@@ -42,33 +44,12 @@ export default function SnapInboxScreen({ navigation }: SnapInboxProps) {
     navHelpers.navigateToStoryViewer(story);
   };
 
-  const formatTimeAgo = (dateString: string) => {
-    const now = new Date();
-    const snapTime = new Date(dateString);
-    const diffInSeconds = Math.floor((now.getTime() - snapTime.getTime()) / 1000);
 
-    if (diffInSeconds < 60) {
-      return 'now';
-    } else if (diffInSeconds < 3600) {
-      const minutes = Math.floor(diffInSeconds / 60);
-      return `${minutes}m`;
-    } else if (diffInSeconds < 86400) {
-      const hours = Math.floor(diffInSeconds / 3600);
-      return `${hours}h`;
-    } else {
-      const days = Math.floor(diffInSeconds / 86400);
-      return `${days}d`;
-    }
-  };
-
-  const getSnapStatusIcon = (snapType: string) => {
-    return snapType === 'photo' ? '📸' : '🎥';
-  };
 
   const renderSnapItem = ({ item }: { item: Snap }) => (
     <TouchableOpacity style={styles.snapItem} onPress={() => handleSnapPress(item)}>
       <View style={styles.snapIcon}>
-        <Text style={styles.snapIconText}>{getSnapStatusIcon(item.snap_type)}</Text>
+        <Text style={styles.snapIconText}>{getSnapTypeIcon(item.snap_type)}</Text>
       </View>
 
       <View style={styles.snapContent}>
@@ -85,7 +66,7 @@ export default function SnapInboxScreen({ navigation }: SnapInboxProps) {
 
   const renderEmptyState = () => (
     <EmptyState
-      icon="📥"
+      icon={getEmptyStateIcon('inbox')}
       title="No snaps yet!"
       subtitle="When friends send you snaps, they'll appear here"
     />
