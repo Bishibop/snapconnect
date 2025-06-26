@@ -14,7 +14,7 @@ import { useFriendshipsSubscription } from '../../hooks/useRealtimeSubscription'
 import ActionButton from '../../components/ui/ActionButton';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
 import EmptyState from '../../components/ui/EmptyState';
-import RefreshableList from '../../components/ui/RefreshableList';
+import SimpleList from '../../components/ui/SimpleList';
 
 type TabType = 'received' | 'sent';
 
@@ -175,12 +175,10 @@ export default function FriendRequestsScreen({ navigation }: any) {
         </TouchableOpacity>
       </View>
 
-      <RefreshableList
+      <SimpleList
         data={currentRequests}
         renderItem={activeTab === 'received' ? renderReceivedRequest : renderSentRequest}
         keyExtractor={item => item.id}
-        refreshing={refreshing}
-        onRefresh={loadRequests}
         style={styles.list}
         ListEmptyComponent={() => (
           <EmptyState

@@ -1,15 +1,10 @@
 import React from 'react';
-import { FlatList, RefreshControl, StyleSheet, ViewStyle } from 'react-native';
-import { theme } from '../../constants/theme';
-import LoadingSpinner from './LoadingSpinner';
+import { FlatList, StyleSheet, ViewStyle } from 'react-native';
 
-interface RefreshableListProps<T> {
+interface SimpleListProps<T> {
   data: T[];
   renderItem: ({ item, index }: { item: T; index: number }) => React.ReactElement;
   keyExtractor: (item: T, index: number) => string;
-  loading?: boolean;
-  refreshing?: boolean;
-  onRefresh?: () => void;
   ListEmptyComponent?: React.ComponentType | React.ReactElement | null;
   style?: ViewStyle;
   contentContainerStyle?: ViewStyle;
@@ -21,13 +16,10 @@ interface RefreshableListProps<T> {
   ListFooterComponent?: React.ComponentType | React.ReactElement | null;
 }
 
-export default function RefreshableList<T>({
+export default function SimpleList<T>({
   data,
   renderItem,
   keyExtractor,
-  loading = false,
-  refreshing = false,
-  onRefresh,
   ListEmptyComponent,
   style,
   contentContainerStyle,
@@ -37,11 +29,7 @@ export default function RefreshableList<T>({
   ItemSeparatorComponent,
   ListHeaderComponent,
   ListFooterComponent,
-}: RefreshableListProps<T>) {
-  // Show loading spinner on initial load
-  if (loading && data.length === 0) {
-    return <LoadingSpinner centered />;
-  }
+}: SimpleListProps<T>) {
 
   return (
     <FlatList
@@ -53,15 +41,6 @@ export default function RefreshableList<T>({
       showsVerticalScrollIndicator={showsVerticalScrollIndicator}
       horizontal={horizontal}
       numColumns={numColumns}
-      refreshControl={
-        onRefresh ? (
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            tintColor={theme.colors.primary}
-          />
-        ) : undefined
-      }
       ListEmptyComponent={ListEmptyComponent}
       ItemSeparatorComponent={ItemSeparatorComponent}
       ListHeaderComponent={ListHeaderComponent}

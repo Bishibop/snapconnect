@@ -5,7 +5,6 @@ import { Story } from '../services/stories';
 import { supabase } from '../lib/supabase';
 import StoryCircle from './StoryCircle';
 import YourStoryCircle from './YourStoryCircle';
-import LoadingSpinner from './ui/LoadingSpinner';
 import { useStories } from '../hooks/useStories';
 
 interface StoriesRowProps {
@@ -14,7 +13,7 @@ interface StoriesRowProps {
 }
 
 export default function StoriesRow({ onCreateStory, onViewStory }: StoriesRowProps) {
-  const { friendStories: stories, myStory: userStory, loading } = useStories();
+  const { friendStories: stories, myStory: userStory } = useStories();
   const [username, setUsername] = useState<string>('');
 
   useEffect(() => {
@@ -41,16 +40,6 @@ export default function StoriesRow({ onCreateStory, onViewStory }: StoriesRowPro
       console.error('Error loading user profile:', error);
     }
   };
-
-  if (loading) {
-    return (
-      <View style={styles.container}>
-        <View style={styles.loadingContainer}>
-          <LoadingSpinner size="small" />
-        </View>
-      </View>
-    );
-  }
 
   // Always show stories row for consistency
   if (stories.length === 0 && !userStory) {

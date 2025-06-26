@@ -89,12 +89,12 @@ export async function getStoriesFromFriends(): Promise<Story[]> {
     .eq('is_active', true)
     .gt('expires_at', new Date().toISOString());
 
-  // Add user filter - include user's own stories and friends' stories if any
+  // Add user filter - only include friends' stories, not user's own
   if (friendIds) {
-    query = query.or(`user_id.eq.${user.id},user_id.in.(${friendIds})`);
+    query = query.in('user_id', friendIds.split(','));
   } else {
-    // If no friends, only show user's own stories
-    query = query.eq('user_id', user.id);
+    // If no friends, return empty array (user's own story is handled separately)
+    return [];
   }
 
   const { data, error } = await query.order('created_at', { ascending: false });

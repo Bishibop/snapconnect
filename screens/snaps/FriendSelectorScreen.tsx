@@ -10,7 +10,7 @@ import { uploadMedia } from '../../services/media';
 import { Filter } from '../../types/filters';
 import { CameraStackParamList } from '../../types';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
-import RefreshableList from '../../components/ui/RefreshableList';
+import SimpleList from '../../components/ui/SimpleList';
 import ActionButton from '../../components/ui/ActionButton';
 
 type FriendSelectorScreenNavigationProp = StackNavigationProp<
@@ -157,7 +157,7 @@ export default function FriendSelectorScreen({ route, navigation }: FriendSelect
 
       {/* Friends List */}
       <View style={styles.content}>
-        <RefreshableList
+        <SimpleList
           data={friends}
           renderItem={renderFriendItem}
           keyExtractor={item => item.id}

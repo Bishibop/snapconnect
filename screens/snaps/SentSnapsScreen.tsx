@@ -1,16 +1,15 @@
-import React, { useCallback } from 'react';
+import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useFocusEffect } from '@react-navigation/native';
 import { theme } from '../../constants/theme';
 import { Snap } from '../../services/snaps';
 import { Story } from '../../services/stories';
 import StoriesRow from '../../components/StoriesRow';
 import TabHeader from '../../components/TabHeader';
-import LoadingSpinner from '../../components/ui/LoadingSpinner';
 import EmptyState from '../../components/ui/EmptyState';
-import RefreshableList from '../../components/ui/RefreshableList';
+import SimpleList from '../../components/ui/SimpleList';
 import { useSnaps } from '../../hooks/useSnaps';
+import { useStories } from '../../hooks/useStories';
 import { useNavigationHelpers, SentNavigation } from '../../utils/navigation';
 import { formatTimeAgo } from '../../utils/dateTime';
 import { getStatusIcon, getStatusColor, getSnapTypeIcon, getEmptyStateIcon } from '../../utils/status';
@@ -20,17 +19,9 @@ interface SentSnapsProps {
 }
 
 export default function SentSnapsScreen({ navigation }: SentSnapsProps) {
-  const { snaps, loading, refreshing, refresh, reload } = useSnaps({ type: 'sent' });
+  const { snaps } = useSnaps({ type: 'sent' });
+  const { refreshing } = useStories();
   const navHelpers = useNavigationHelpers(navigation);
-
-  useFocusEffect(
-    useCallback(() => {
-      // Refresh when screen comes into focus
-      if (!loading) {
-        reload();
-      }
-    }, [loading, reload])
-  );
 
   const handleCreateStory = () => {
     navHelpers.navigateToCamera();
@@ -72,31 +63,18 @@ export default function SentSnapsScreen({ navigation }: SentSnapsProps) {
     />
   );
 
-  if (loading) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <TabHeader title="Sent" />
-        <View style={styles.centerContainer}>
-          <LoadingSpinner size="large" />
-          <Text style={styles.loadingText}>Loading sent snaps...</Text>
-        </View>
-      </SafeAreaView>
-    );
-  }
 
   return (
     <SafeAreaView style={styles.container}>
-      <TabHeader title="Sent" />
+      <TabHeader title="Sent" showLoading={refreshing} />
 
       <StoriesRow onCreateStory={handleCreateStory} onViewStory={handleViewStory} />
 
-      <RefreshableList
+      <SimpleList
         data={snaps}
         renderItem={renderSnapItem}
         keyExtractor={item => item.id}
         style={styles.snapsList}
-        refreshing={refreshing}
-        onRefresh={refresh}
         ListEmptyComponent={renderEmptyState}
       />
     </SafeAreaView>
@@ -107,16 +85,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: theme.colors.background,
-  },
-  centerContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  loadingText: {
-    marginTop: theme.spacing.md,
-    color: theme.colors.textSecondary,
-    fontSize: 16,
   },
   snapsList: {
     flex: 1,

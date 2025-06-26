@@ -4,40 +4,54 @@ import { getStoriesFromFriends, getCurrentUserStory, markStoryViewed, Story } fr
 import { useAuth } from '../contexts/AuthContext';
 import { useRealtimeSubscription } from './useRealtimeSubscription';
 import { supabase } from '../lib/supabase';
+import { cache, CACHE_KEYS, CACHE_DURATIONS } from '../utils/cache';
 
 export function useStories() {
   const { user } = useAuth();
-  const [friendStories, setFriendStories] = useState<Story[]>([]);
-  const [myStory, setMyStory] = useState<Story | null>(null);
-  const [loading, setLoading] = useState(true);
+  
+  // Initialize with cached data synchronously
+  const [friendStories, setFriendStories] = useState<Story[]>(() => {
+    if (!user?.id) return [];
+    return cache.get<Story[]>(CACHE_KEYS.STORIES, user.id, CACHE_DURATIONS.STORIES) || [];
+  });
+  
+  const [myStory, setMyStory] = useState<Story | null>(() => {
+    if (!user?.id) return null;
+    const cached = cache.get<Story | null>(CACHE_KEYS.USER_STORY, user.id, CACHE_DURATIONS.STORIES);
+    return cached !== undefined ? cached : null;
+  });
+  
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const loadStories = useCallback(async () => {
+  const loadStories = useCallback(async (silent = false) => {
     if (!user?.id) return;
 
     try {
       setError(null);
+      if (!silent) setRefreshing(true);
+      
       const [friendStoriesData, myStoryData] = await Promise.all([
         getStoriesFromFriends(),
         getCurrentUserStory(),
       ]);
       setFriendStories(friendStoriesData);
       setMyStory(myStoryData);
+      
+      // Cache the new data
+      cache.set(CACHE_KEYS.STORIES, friendStoriesData, user.id);
+      cache.set(CACHE_KEYS.USER_STORY, myStoryData, user.id);
     } catch (error) {
       console.error('Error loading stories:', error);
       setError('Failed to load stories');
-      Alert.alert('Error', 'Failed to load stories');
+      if (!silent) {
+        Alert.alert('Error', 'Failed to load stories');
+      }
     } finally {
-      setLoading(false);
       setRefreshing(false);
     }
   }, [user?.id]);
 
-  const refresh = useCallback(async () => {
-    setRefreshing(true);
-    await loadStories();
-  }, [loadStories]);
 
   const markViewed = useCallback(async (storyId: string) => {
     if (!user?.id) return;
@@ -45,20 +59,30 @@ export function useStories() {
     try {
       await markStoryViewed(storyId);
       // Update local state to reflect viewed status
-      setFriendStories(prev =>
-        prev.map(story =>
-          story.id === storyId ? { ...story, is_viewed: true } : story
-        )
+      const updatedStories = friendStories.map(story =>
+        story.id === storyId ? { ...story, is_viewed: true } : story
       );
+      setFriendStories(updatedStories);
+      
+      // Update cache
+      cache.set(CACHE_KEYS.STORIES, updatedStories, user.id);
     } catch (error) {
       console.error('Error marking story as viewed:', error);
     }
-  }, [user?.id]);
+  }, [user?.id, friendStories]);
 
-  // Initial load
+  // Background fetch for fresh data
   useEffect(() => {
-    loadStories();
-  }, [loadStories]);
+    if (!user?.id) return;
+    
+    // Check if we need fresh data
+    const hasValidStoriesCache = cache.has(CACHE_KEYS.STORIES, user.id, CACHE_DURATIONS.STORIES);
+    const hasValidUserStoryCache = cache.has(CACHE_KEYS.USER_STORY, user.id, CACHE_DURATIONS.STORIES);
+    
+    if (!hasValidStoriesCache || !hasValidUserStoryCache) {
+      loadStories(true); // Silent background fetch
+    }
+  }, [user?.id, loadStories]);
 
   // Real-time subscription for story changes
   useRealtimeSubscription(
@@ -88,31 +112,46 @@ export function useStories() {
           if (storyWithProfile) {
             if (storyWithProfile.user_id === user?.id) {
               setMyStory(storyWithProfile);
+              cache.set(CACHE_KEYS.USER_STORY, storyWithProfile, user.id);
             } else {
               setFriendStories(prev => {
                 const exists = prev.some(s => s.id === storyWithProfile.id);
-                if (exists) {
-                  return prev.map(s => s.id === storyWithProfile.id ? storyWithProfile : s);
-                }
-                return [storyWithProfile, ...prev];
+                const updatedStories = exists 
+                  ? prev.map(s => s.id === storyWithProfile.id ? storyWithProfile : s)
+                  : [storyWithProfile, ...prev];
+                
+                // Update cache
+                cache.set(CACHE_KEYS.STORIES, updatedStories, user.id);
+                return updatedStories;
               });
             }
           }
         } else if (eventType === 'DELETE') {
           if (oldStory.user_id === user?.id) {
             setMyStory(null);
+            cache.set(CACHE_KEYS.USER_STORY, null, user.id);
           } else {
-            setFriendStories(prev => prev.filter(s => s.id !== oldStory.id));
+            setFriendStories(prev => {
+              const updatedStories = prev.filter(s => s.id !== oldStory.id);
+              cache.set(CACHE_KEYS.STORIES, updatedStories, user.id);
+              return updatedStories;
+            });
           }
         }
       } else if (payload.table === 'story_views') {
         // Update viewed status when we view a story
         const { story_id } = payload.new;
-        setFriendStories(prev =>
-          prev.map(story =>
+        setFriendStories(prev => {
+          const updatedStories = prev.map(story =>
             story.id === story_id ? { ...story, is_viewed: true } : story
-          )
-        );
+          );
+          
+          // Update cache
+          if (user?.id) {
+            cache.set(CACHE_KEYS.STORIES, updatedStories, user.id);
+          }
+          return updatedStories;
+        });
       }
     },
     {
@@ -124,10 +163,8 @@ export function useStories() {
   return {
     friendStories,
     myStory,
-    loading,
     refreshing,
     error,
-    refresh,
     markViewed,
     reload: loadStories,
   };

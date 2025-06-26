@@ -7,10 +7,10 @@ import { theme } from '../../constants/theme';
 import StoriesRow from '../../components/StoriesRow';
 import TabHeader from '../../components/TabHeader';
 import EmptyState from '../../components/ui/EmptyState';
-import RefreshableList from '../../components/ui/RefreshableList';
+import SimpleList from '../../components/ui/SimpleList';
 import ActionButton from '../../components/ui/ActionButton';
-import LoadingSpinner from '../../components/ui/LoadingSpinner';
 import { useFriends } from '../../hooks/useFriends';
+import { useStories } from '../../hooks/useStories';
 import { useNavigationHelpers, FriendsNavigation } from '../../utils/navigation';
 import { formatFriendsSinceDate } from '../../utils/dateTime';
 
@@ -19,7 +19,8 @@ interface FriendsListProps {
 }
 
 export default function FriendsListScreen({ navigation }: FriendsListProps) {
-  const { friends, loading, refreshing, refresh, remove } = useFriends();
+  const { friends, remove } = useFriends();
+  const { refreshing } = useStories();
   const navHelpers = useNavigationHelpers(navigation);
 
   const handleCreateStory = () => {
@@ -62,19 +63,12 @@ export default function FriendsListScreen({ navigation }: FriendsListProps) {
     </View>
   );
 
-  if (loading) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <LoadingSpinner centered size="large" />
-        <Text style={styles.loadingText}>Loading friends...</Text>
-      </SafeAreaView>
-    );
-  }
 
   return (
     <SafeAreaView style={styles.container}>
       <TabHeader
         title="Friends"
+        showLoading={refreshing}
         rightElement={
           <ActionButton
             title="Add Friends"
@@ -99,12 +93,10 @@ export default function FriendsListScreen({ navigation }: FriendsListProps) {
       {friends.length === 0 ? (
         <EmptyState title="No friends yet" subtitle="Add some friends to start sharing snaps!" />
       ) : (
-        <RefreshableList
+        <SimpleList
           data={friends}
           renderItem={renderFriendItem}
           keyExtractor={item => item.id}
-          refreshing={refreshing}
-          onRefresh={refresh}
           style={styles.list}
         />
       )}
@@ -142,12 +134,6 @@ const styles = StyleSheet.create({
   },
   joinDate: {
     fontSize: 14,
-    color: theme.colors.gray,
-  },
-  loadingText: {
-    textAlign: 'center',
-    marginTop: 50,
-    fontSize: 16,
     color: theme.colors.gray,
   },
 });

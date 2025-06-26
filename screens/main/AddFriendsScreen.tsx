@@ -10,7 +10,7 @@ import ActionButton from '../../components/ui/ActionButton';
 import FormInput from '../../components/ui/FormInput';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
 import EmptyState from '../../components/ui/EmptyState';
-import RefreshableList from '../../components/ui/RefreshableList';
+import SimpleList from '../../components/ui/SimpleList';
 
 export default function AddFriendsScreen({ navigation }: any) {
   const { user } = useAuth();
@@ -147,7 +147,7 @@ export default function AddFriendsScreen({ navigation }: any) {
         />
       )}
 
-      <RefreshableList
+      <SimpleList
         data={searchResults}
         renderItem={renderUserItem}
         keyExtractor={item => item.id}
