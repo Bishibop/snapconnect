@@ -22,7 +22,7 @@ export class AuthErrorBoundary extends Component<Props, State> {
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error('AuthErrorBoundary caught an error:', error, errorInfo);
-    
+
     // Handle specific auth errors
     if (this.isAuthError(error)) {
       this.props.onAuthError?.(error);
@@ -37,15 +37,13 @@ export class AuthErrorBoundary extends Component<Props, State> {
       'Email already registered',
       'Network request failed',
     ];
-    
+
     // Handle case where error.message might be undefined
     if (!error.message) {
       return false;
     }
-    
-    return authErrorMessages.some(msg => 
-      error.message.toLowerCase().includes(msg.toLowerCase())
-    );
+
+    return authErrorMessages.some(msg => error.message.toLowerCase().includes(msg.toLowerCase()));
   };
 
   private handleReset = () => {
@@ -53,26 +51,22 @@ export class AuthErrorBoundary extends Component<Props, State> {
   };
 
   private handleReportIssue = () => {
-    Alert.alert(
-      'Report Issue',
-      'Would you like to report this issue to help us improve the app?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { 
-          text: 'Report', 
-          onPress: () => {
-            // In a real app, you'd send this to your error reporting service
-            Alert.alert('Thanks!', 'Your report has been sent.');
-          }
-        }
-      ]
-    );
+    Alert.alert('Report Issue', 'Would you like to report this issue to help us improve the app?', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Report',
+        onPress: () => {
+          // In a real app, you'd send this to your error reporting service
+          Alert.alert('Thanks!', 'Your report has been sent.');
+        },
+      },
+    ]);
   };
 
   public render() {
     if (this.state.hasError) {
       const isAuthError = this.state.error && this.isAuthError(this.state.error);
-      
+
       return (
         <View style={styles.container}>
           <View style={styles.content}>
@@ -80,10 +74,9 @@ export class AuthErrorBoundary extends Component<Props, State> {
               {isAuthError ? 'Authentication Error' : 'Something went wrong'}
             </Text>
             <Text style={styles.message}>
-              {isAuthError 
+              {isAuthError
                 ? 'There was a problem with authentication. Please check your connection and try again.'
-                : this.state.error?.message || 'An unexpected error occurred'
-              }
+                : this.state.error?.message || 'An unexpected error occurred'}
             </Text>
             <View style={styles.buttonContainer}>
               <TouchableOpacity style={styles.primaryButton} onPress={this.handleReset}>

@@ -1,18 +1,9 @@
-import React, { useState, useRef, useEffect } from 'react';
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  Alert,
-  Dimensions,
-} from 'react-native';
+import React, { useState, useRef } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { CameraView, CameraType, useCameraPermissions } from 'expo-camera';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { theme } from '../../constants/theme';
-
-const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
 export default function CameraScreen({ navigation }: any) {
   const [facing, setFacing] = useState<CameraType>('back');
@@ -27,7 +18,7 @@ export default function CameraScreen({ navigation }: any) {
       // Reset camera state when screen is focused
       setIsCameraReady(false);
       setCameraKey(prev => prev + 1);
-      
+
       // Small delay to ensure camera reinitializes properly
       const timer = setTimeout(() => {
         setIsCameraReady(true);
@@ -64,13 +55,12 @@ export default function CameraScreen({ navigation }: any) {
   const toggleCameraFacing = () => {
     setIsCameraReady(false);
     setFacing(current => (current === 'back' ? 'front' : 'back'));
-    
+
     // Reset camera ready state after facing change
     setTimeout(() => {
       setIsCameraReady(true);
     }, 100);
   };
-
 
   const takePicture = async () => {
     if (!cameraRef.current || !isCameraReady) return;
@@ -111,11 +101,8 @@ export default function CameraScreen({ navigation }: any) {
           >
             <Text style={styles.closeButtonText}>✕</Text>
           </TouchableOpacity>
-          
-          <TouchableOpacity
-            style={styles.flipButton}
-            onPress={toggleCameraFacing}
-          >
+
+          <TouchableOpacity style={styles.flipButton} onPress={toggleCameraFacing}>
             <Text style={styles.flipButtonText}>🔄</Text>
           </TouchableOpacity>
         </View>
@@ -123,17 +110,16 @@ export default function CameraScreen({ navigation }: any) {
         {/* Bottom Controls */}
         <View style={styles.bottomControls}>
           <TouchableOpacity
-            style={[
-              styles.captureButton,
-              !isCameraReady && styles.captureButtonDisabled
-            ]}
+            style={[styles.captureButton, !isCameraReady && styles.captureButtonDisabled]}
             onPress={takePicture}
             disabled={!isCameraReady}
           >
-            <View style={[
-              styles.captureButtonInner,
-              !isCameraReady && styles.captureButtonInnerDisabled
-            ]} />
+            <View
+              style={[
+                styles.captureButtonInner,
+                !isCameraReady && styles.captureButtonInnerDisabled,
+              ]}
+            />
           </TouchableOpacity>
         </View>
       </CameraView>

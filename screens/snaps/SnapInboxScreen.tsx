@@ -53,10 +53,12 @@ export default function SnapInboxScreen({ navigation }: SnapInboxProps) {
   };
 
   const setupRealtimeSubscription = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     if (!user) return;
 
-    const subscription = subscribeToInboxChanges(user.id, (payload) => {
+    const subscription = subscribeToInboxChanges(user.id, _payload => {
       loadSnaps(); // Refresh the list when changes occur
     });
 
@@ -113,23 +115,16 @@ export default function SnapInboxScreen({ navigation }: SnapInboxProps) {
   };
 
   const renderSnapItem = ({ item }: { item: Snap }) => (
-    <TouchableOpacity
-      style={styles.snapItem}
-      onPress={() => handleSnapPress(item)}
-    >
+    <TouchableOpacity style={styles.snapItem} onPress={() => handleSnapPress(item)}>
       <View style={styles.snapIcon}>
         <Text style={styles.snapIconText}>{getSnapStatusIcon(item.snap_type)}</Text>
       </View>
-      
+
       <View style={styles.snapContent}>
-        <Text style={styles.senderName}>
-          {item.sender_profile?.username || 'Unknown'}
-        </Text>
-        <Text style={styles.snapDetails}>
-          Sent a {item.snap_type}
-        </Text>
+        <Text style={styles.senderName}>{item.sender_profile?.username || 'Unknown'}</Text>
+        <Text style={styles.snapDetails}>Sent a {item.snap_type}</Text>
       </View>
-      
+
       <View style={styles.snapMeta}>
         <Text style={styles.timeAgo}>{formatTimeAgo(item.created_at)}</Text>
         <View style={[styles.statusDot, { backgroundColor: theme.colors.primary }]} />
@@ -141,9 +136,7 @@ export default function SnapInboxScreen({ navigation }: SnapInboxProps) {
     <View style={styles.emptyContainer}>
       <Text style={styles.emptyIcon}>📥</Text>
       <Text style={styles.emptyTitle}>No snaps yet!</Text>
-      <Text style={styles.emptySubtext}>
-        When friends send you snaps, they'll appear here
-      </Text>
+      <Text style={styles.emptySubtext}>When friends send you snaps, they&apos;ll appear here</Text>
     </View>
   );
 
@@ -162,16 +155,13 @@ export default function SnapInboxScreen({ navigation }: SnapInboxProps) {
   return (
     <SafeAreaView style={styles.container}>
       <TabHeader title="Inbox" />
-      
-      <StoriesRow
-        onCreateStory={handleCreateStory}
-        onViewStory={handleViewStory}
-      />
-      
+
+      <StoriesRow onCreateStory={handleCreateStory} onViewStory={handleViewStory} />
+
       <FlatList
         data={snaps}
         renderItem={renderSnapItem}
-        keyExtractor={(item) => item.id}
+        keyExtractor={item => item.id}
         style={styles.snapsList}
         contentContainerStyle={snaps.length === 0 ? styles.emptyListContainer : undefined}
         showsVerticalScrollIndicator={false}

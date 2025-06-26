@@ -16,7 +16,7 @@ const generateFileName = (mediaType: 'photo' | 'video'): string => {
 
 // Upload media file to Supabase Storage
 export async function uploadMedia(
-  mediaUri: string, 
+  mediaUri: string,
   mediaType: 'photo' | 'video'
 ): Promise<UploadResult> {
   try {
@@ -38,7 +38,7 @@ export async function uploadMedia(
     const arrayBuffer = Uint8Array.from(atob(base64), c => c.charCodeAt(0));
 
     // Upload to Supabase Storage
-    const { data, error } = await supabase.storage
+    const { error } = await supabase.storage
       .from('media') // Make sure this bucket exists
       .upload(fileName, arrayBuffer, {
         contentType: mediaType === 'photo' ? 'image/jpeg' : 'video/mp4',
@@ -51,15 +51,12 @@ export async function uploadMedia(
     }
 
     // Get the public URL
-    const { data: urlData } = supabase.storage
-      .from('media')
-      .getPublicUrl(fileName);
+    const { data: urlData } = supabase.storage.from('media').getPublicUrl(fileName);
 
     return {
       url: urlData.publicUrl,
       path: fileName,
     };
-
   } catch (error) {
     console.error('Error uploading media:', error);
     throw error;
@@ -69,15 +66,12 @@ export async function uploadMedia(
 // Delete media file from Supabase Storage
 export async function deleteMedia(filePath: string): Promise<void> {
   try {
-    const { error } = await supabase.storage
-      .from('media')
-      .remove([filePath]);
+    const { error } = await supabase.storage.from('media').remove([filePath]);
 
     if (error) {
       console.error('Delete error:', error);
       throw error;
     }
-
   } catch (error) {
     console.error('Error deleting media:', error);
     throw error;

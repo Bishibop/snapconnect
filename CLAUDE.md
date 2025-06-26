@@ -19,6 +19,12 @@ npm start
 npm run android   # Run on Android
 npm run ios       # Run on iOS  
 npm run web       # Run in browser
+
+# Code quality
+npm run lint       # Check for linting issues
+npm run lint:fix   # Fix auto-fixable linting issues
+npm run format     # Format code with Prettier
+npm run typecheck  # Check TypeScript types
 ```
 
 ## Architecture Overview

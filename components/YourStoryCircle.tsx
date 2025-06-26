@@ -10,11 +10,11 @@ interface YourStoryCircleProps {
   onStoryPress?: (story: Story) => void;
 }
 
-export default function YourStoryCircle({ 
-  userStory, 
-  username, 
-  onPress, 
-  onStoryPress 
+export default function YourStoryCircle({
+  userStory,
+  username,
+  onPress,
+  onStoryPress,
 }: YourStoryCircleProps) {
   // Get first 2 letters of username, uppercase
   const getInitials = (username: string): string => {
@@ -33,16 +33,9 @@ export default function YourStoryCircle({
   };
 
   return (
-    <TouchableOpacity
-      style={styles.container}
-      onPress={handlePress}
-      activeOpacity={0.7}
-    >
+    <TouchableOpacity style={styles.container} onPress={handlePress} activeOpacity={0.7}>
       <View style={styles.circleContainer}>
-        <View style={[
-          styles.circle,
-          hasStory ? styles.storyCircle : styles.addCircle
-        ]}>
+        <View style={[styles.circle, hasStory ? styles.storyCircle : styles.addCircle]}>
           {hasStory ? (
             <Text style={styles.initials}>{initials}</Text>
           ) : (

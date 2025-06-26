@@ -27,23 +27,19 @@ export const RootNavigator = () => {
       >
         {session ? (
           <>
-            <Stack.Screen 
-              name="MainTabs" 
+            <Stack.Screen
+              name="MainTabs"
               component={TabNavigator}
               options={{ headerShown: false }}
             />
           </>
         ) : (
           <>
-            <Stack.Screen 
-              name="Login" 
-              component={LoginScreen}
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen 
-              name="Signup" 
+            <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
+            <Stack.Screen
+              name="Signup"
               component={SignupScreen}
-              options={{ 
+              options={{
                 headerShown: true,
                 title: '',
                 headerStyle: {

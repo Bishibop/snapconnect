@@ -3,7 +3,13 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
 import { View, Text, StyleSheet } from 'react-native';
 import { CommonActions } from '@react-navigation/native';
-import { MainTabParamList, FriendsStackParamList, CameraStackParamList, InboxStackParamList, SentStackParamList } from '../types';
+import {
+  MainTabParamList,
+  FriendsStackParamList,
+  CameraStackParamList,
+  InboxStackParamList,
+  SentStackParamList,
+} from '../types';
 import { theme } from '../constants/theme';
 
 // Import existing friends screens
@@ -26,14 +32,6 @@ const FriendsStack = createStackNavigator<FriendsStackParamList>();
 const CameraStack = createStackNavigator<CameraStackParamList>();
 const InboxStack = createStackNavigator<InboxStackParamList>();
 const SentStack = createStackNavigator<SentStackParamList>();
-
-// Placeholder component for inactive tabs
-const ComingSoonScreen = ({ route }: any) => (
-  <View style={styles.comingSoonContainer}>
-    <Text style={styles.comingSoonTitle}>{route.name} Coming Soon</Text>
-    <Text style={styles.comingSoonSubtitle}>This feature will be available in the next update</Text>
-  </View>
-);
 
 // Friends Stack Navigator
 const FriendsStackNavigator = () => (
@@ -91,16 +89,14 @@ export const TabNavigator = () => {
         },
       }}
     >
-      <Tab.Screen 
-        name="Friends" 
+      <Tab.Screen
+        name="Friends"
         component={FriendsStackNavigator}
         options={{
-          tabBarIcon: ({ color, size }) => (
-            <Text style={{ color, fontSize: size }}>👥</Text>
-          ),
+          tabBarIcon: ({ color, size }) => <Text style={{ color, fontSize: size }}>👥</Text>,
         }}
         listeners={({ navigation }) => ({
-          tabPress: (e) => {
+          tabPress: e => {
             e.preventDefault();
             navigation.dispatch(
               CommonActions.reset({
@@ -111,8 +107,8 @@ export const TabNavigator = () => {
           },
         })}
       />
-      <Tab.Screen 
-        name="Camera" 
+      <Tab.Screen
+        name="Camera"
         component={CameraStackNavigator}
         options={{
           tabBarIcon: ({ color, size }) => (
@@ -122,16 +118,14 @@ export const TabNavigator = () => {
           ),
         }}
       />
-      <Tab.Screen 
-        name="Inbox" 
+      <Tab.Screen
+        name="Inbox"
         component={InboxStackNavigator}
         options={{
-          tabBarIcon: ({ color, size }) => (
-            <Text style={{ color, fontSize: size }}>📥</Text>
-          ),
+          tabBarIcon: ({ color, size }) => <Text style={{ color, fontSize: size }}>📥</Text>,
         }}
         listeners={({ navigation }) => ({
-          tabPress: (e) => {
+          tabPress: e => {
             e.preventDefault();
             navigation.dispatch(
               CommonActions.reset({
@@ -142,16 +136,14 @@ export const TabNavigator = () => {
           },
         })}
       />
-      <Tab.Screen 
-        name="Sent" 
+      <Tab.Screen
+        name="Sent"
         component={SentStackNavigator}
         options={{
-          tabBarIcon: ({ color, size }) => (
-            <Text style={{ color, fontSize: size }}>📤</Text>
-          ),
+          tabBarIcon: ({ color, size }) => <Text style={{ color, fontSize: size }}>📤</Text>,
         }}
         listeners={({ navigation }) => ({
-          tabPress: (e) => {
+          tabPress: e => {
             e.preventDefault();
             navigation.dispatch(
               CommonActions.reset({
@@ -167,26 +159,6 @@ export const TabNavigator = () => {
 };
 
 const styles = StyleSheet.create({
-  comingSoonContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: theme.colors.white,
-    paddingHorizontal: theme.spacing.xl,
-  },
-  comingSoonTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: theme.colors.secondary,
-    marginBottom: theme.spacing.md,
-    textAlign: 'center',
-  },
-  comingSoonSubtitle: {
-    fontSize: 16,
-    color: theme.colors.gray,
-    textAlign: 'center',
-    lineHeight: 24,
-  },
   cameraIcon: {
     borderWidth: 2,
     borderRadius: theme.borderRadius.full,

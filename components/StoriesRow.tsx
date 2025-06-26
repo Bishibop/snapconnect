@@ -20,10 +20,10 @@ export default function StoriesRow({ onCreateStory, onViewStory }: StoriesRowPro
   useEffect(() => {
     loadStories();
     loadUserProfile();
-    
+
     // Setup realtime subscription with proper cleanup
     const cleanup = setupRealtimeSubscription();
-    
+
     return cleanup; // This will unsubscribe when component unmounts
   }, []);
 
@@ -33,11 +33,13 @@ export default function StoriesRow({ onCreateStory, onViewStory }: StoriesRowPro
         getStoriesFromFriends(),
         getCurrentUserStory(),
       ]);
-      
+
       // Filter out current user's story from friends list (it's shown separately)
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       const filteredStories = friendStories.filter(story => story.user_id !== user?.id);
-      
+
       setStories(filteredStories);
       setUserStory(currentUserStory);
     } catch (error: any) {
@@ -49,14 +51,16 @@ export default function StoriesRow({ onCreateStory, onViewStory }: StoriesRowPro
 
   const loadUserProfile = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (user) {
         const { data: profile } = await supabase
           .from('profiles')
           .select('username')
           .eq('id', user.id)
           .single();
-        
+
         if (profile) {
           setUsername(profile.username);
         }
@@ -69,7 +73,7 @@ export default function StoriesRow({ onCreateStory, onViewStory }: StoriesRowPro
   const setupRealtimeSubscription = () => {
     // Create a unique channel name to avoid conflicts between multiple StoriesRow instances
     const channelName = `stories-changes-${Math.random().toString(36).substring(2, 9)}`;
-    
+
     const subscription = supabase
       .channel(channelName)
       .on(
@@ -79,7 +83,7 @@ export default function StoriesRow({ onCreateStory, onViewStory }: StoriesRowPro
           schema: 'public',
           table: 'stories',
         },
-        (payload) => {
+        payload => {
           handleStoryChange(payload);
         }
       )
@@ -90,7 +94,7 @@ export default function StoriesRow({ onCreateStory, onViewStory }: StoriesRowPro
           schema: 'public',
           table: 'story_views',
         },
-        (payload) => {
+        payload => {
           handleStoryViewChange(payload);
         }
       )
@@ -103,10 +107,12 @@ export default function StoriesRow({ onCreateStory, onViewStory }: StoriesRowPro
 
   const handleStoryChange = async (payload: any) => {
     const { eventType, new: newStory, old: oldStory } = payload;
-    
+
     if (eventType === 'INSERT') {
       // Add new story to the list
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (newStory.user_id === user?.id) {
         // Update user's story
         setUserStory(newStory);
@@ -119,12 +125,13 @@ export default function StoriesRow({ onCreateStory, onViewStory }: StoriesRowPro
       if (newStory.user_id === userStory?.user_id) {
         setUserStory(newStory.is_active ? newStory : null);
       } else {
-        setStories(prev => 
-          prev.map(story => 
-            story.id === newStory.id 
-              ? { ...newStory, is_viewed: story.is_viewed }
-              : story
-          ).filter(story => story.is_active) // Remove deactivated stories
+        setStories(
+          prev =>
+            prev
+              .map(story =>
+                story.id === newStory.id ? { ...newStory, is_viewed: story.is_viewed } : story
+              )
+              .filter(story => story.is_active) // Remove deactivated stories
         );
       }
     } else if (eventType === 'DELETE') {
@@ -139,16 +146,14 @@ export default function StoriesRow({ onCreateStory, onViewStory }: StoriesRowPro
 
   const handleStoryViewChange = async (payload: any) => {
     const { eventType, new: newView } = payload;
-    const { data: { user } } = await supabase.auth.getUser();
-    
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
     if (eventType === 'INSERT' && newView.viewer_id === user?.id) {
       // Current user viewed a story - mark it as viewed
-      setStories(prev => 
-        prev.map(story => 
-          story.id === newView.story_id 
-            ? { ...story, is_viewed: true }
-            : story
-        )
+      setStories(prev =>
+        prev.map(story => (story.id === newView.story_id ? { ...story, is_viewed: true } : story))
       );
     }
   };
@@ -167,8 +172,8 @@ export default function StoriesRow({ onCreateStory, onViewStory }: StoriesRowPro
   if (stories.length === 0 && !userStory) {
     return (
       <View style={styles.container}>
-        <ScrollView 
-          horizontal 
+        <ScrollView
+          horizontal
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.scrollContent}
         >
@@ -185,8 +190,8 @@ export default function StoriesRow({ onCreateStory, onViewStory }: StoriesRowPro
 
   return (
     <View style={styles.container}>
-      <ScrollView 
-        horizontal 
+      <ScrollView
+        horizontal
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
       >
@@ -197,14 +202,10 @@ export default function StoriesRow({ onCreateStory, onViewStory }: StoriesRowPro
           onPress={onCreateStory}
           onStoryPress={onViewStory}
         />
-        
+
         {/* Friends' stories */}
-        {stories.map((story) => (
-          <StoryCircle
-            key={story.id}
-            story={story}
-            onPress={onViewStory}
-          />
+        {stories.map(story => (
+          <StoryCircle key={story.id} story={story} onPress={onViewStory} />
         ))}
       </ScrollView>
     </View>

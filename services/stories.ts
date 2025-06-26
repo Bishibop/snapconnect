@@ -27,7 +27,9 @@ export interface CreateStoryParams {
 
 // Create a new story (replaces existing active story)
 export async function createStory(params: CreateStoryParams): Promise<Story> {
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user) throw new Error('User not authenticated');
 
   // First, deactivate any existing active story for this user
@@ -48,10 +50,12 @@ export async function createStory(params: CreateStoryParams): Promise<Story> {
       duration: params.duration,
       is_active: true,
     })
-    .select(`
+    .select(
+      `
       *,
       user_profile:profiles!stories_user_id_fkey(*)
-    `)
+    `
+    )
     .single();
 
   if (error) {
@@ -64,20 +68,24 @@ export async function createStory(params: CreateStoryParams): Promise<Story> {
 
 // Get all active stories from friends with view status
 export async function getStoriesFromFriends(): Promise<Story[]> {
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user) throw new Error('User not authenticated');
 
   // Get friend IDs
   const friendIds = await getFriendIds(user.id);
-  
+
   // Build the query based on whether user has friends
   let query = supabase
     .from('stories')
-    .select(`
+    .select(
+      `
       *,
       user_profile:profiles!stories_user_id_fkey(*),
       story_views!story_views_story_id_fkey(viewer_id)
-    `)
+    `
+    )
     .eq('is_active', true)
     .gt('expires_at', new Date().toISOString());
 
@@ -99,7 +107,7 @@ export async function getStoriesFromFriends(): Promise<Story[]> {
   // Add view status to each story
   const storiesWithViewStatus = (data || []).map(story => ({
     ...story,
-    is_viewed: story.story_views?.some((view: any) => view.viewer_id === user.id) || false
+    is_viewed: story.story_views?.some((view: any) => view.viewer_id === user.id) || false,
   }));
 
   return storiesWithViewStatus;
@@ -124,21 +132,26 @@ async function getFriendIds(userId: string): Promise<string | null> {
 
 // Get current user's active story
 export async function getCurrentUserStory(): Promise<Story | null> {
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user) throw new Error('User not authenticated');
 
   const { data, error } = await supabase
     .from('stories')
-    .select(`
+    .select(
+      `
       *,
       user_profile:profiles!stories_user_id_fkey(*)
-    `)
+    `
+    )
     .eq('user_id', user.id)
     .eq('is_active', true)
     .gt('expires_at', new Date().toISOString())
     .single();
 
-  if (error && error.code !== 'PGRST116') { // PGRST116 is "no rows returned"
+  if (error && error.code !== 'PGRST116') {
+    // PGRST116 is "no rows returned"
     console.error('Error fetching user story:', error);
     throw error;
   }
@@ -148,7 +161,9 @@ export async function getCurrentUserStory(): Promise<Story | null> {
 
 // Deactivate a story (soft delete)
 export async function deactivateStory(storyId: string): Promise<void> {
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user) throw new Error('User not authenticated');
 
   const { error } = await supabase
@@ -165,7 +180,9 @@ export async function deactivateStory(storyId: string): Promise<void> {
 
 // Mark a story as viewed
 export async function markStoryViewed(storyId: string): Promise<void> {
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user) throw new Error('User not authenticated');
 
   // Check if already viewed
@@ -178,13 +195,11 @@ export async function markStoryViewed(storyId: string): Promise<void> {
 
   // Only insert if not already viewed
   if (!existingView) {
-    const { error } = await supabase
-      .from('story_views')
-      .insert({
-        story_id: storyId,
-        viewer_id: user.id,
-        viewed_at: new Date().toISOString()
-      });
+    const { error } = await supabase.from('story_views').insert({
+      story_id: storyId,
+      viewer_id: user.id,
+      viewed_at: new Date().toISOString(),
+    });
 
     if (error) {
       console.error('Error marking story as viewed:', error);
@@ -194,9 +209,7 @@ export async function markStoryViewed(storyId: string): Promise<void> {
 }
 
 // Subscribe to stories changes
-export function subscribeToStoriesChanges(
-  callback: (payload: any) => void
-) {
+export function subscribeToStoriesChanges(callback: (payload: any) => void) {
   return supabase
     .channel('stories-changes')
     .on(

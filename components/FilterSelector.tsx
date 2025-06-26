@@ -10,19 +10,19 @@ interface FilterSelectorProps {
   onFilterSelect: (filter: Filter) => void;
 }
 
-export default function FilterSelector({ 
-  imageUri, 
-  selectedFilter, 
-  onFilterSelect 
+export default function FilterSelector({
+  imageUri,
+  selectedFilter,
+  onFilterSelect,
 }: FilterSelectorProps) {
   return (
     <View style={styles.container}>
-      <ScrollView 
-        horizontal 
+      <ScrollView
+        horizontal
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
       >
-        {FILTERS.map((filter) => (
+        {FILTERS.map(filter => (
           <FilterThumbnail
             key={filter.id}
             filter={filter}

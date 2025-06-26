@@ -10,11 +10,11 @@ interface FriendItemProps {
   showRemoveButton?: boolean;
 }
 
-export default function FriendItem({ 
-  friend, 
-  onRemove, 
-  onPress, 
-  showRemoveButton = true 
+export default function FriendItem({
+  friend,
+  onRemove,
+  onPress,
+  showRemoveButton = true,
 }: FriendItemProps) {
   return (
     <TouchableOpacity
@@ -28,12 +28,9 @@ export default function FriendItem({
           Friends since {new Date(friend.created_at).toLocaleDateString()}
         </Text>
       </View>
-      
+
       {showRemoveButton && onRemove && (
-        <TouchableOpacity
-          style={styles.removeButton}
-          onPress={() => onRemove(friend)}
-        >
+        <TouchableOpacity style={styles.removeButton} onPress={() => onRemove(friend)}>
           <Text style={styles.removeButtonText}>Remove</Text>
         </TouchableOpacity>
       )}

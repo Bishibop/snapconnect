@@ -29,13 +29,13 @@ export const SignupScreen = () => {
   };
 
   return (
-    <KeyboardAvoidingView 
+    <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       style={styles.container}
     >
       <View style={styles.content}>
         <Text style={styles.title}>Join SnapConnect</Text>
-        
+
         <View style={styles.form}>
           <TextInput
             style={styles.input}
@@ -45,7 +45,7 @@ export const SignupScreen = () => {
             autoCapitalize="none"
             placeholderTextColor="#666"
           />
-          
+
           <TextInput
             style={styles.input}
             placeholder="Email"
@@ -55,7 +55,7 @@ export const SignupScreen = () => {
             keyboardType="email-address"
             placeholderTextColor="#666"
           />
-          
+
           <TextInput
             style={styles.input}
             placeholder="Password"
@@ -64,26 +64,17 @@ export const SignupScreen = () => {
             secureTextEntry
             placeholderTextColor="#666"
           />
-          
-          <TouchableOpacity 
-            style={styles.button}
-            onPress={handleSignup}
-            disabled={loading}
-          >
+
+          <TouchableOpacity style={styles.button} onPress={handleSignup} disabled={loading}>
             {loading ? (
               <ActivityIndicator color="white" />
             ) : (
               <Text style={styles.buttonText}>Sign Up</Text>
             )}
           </TouchableOpacity>
-          
-          <TouchableOpacity 
-            onPress={() => navigation.goBack()}
-            disabled={loading}
-          >
-            <Text style={styles.linkText}>
-              Already have an account? Login
-            </Text>
+
+          <TouchableOpacity onPress={() => navigation.goBack()} disabled={loading}>
+            <Text style={styles.linkText}>Already have an account? Login</Text>
           </TouchableOpacity>
         </View>
       </View>

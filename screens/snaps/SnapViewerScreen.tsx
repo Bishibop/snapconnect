@@ -1,19 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  Image,
-  Dimensions,
-  Alert,
-} from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { theme } from '../../constants/theme';
 import { markSnapOpened, Snap } from '../../services/snaps';
 import { Story, markStoryViewed } from '../../services/stories';
 import { supabase } from '../../lib/supabase';
-import { Filter, FILTERS } from '../../types/filters';
+import { FILTERS } from '../../types/filters';
 import FilteredImage from '../../components/FilteredImage';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
@@ -32,32 +24,32 @@ export default function SnapViewerScreen({ route, navigation }: SnapViewerProps)
   const { snap, story } = route.params;
   const content = snap || story; // Use snap if available, otherwise story
   const isStory = !!story;
-  
+
   const [timeLeft, setTimeLeft] = useState(5); // 5 seconds for photos
   const [mediaUrl, setMediaUrl] = useState<string>('');
 
   useEffect(() => {
     if (!content) return;
-    
+
     // Mark snap as opened when viewer opens (only for snaps, not stories)
     if (snap) {
       markSnapOpened(snap.id).catch(console.error);
     }
-    
+
     // Mark story as viewed when viewer opens (only for stories, not snaps)
     if (story && !story.is_viewed) {
-      markStoryViewed(story.id).catch(error => {
+      markStoryViewed(story.id).catch(_error => {
         // Silently fail if already viewed or other non-critical error
       });
     }
-    
+
     // Get the public URL for the media
     getMediaUrl();
-    
+
     // Start countdown for photos
     if (content.snap_type === 'photo') {
       const timer = setInterval(() => {
-        setTimeLeft((prev) => {
+        setTimeLeft(prev => {
           if (prev <= 1) {
             clearInterval(timer);
             return 0;
@@ -79,11 +71,9 @@ export default function SnapViewerScreen({ route, navigation }: SnapViewerProps)
 
   const getMediaUrl = () => {
     if (!content) return;
-    
-    const { data } = supabase.storage
-      .from('media')
-      .getPublicUrl(content.media_url);
-    
+
+    const { data } = supabase.storage.from('media').getPublicUrl(content.media_url);
+
     setMediaUrl(data.publicUrl);
   };
 
@@ -113,30 +103,22 @@ export default function SnapViewerScreen({ route, navigation }: SnapViewerProps)
       {/* Sender info */}
       <View style={styles.senderInfo}>
         <Text style={styles.senderName}>
-          {isStory 
-            ? (story as Story)?.user_profile?.username 
-            : (snap as Snap)?.sender_profile?.username
-          }
+          {isStory
+            ? (story as Story)?.user_profile?.username
+            : (snap as Snap)?.sender_profile?.username}
         </Text>
         <Text style={styles.snapType}>
-          {isStory 
-            ? `posted a ${content?.snap_type} story`
-            : `sent a ${content?.snap_type}`
-          }
+          {isStory ? `posted a ${content?.snap_type} story` : `sent a ${content?.snap_type}`}
         </Text>
       </View>
 
       {/* Media content */}
-      <TouchableOpacity 
-        style={styles.mediaContainer}
-        activeOpacity={1}
-        onPress={handleTap}
-      >
+      <TouchableOpacity style={styles.mediaContainer} activeOpacity={1} onPress={handleTap}>
         {mediaUrl ? (
-          <FilteredImage 
+          <FilteredImage
             imageUri={mediaUrl}
             filter={FILTERS.find(f => f.id === content?.filter_type) || FILTERS[0]}
-            style={styles.media} 
+            style={styles.media}
             resizeMode="contain"
           />
         ) : (

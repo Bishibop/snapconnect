@@ -25,7 +25,7 @@ export default function AddFriendsScreen({ navigation }: any) {
 
   const handleSearch = async (query: string) => {
     setSearchQuery(query);
-    
+
     if (!query.trim()) {
       setSearchResults([]);
       return;
@@ -49,14 +49,15 @@ export default function AddFriendsScreen({ navigation }: any) {
 
     const subscription = supabase
       .channel('add-friends-changes')
-      .on('postgres_changes', 
-        { 
-          event: 'INSERT', 
-          schema: 'public', 
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
           table: 'friendships',
-          filter: `requested_by=eq.${user.id}` 
-        }, 
-        (payload) => {
+          filter: `requested_by=eq.${user.id}`,
+        },
+        _payload => {
           // Could show a toast notification here
         }
       )
@@ -69,7 +70,7 @@ export default function AddFriendsScreen({ navigation }: any) {
 
   const handleSendFriendRequest = async (userProfile: Profile) => {
     setSendingRequests(prev => new Set(prev).add(userProfile.id));
-    
+
     try {
       await sendFriendRequest(userProfile.id);
       Alert.alert('Success', `Friend request sent to ${userProfile.username}`);
@@ -89,7 +90,7 @@ export default function AddFriendsScreen({ navigation }: any) {
 
   const renderUserItem = ({ item }: { item: Profile }) => {
     const isSending = sendingRequests.has(item.id);
-    
+
     return (
       <View style={styles.userItem}>
         <View style={styles.userInfo}>
@@ -116,10 +117,7 @@ export default function AddFriendsScreen({ navigation }: any) {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => navigation.goBack()}
-        >
+        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
           <Text style={styles.backButtonText}>← Back</Text>
         </TouchableOpacity>
         <Text style={styles.title}>Add Friends</Text>
@@ -160,7 +158,7 @@ export default function AddFriendsScreen({ navigation }: any) {
       <FlatList
         data={searchResults}
         renderItem={renderUserItem}
-        keyExtractor={(item) => item.id}
+        keyExtractor={item => item.id}
         style={styles.list}
       />
     </SafeAreaView>

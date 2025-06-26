@@ -46,5 +46,5 @@ export const FILTERS: Filter[] = [
     name: 'Contrast',
     brightness: 1.2,
     contrast: 1.5,
-  }
+  },
 ];

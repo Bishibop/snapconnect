@@ -13,7 +13,7 @@ import { theme } from '../../constants/theme';
 import { getFriends, FriendWithProfile } from '../../services/friends';
 import { createSnap } from '../../services/snaps';
 import { uploadMedia } from '../../services/media';
-import { Filter, FILTERS } from '../../types/filters';
+import { Filter } from '../../types/filters';
 
 interface FriendSelectorProps {
   route: {
@@ -57,11 +57,9 @@ export default function FriendSelectorScreen({ route, navigation }: FriendSelect
   };
 
   const toggleFriendSelection = (friendshipId: string) => {
-    setFriends(prev => 
-      prev.map(friend => 
-        friend.id === friendshipId 
-          ? { ...friend, selected: !friend.selected }
-          : friend
+    setFriends(prev =>
+      prev.map(friend =>
+        friend.id === friendshipId ? { ...friend, selected: !friend.selected } : friend
       )
     );
   };
@@ -76,11 +74,11 @@ export default function FriendSelectorScreen({ route, navigation }: FriendSelect
     }
 
     setSending(true);
-    
+
     try {
       // First upload the media
       const uploadResult = await uploadMedia(mediaUri, mediaType);
-      
+
       // Create snaps for each selected friend
       const snapPromises = selectedFriends.map(friend =>
         createSnap({
@@ -90,9 +88,9 @@ export default function FriendSelectorScreen({ route, navigation }: FriendSelect
           filterType: filter?.id || 'original',
         })
       );
-      
+
       await Promise.all(snapPromises);
-      
+
       Alert.alert(
         'Snap Sent!',
         `Successfully sent ${mediaType} to ${selectedCount} friend${selectedCount > 1 ? 's' : ''}`,
@@ -114,10 +112,7 @@ export default function FriendSelectorScreen({ route, navigation }: FriendSelect
   };
 
   const renderFriendItem = ({ item }: { item: SelectableFriend }) => (
-    <TouchableOpacity
-      style={styles.friendItem}
-      onPress={() => toggleFriendSelection(item.id)}
-    >
+    <TouchableOpacity style={styles.friendItem} onPress={() => toggleFriendSelection(item.id)}>
       <View style={styles.friendInfo}>
         <Text style={styles.friendUsername}>{item.friend_profile.username}</Text>
       </View>
@@ -142,10 +137,7 @@ export default function FriendSelectorScreen({ route, navigation }: FriendSelect
     <SafeAreaView style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.cancelButton}
-          onPress={() => navigation.goBack()}
-        >
+        <TouchableOpacity style={styles.cancelButton} onPress={() => navigation.goBack()}>
           <Text style={styles.cancelButtonText}>Cancel</Text>
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Send to...</Text>
@@ -163,7 +155,7 @@ export default function FriendSelectorScreen({ route, navigation }: FriendSelect
           <FlatList
             data={friends}
             renderItem={renderFriendItem}
-            keyExtractor={(item) => item.id}
+            keyExtractor={item => item.id}
             style={styles.friendsList}
             showsVerticalScrollIndicator={false}
           />

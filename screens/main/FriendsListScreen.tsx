@@ -46,25 +46,27 @@ export default function FriendsListScreen({ navigation }: any) {
 
     const subscription = supabase
       .channel('friendships-changes')
-      .on('postgres_changes', 
-        { 
-          event: '*', 
-          schema: 'public', 
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
           table: 'friendships',
-          filter: `user_id=eq.${user.id}` 
-        }, 
-        (payload) => {
+          filter: `user_id=eq.${user.id}`,
+        },
+        _payload => {
           loadFriends(); // Refresh friends list
         }
       )
-      .on('postgres_changes', 
-        { 
-          event: '*', 
-          schema: 'public', 
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
           table: 'friendships',
-          filter: `friend_id=eq.${user.id}` 
-        }, 
-        (payload) => {
+          filter: `friend_id=eq.${user.id}`,
+        },
+        _payload => {
           loadFriends(); // Refresh friends list
         }
       )
@@ -116,10 +118,7 @@ export default function FriendsListScreen({ navigation }: any) {
           Friends since {new Date(item.created_at).toLocaleDateString()}
         </Text>
       </View>
-      <TouchableOpacity
-        style={styles.removeButton}
-        onPress={() => handleRemoveFriend(item)}
-      >
+      <TouchableOpacity style={styles.removeButton} onPress={() => handleRemoveFriend(item)}>
         <Text style={styles.removeButtonText}>Remove</Text>
       </TouchableOpacity>
     </View>
@@ -135,7 +134,7 @@ export default function FriendsListScreen({ navigation }: any) {
 
   return (
     <SafeAreaView style={styles.container}>
-      <TabHeader 
+      <TabHeader
         title="Friends"
         rightElement={
           <TouchableOpacity
@@ -147,10 +146,7 @@ export default function FriendsListScreen({ navigation }: any) {
         }
       />
 
-      <StoriesRow
-        onCreateStory={handleCreateStory}
-        onViewStory={handleViewStory}
-      />
+      <StoriesRow onCreateStory={handleCreateStory} onViewStory={handleViewStory} />
 
       <TouchableOpacity
         style={styles.requestsButton}
@@ -168,10 +164,8 @@ export default function FriendsListScreen({ navigation }: any) {
         <FlatList
           data={friends}
           renderItem={renderFriendItem}
-          keyExtractor={(item) => item.id}
-          refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={loadFriends} />
-          }
+          keyExtractor={item => item.id}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={loadFriends} />}
           style={styles.list}
         />
       )}

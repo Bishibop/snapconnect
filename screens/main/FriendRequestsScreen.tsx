@@ -34,10 +34,7 @@ export default function FriendRequestsScreen({ navigation }: any) {
 
   const loadRequests = async () => {
     try {
-      const [received, sent] = await Promise.all([
-        getPendingRequests(),
-        getSentRequests(),
-      ]);
+      const [received, sent] = await Promise.all([getPendingRequests(), getSentRequests()]);
       setReceivedRequests(received);
       setSentRequests(sent);
     } catch (error) {
@@ -59,25 +56,27 @@ export default function FriendRequestsScreen({ navigation }: any) {
 
     const subscription = supabase
       .channel('friend-requests-changes')
-      .on('postgres_changes', 
-        { 
-          event: '*', 
-          schema: 'public', 
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
           table: 'friendships',
-          filter: `user_id=eq.${user.id}` 
-        }, 
-        (payload) => {
+          filter: `user_id=eq.${user.id}`,
+        },
+        _payload => {
           loadRequests(); // Refresh both lists
         }
       )
-      .on('postgres_changes', 
-        { 
-          event: '*', 
-          schema: 'public', 
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
           table: 'friendships',
-          filter: `friend_id=eq.${user.id}` 
-        }, 
-        (payload) => {
+          filter: `friend_id=eq.${user.id}`,
+        },
+        _payload => {
           loadRequests(); // Refresh both lists
         }
       )
@@ -90,7 +89,7 @@ export default function FriendRequestsScreen({ navigation }: any) {
 
   const handleAcceptRequest = async (request: FriendRequest) => {
     setProcessingRequests(prev => new Set(prev).add(request.id));
-    
+
     try {
       await acceptFriendRequest(request.id);
       setReceivedRequests(prev => prev.filter(r => r.id !== request.id));
@@ -109,7 +108,7 @@ export default function FriendRequestsScreen({ navigation }: any) {
 
   const handleDeclineRequest = async (request: FriendRequest) => {
     setProcessingRequests(prev => new Set(prev).add(request.id));
-    
+
     try {
       await declineFriendRequest(request.id);
       setReceivedRequests(prev => prev.filter(r => r.id !== request.id));
@@ -127,14 +126,12 @@ export default function FriendRequestsScreen({ navigation }: any) {
 
   const renderReceivedRequest = ({ item }: { item: FriendRequest }) => {
     const isProcessing = processingRequests.has(item.id);
-    
+
     return (
       <View style={styles.requestItem}>
         <View style={styles.requestInfo}>
           <Text style={styles.username}>{item.requester_profile.username}</Text>
-          <Text style={styles.requestDate}>
-            {new Date(item.created_at).toLocaleDateString()}
-          </Text>
+          <Text style={styles.requestDate}>{new Date(item.created_at).toLocaleDateString()}</Text>
         </View>
         <View style={styles.requestActions}>
           <TouchableOpacity
@@ -187,10 +184,7 @@ export default function FriendRequestsScreen({ navigation }: any) {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => navigation.goBack()}
-        >
+        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
           <Text style={styles.backButtonText}>← Back</Text>
         </TouchableOpacity>
         <Text style={styles.title}>Friend Requests</Text>
@@ -221,20 +215,17 @@ export default function FriendRequestsScreen({ navigation }: any) {
             {activeTab === 'received' ? 'No friend requests' : 'No pending requests'}
           </Text>
           <Text style={styles.emptySubtext}>
-            {activeTab === 'received' 
+            {activeTab === 'received'
               ? 'Friend requests will appear here'
-              : 'Requests you send will appear here'
-            }
+              : 'Requests you send will appear here'}
           </Text>
         </View>
       ) : (
         <FlatList
           data={currentRequests}
           renderItem={activeTab === 'received' ? renderReceivedRequest : renderSentRequest}
-          keyExtractor={(item) => item.id}
-          refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={loadRequests} />
-          }
+          keyExtractor={item => item.id}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={loadRequests} />}
           style={styles.list}
         />
       )}

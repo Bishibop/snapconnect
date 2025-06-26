@@ -28,13 +28,13 @@ export const LoginScreen = () => {
   };
 
   return (
-    <KeyboardAvoidingView 
+    <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       style={styles.container}
     >
       <View style={styles.content}>
         <Text style={styles.title}>SnapConnect</Text>
-        
+
         <View style={styles.form}>
           <TextInput
             style={styles.input}
@@ -45,7 +45,7 @@ export const LoginScreen = () => {
             keyboardType="email-address"
             placeholderTextColor="#666"
           />
-          
+
           <TextInput
             style={styles.input}
             placeholder="Password"
@@ -54,26 +54,17 @@ export const LoginScreen = () => {
             secureTextEntry
             placeholderTextColor="#666"
           />
-          
-          <TouchableOpacity 
-            style={styles.button}
-            onPress={handleLogin}
-            disabled={loading}
-          >
+
+          <TouchableOpacity style={styles.button} onPress={handleLogin} disabled={loading}>
             {loading ? (
               <ActivityIndicator color="white" />
             ) : (
               <Text style={styles.buttonText}>Login</Text>
             )}
           </TouchableOpacity>
-          
-          <TouchableOpacity 
-            onPress={() => navigation.navigate('Signup')}
-            disabled={loading}
-          >
-            <Text style={styles.linkText}>
-              Don't have an account? Sign up
-            </Text>
+
+          <TouchableOpacity onPress={() => navigation.navigate('Signup')} disabled={loading}>
+            <Text style={styles.linkText}>Don&apos;t have an account? Sign up</Text>
           </TouchableOpacity>
         </View>
       </View>

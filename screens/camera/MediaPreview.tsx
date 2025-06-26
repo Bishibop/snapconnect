@@ -58,18 +58,18 @@ export default function MediaPreview({ route, navigation }: MediaPreviewProps) {
 
   const handleAddToStory = async () => {
     setUploading(true);
-    
+
     try {
       // First upload the media
       const uploadResult = await uploadMedia(mediaUri, mediaType);
-      
+
       // Create the story with filter
       await createStory({
         mediaUrl: uploadResult.path,
         snapType: mediaType,
         filterType: selectedFilter.id,
       });
-      
+
       Alert.alert(
         'Story Posted!',
         'Your story has been posted and is visible to all your friends.',
@@ -94,7 +94,7 @@ export default function MediaPreview({ route, navigation }: MediaPreviewProps) {
     <SafeAreaView style={styles.container}>
       {/* Media Display */}
       <View style={styles.mediaContainer}>
-        <FilteredImage 
+        <FilteredImage
           imageUri={mediaUri}
           filter={selectedFilter}
           style={styles.media}

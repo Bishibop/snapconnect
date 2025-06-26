@@ -1,12 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  FlatList,
-  ActivityIndicator,
-  RefreshControl,
-} from 'react-native';
+import { View, Text, StyleSheet, FlatList, ActivityIndicator, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { theme } from '../../constants/theme';
@@ -52,10 +45,12 @@ export default function SentSnapsScreen({ navigation }: SentSnapsProps) {
   };
 
   const setupRealtimeSubscription = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     if (!user) return;
 
-    const subscription = subscribeToSentSnapsChanges(user.id, (payload) => {
+    const subscription = subscribeToSentSnapsChanges(user.id, _payload => {
       loadSnaps(); // Refresh the list when status updates occur
     });
 
@@ -139,16 +134,14 @@ export default function SentSnapsScreen({ navigation }: SentSnapsProps) {
       <View style={styles.snapIcon}>
         <Text style={styles.snapIconText}>{getSnapTypeIcon(item.snap_type)}</Text>
       </View>
-      
+
       <View style={styles.snapContent}>
-        <Text style={styles.recipientName}>
-          {item.recipient_profile?.username || 'Unknown'}
-        </Text>
+        <Text style={styles.recipientName}>{item.recipient_profile?.username || 'Unknown'}</Text>
         <Text style={styles.snapDetails}>
           {item.snap_type} • {formatTimeAgo(item.created_at)}
         </Text>
       </View>
-      
+
       <View style={styles.snapStatus}>
         <Text style={styles.statusIcon}>{getStatusIcon(item.status)}</Text>
         <Text style={[styles.statusText, { color: getStatusColor(item.status) }]}>
@@ -163,7 +156,7 @@ export default function SentSnapsScreen({ navigation }: SentSnapsProps) {
       <Text style={styles.emptyIcon}>📤</Text>
       <Text style={styles.emptyTitle}>No snaps sent yet!</Text>
       <Text style={styles.emptySubtext}>
-        When you send snaps to friends, you'll see them here with their status
+        When you send snaps to friends, you&apos;ll see them here with their status
       </Text>
     </View>
   );
@@ -183,16 +176,13 @@ export default function SentSnapsScreen({ navigation }: SentSnapsProps) {
   return (
     <SafeAreaView style={styles.container}>
       <TabHeader title="Sent" />
-      
-      <StoriesRow
-        onCreateStory={handleCreateStory}
-        onViewStory={handleViewStory}
-      />
-      
+
+      <StoriesRow onCreateStory={handleCreateStory} onViewStory={handleViewStory} />
+
       <FlatList
         data={snaps}
         renderItem={renderSnapItem}
-        keyExtractor={(item) => item.id}
+        keyExtractor={item => item.id}
         style={styles.snapsList}
         contentContainerStyle={snaps.length === 0 ? styles.emptyListContainer : undefined}
         showsVerticalScrollIndicator={false}

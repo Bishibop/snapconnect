@@ -9,31 +9,23 @@ interface FilteredImageProps {
   resizeMode?: 'cover' | 'contain' | 'stretch' | 'center';
 }
 
-export default function FilteredImage({ 
-  imageUri, 
-  filter, 
+export default function FilteredImage({
+  imageUri,
+  filter,
   style,
-  resizeMode = 'contain'
+  resizeMode = 'contain',
 }: FilteredImageProps) {
   if (filter.id === 'original') {
     // Original - no filter
     return (
-      <Image
-        source={{ uri: imageUri }}
-        style={[styles.image, style]}
-        resizeMode={resizeMode}
-      />
+      <Image source={{ uri: imageUri }} style={[styles.image, style]} resizeMode={resizeMode} />
     );
   }
 
   // Apply filter using overlay technique
   return (
     <View style={[styles.container, style]}>
-      <Image
-        source={{ uri: imageUri }}
-        style={styles.image}
-        resizeMode={resizeMode}
-      />
+      <Image source={{ uri: imageUri }} style={styles.image} resizeMode={resizeMode} />
       {filter.id === 'bw' ? (
         // Black and white filter using multiple overlays
         <>
@@ -42,14 +34,14 @@ export default function FilteredImage({
           <View style={[styles.overlay, { backgroundColor: '#ffffff', opacity: 0.2 }]} />
         </>
       ) : filter.tintColor ? (
-        <View 
+        <View
           style={[
             styles.overlay,
             {
               backgroundColor: filter.tintColor,
               opacity: filter.opacity || 0.3,
-            }
-          ]} 
+            },
+          ]}
         />
       ) : null}
     </View>

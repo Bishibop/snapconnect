@@ -17,16 +17,25 @@ export default function StoryCircle({ story, onPress }: StoryCircleProps) {
   // Generate a consistent color based on username
   const getCircleColor = (username: string): string => {
     const colors = [
-      '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', 
-      '#FECA57', '#FF9FF3', '#54A0FF', '#5F27CD',
-      '#00D2D3', '#FF9F43', '#A55EEA', '#26DE81'
+      '#FF6B6B',
+      '#4ECDC4',
+      '#45B7D1',
+      '#96CEB4',
+      '#FECA57',
+      '#FF9FF3',
+      '#54A0FF',
+      '#5F27CD',
+      '#00D2D3',
+      '#FF9F43',
+      '#A55EEA',
+      '#26DE81',
     ];
-    
+
     let hash = 0;
     for (let i = 0; i < username.length; i++) {
       hash = username.charCodeAt(i) + ((hash << 5) - hash);
     }
-    
+
     const index = Math.abs(hash % colors.length);
     return colors[index];
   };
@@ -38,15 +47,8 @@ export default function StoryCircle({ story, onPress }: StoryCircleProps) {
   const hasUnviewedStory = !story.is_viewed;
 
   return (
-    <TouchableOpacity
-      style={styles.container}
-      onPress={() => onPress(story)}
-      activeOpacity={0.7}
-    >
-      <View style={[
-        styles.circleContainer,
-        hasUnviewedStory && styles.unviewedBorder
-      ]}>
+    <TouchableOpacity style={styles.container} onPress={() => onPress(story)} activeOpacity={0.7}>
+      <View style={[styles.circleContainer, hasUnviewedStory && styles.unviewedBorder]}>
         <View style={[styles.circle, { backgroundColor: circleColor }]}>
           <Text style={styles.initials}>{initials}</Text>
         </View>

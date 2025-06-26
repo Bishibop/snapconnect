@@ -10,32 +10,22 @@ interface FilterThumbnailProps {
   onPress: (filter: Filter) => void;
 }
 
-export default function FilterThumbnail({ 
-  filter, 
-  imageUri, 
-  isSelected, 
-  onPress 
+export default function FilterThumbnail({
+  filter,
+  imageUri,
+  isSelected,
+  onPress,
 }: FilterThumbnailProps) {
   const renderImage = () => {
     if (filter.id === 'original') {
       // Original - no filter
-      return (
-        <Image
-          source={{ uri: imageUri }}
-          style={styles.thumbnailImage}
-          resizeMode="cover"
-        />
-      );
+      return <Image source={{ uri: imageUri }} style={styles.thumbnailImage} resizeMode="cover" />;
     }
 
     // Apply filter using overlay technique
     return (
       <View style={styles.thumbnailImageContainer}>
-        <Image
-          source={{ uri: imageUri }}
-          style={styles.thumbnailImage}
-          resizeMode="cover"
-        />
+        <Image source={{ uri: imageUri }} style={styles.thumbnailImage} resizeMode="cover" />
         {filter.id === 'bw' ? (
           // Black and white filter using multiple overlays
           <>
@@ -44,14 +34,14 @@ export default function FilterThumbnail({
             <View style={[styles.thumbnailOverlay, { backgroundColor: '#ffffff', opacity: 0.2 }]} />
           </>
         ) : filter.tintColor ? (
-          <View 
+          <View
             style={[
               styles.thumbnailOverlay,
               {
                 backgroundColor: filter.tintColor,
                 opacity: filter.opacity || 0.3,
-              }
-            ]} 
+              },
+            ]}
           />
         ) : null}
       </View>
@@ -60,20 +50,12 @@ export default function FilterThumbnail({
 
   return (
     <TouchableOpacity
-      style={[
-        styles.container,
-        isSelected && styles.selectedContainer
-      ]}
+      style={[styles.container, isSelected && styles.selectedContainer]}
       onPress={() => onPress(filter)}
       activeOpacity={0.7}
     >
-      <View style={styles.thumbnailContainer}>
-        {renderImage()}
-      </View>
-      <Text style={[
-        styles.filterName,
-        isSelected && styles.selectedFilterName
-      ]}>
+      <View style={styles.thumbnailContainer}>{renderImage()}</View>
+      <Text style={[styles.filterName, isSelected && styles.selectedFilterName]}>
         {filter.name}
       </Text>
     </TouchableOpacity>

@@ -34,7 +34,9 @@ export interface CreateSnapParams {
 
 // Create a new snap
 export async function createSnap(params: CreateSnapParams): Promise<Snap> {
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user) throw new Error('User not authenticated');
 
   const { data, error } = await supabase
@@ -48,11 +50,13 @@ export async function createSnap(params: CreateSnapParams): Promise<Snap> {
       duration: params.duration,
       status: 'sent',
     })
-    .select(`
+    .select(
+      `
       *,
       sender_profile:profiles!snaps_sender_id_fkey(*),
       recipient_profile:profiles!snaps_recipient_id_fkey(*)
-    `)
+    `
+    )
     .single();
 
   if (error) {
@@ -65,15 +69,19 @@ export async function createSnap(params: CreateSnapParams): Promise<Snap> {
 
 // Get inbox snaps (received by current user)
 export async function getInboxSnaps(): Promise<Snap[]> {
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user) throw new Error('User not authenticated');
 
   const { data, error } = await supabase
     .from('snaps')
-    .select(`
+    .select(
+      `
       *,
       sender_profile:profiles!snaps_sender_id_fkey(*)
-    `)
+    `
+    )
     .eq('recipient_id', user.id)
     .in('status', ['sent', 'delivered'])
     .order('created_at', { ascending: false });
@@ -88,15 +96,19 @@ export async function getInboxSnaps(): Promise<Snap[]> {
 
 // Get sent snaps (sent by current user)
 export async function getSentSnaps(): Promise<Snap[]> {
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user) throw new Error('User not authenticated');
 
   const { data, error } = await supabase
     .from('snaps')
-    .select(`
+    .select(
+      `
       *,
       recipient_profile:profiles!snaps_recipient_id_fkey(*)
-    `)
+    `
+    )
     .eq('sender_id', user.id)
     .order('created_at', { ascending: false });
 
@@ -110,7 +122,9 @@ export async function getSentSnaps(): Promise<Snap[]> {
 
 // Mark a snap as opened
 export async function markSnapOpened(snapId: string): Promise<void> {
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user) throw new Error('User not authenticated');
 
   const { error } = await supabase
@@ -129,10 +143,7 @@ export async function markSnapOpened(snapId: string): Promise<void> {
 }
 
 // Subscribe to inbox changes
-export function subscribeToInboxChanges(
-  userId: string,
-  callback: (payload: any) => void
-) {
+export function subscribeToInboxChanges(userId: string, callback: (payload: any) => void) {
   return supabase
     .channel('inbox-changes')
     .on(
@@ -149,10 +160,7 @@ export function subscribeToInboxChanges(
 }
 
 // Subscribe to sent snaps changes (for status updates)
-export function subscribeToSentSnapsChanges(
-  userId: string,
-  callback: (payload: any) => void
-) {
+export function subscribeToSentSnapsChanges(userId: string, callback: (payload: any) => void) {
   return supabase
     .channel('sent-snaps-changes')
     .on(
