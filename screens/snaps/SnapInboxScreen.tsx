@@ -10,15 +10,24 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { CompositeNavigationProp } from '@react-navigation/native';
+import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { theme } from '../../constants/theme';
 import { getInboxSnaps, subscribeToInboxChanges, Snap } from '../../services/snaps';
 import { Story } from '../../services/stories';
 import { supabase } from '../../lib/supabase';
 import StoriesRow from '../../components/StoriesRow';
 import TabHeader from '../../components/TabHeader';
+import { InboxStackParamList, MainTabParamList } from '../../types';
+
+type SnapInboxScreenNavigationProp = CompositeNavigationProp<
+  StackNavigationProp<InboxStackParamList, 'SnapInbox'>,
+  BottomTabNavigationProp<MainTabParamList>
+>;
 
 interface SnapInboxProps {
-  navigation: any;
+  navigation: SnapInboxScreenNavigationProp;
 }
 
 export default function SnapInboxScreen({ navigation }: SnapInboxProps) {
@@ -44,7 +53,7 @@ export default function SnapInboxScreen({ navigation }: SnapInboxProps) {
     try {
       const snapsList = await getInboxSnaps();
       setSnaps(snapsList);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error loading snaps:', error);
     } finally {
       setLoading(false);
@@ -81,7 +90,7 @@ export default function SnapInboxScreen({ navigation }: SnapInboxProps) {
 
   const handleCreateStory = () => {
     // Navigate to camera to create a story
-    navigation.navigate('Camera', { screen: 'CameraScreen' });
+    navigation.navigate('Camera');
   };
 
   const handleViewStory = (story: Story) => {

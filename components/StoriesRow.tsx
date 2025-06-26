@@ -42,7 +42,7 @@ export default function StoriesRow({ onCreateStory, onViewStory }: StoriesRowPro
 
       setStories(filteredStories);
       setUserStory(currentUserStory);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error loading stories:', error);
     } finally {
       setLoading(false);
@@ -65,7 +65,7 @@ export default function StoriesRow({ onCreateStory, onViewStory }: StoriesRowPro
           setUsername(profile.username);
         }
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error loading user profile:', error);
     }
   };

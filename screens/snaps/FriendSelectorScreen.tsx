@@ -9,21 +9,27 @@ import {
   Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { RouteProp } from '@react-navigation/native';
 import { theme } from '../../constants/theme';
 import { getFriends, FriendWithProfile } from '../../services/friends';
 import { createSnap } from '../../services/snaps';
 import { uploadMedia } from '../../services/media';
 import { Filter } from '../../types/filters';
+import { CameraStackParamList } from '../../types';
+
+type FriendSelectorScreenNavigationProp = StackNavigationProp<CameraStackParamList, 'FriendSelector'>;
+type FriendSelectorScreenRouteProp = RouteProp<CameraStackParamList, 'FriendSelector'>;
 
 interface FriendSelectorProps {
-  route: {
+  route: FriendSelectorScreenRouteProp & {
     params: {
       mediaUri: string;
       mediaType: 'photo' | 'video';
       filter?: Filter;
     };
   };
-  navigation: any;
+  navigation: FriendSelectorScreenNavigationProp;
 }
 
 interface SelectableFriend extends FriendWithProfile {
@@ -48,7 +54,7 @@ export default function FriendSelectorScreen({ route, navigation }: FriendSelect
         selected: false,
       }));
       setFriends(selectableFriends);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error loading friends:', error);
       Alert.alert('Error', 'Failed to load friends list');
     } finally {
@@ -103,9 +109,9 @@ export default function FriendSelectorScreen({ route, navigation }: FriendSelect
           },
         ]
       );
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error sending snap:', error);
-      Alert.alert('Send Failed', error.message || 'Failed to send snap. Please try again.');
+      Alert.alert('Send Failed', (error instanceof Error ? error.message : String(error)) || 'Failed to send snap. Please try again.');
     } finally {
       setSending(false);
     }

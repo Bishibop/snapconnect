@@ -2,15 +2,24 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, StyleSheet, FlatList, ActivityIndicator, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { CompositeNavigationProp } from '@react-navigation/native';
+import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { theme } from '../../constants/theme';
 import { getSentSnaps, subscribeToSentSnapsChanges, Snap } from '../../services/snaps';
 import { Story } from '../../services/stories';
 import { supabase } from '../../lib/supabase';
 import StoriesRow from '../../components/StoriesRow';
 import TabHeader from '../../components/TabHeader';
+import { SentStackParamList, MainTabParamList } from '../../types';
+
+type SentSnapsScreenNavigationProp = CompositeNavigationProp<
+  StackNavigationProp<SentStackParamList, 'SentSnaps'>,
+  BottomTabNavigationProp<MainTabParamList>
+>;
 
 interface SentSnapsProps {
-  navigation: any;
+  navigation: SentSnapsScreenNavigationProp;
 }
 
 export default function SentSnapsScreen({ navigation }: SentSnapsProps) {
@@ -36,7 +45,7 @@ export default function SentSnapsScreen({ navigation }: SentSnapsProps) {
     try {
       const snapsList = await getSentSnaps();
       setSnaps(snapsList);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error loading sent snaps:', error);
     } finally {
       setLoading(false);
@@ -66,7 +75,7 @@ export default function SentSnapsScreen({ navigation }: SentSnapsProps) {
 
   const handleCreateStory = () => {
     // Navigate to camera to create a story
-    navigation.navigate('Camera', { screen: 'CameraScreen' });
+    navigation.navigate('Camera');
   };
 
   const handleViewStory = (story: Story) => {

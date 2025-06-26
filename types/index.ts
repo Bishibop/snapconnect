@@ -56,16 +56,82 @@ export type MainTabParamList = {
 export type InboxStackParamList = {
   SnapInbox: undefined;
   SnapViewer: {
-    snap?: any; // Snap type from services
-    story?: any; // Story type from services
+    snap?: {
+      id: string;
+      sender_id: string;
+      recipient_id: string;
+      media_url: string;
+      snap_type: 'photo' | 'video';
+      filter_type?: string;
+      duration?: number;
+      status: 'sent' | 'delivered' | 'opened' | 'expired';
+      created_at: string;
+      delivered_at?: string;
+      opened_at?: string;
+      sender_profile?: {
+        id: string;
+        username: string;
+        avatar_url?: string;
+      };
+    };
+    story?: {
+      id: string;
+      user_id: string;
+      media_url: string;
+      snap_type: 'photo' | 'video';
+      filter_type?: string;
+      duration?: number;
+      is_active: boolean;
+      created_at: string;
+      expires_at: string;
+      user_profile?: {
+        id: string;
+        username: string;
+        avatar_url?: string;
+      };
+      is_viewed?: boolean;
+    };
   };
 };
 
 export type SentStackParamList = {
   SentSnaps: undefined;
   SnapViewer: {
-    snap?: any;
-    story?: any;
+    snap?: {
+      id: string;
+      sender_id: string;
+      recipient_id: string;
+      media_url: string;
+      snap_type: 'photo' | 'video';
+      filter_type?: string;
+      duration?: number;
+      status: 'sent' | 'delivered' | 'opened' | 'expired';
+      created_at: string;
+      delivered_at?: string;
+      opened_at?: string;
+      recipient_profile?: {
+        id: string;
+        username: string;
+        avatar_url?: string;
+      };
+    };
+    story?: {
+      id: string;
+      user_id: string;
+      media_url: string;
+      snap_type: 'photo' | 'video';
+      filter_type?: string;
+      duration?: number;
+      is_active: boolean;
+      created_at: string;
+      expires_at: string;
+      user_profile?: {
+        id: string;
+        username: string;
+        avatar_url?: string;
+      };
+      is_viewed?: boolean;
+    };
   };
 };
 
@@ -74,8 +140,41 @@ export type FriendsStackParamList = {
   AddFriends: undefined;
   FriendRequests: undefined;
   SnapViewer: {
-    snap?: any;
-    story?: any;
+    snap?: {
+      id: string;
+      sender_id: string;
+      recipient_id: string;
+      media_url: string;
+      snap_type: 'photo' | 'video';
+      filter_type?: string;
+      duration?: number;
+      status: 'sent' | 'delivered' | 'opened' | 'expired';
+      created_at: string;
+      delivered_at?: string;
+      opened_at?: string;
+      sender_profile?: {
+        id: string;
+        username: string;
+        avatar_url?: string;
+      };
+    };
+    story?: {
+      id: string;
+      user_id: string;
+      media_url: string;
+      snap_type: 'photo' | 'video';
+      filter_type?: string;
+      duration?: number;
+      is_active: boolean;
+      created_at: string;
+      expires_at: string;
+      user_profile?: {
+        id: string;
+        username: string;
+        avatar_url?: string;
+      };
+      is_viewed?: boolean;
+    };
   };
 };
 
@@ -88,5 +187,15 @@ export type CameraStackParamList = {
   FriendSelector: {
     mediaUri: string;
     mediaType: 'photo' | 'video';
+    filter?: {
+      id: string;
+      name: string;
+      tintColor?: string;
+      opacity?: number;
+      saturation?: number;
+      brightness?: number;
+      contrast?: number;
+      blendMode?: 'multiply' | 'overlay' | 'saturation';
+    };
   };
 };

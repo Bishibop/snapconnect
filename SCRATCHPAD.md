@@ -40,7 +40,6 @@ const subscription = supabase
 
 1. **Friend Removal Real-time**: Complex OR delete queries don't trigger real-time properly
 2. **Empty List Pull-to-refresh**: Only works when list has content
-3. **Migration Cleanup**: Remove `002_friendships.sql` when convenient
 
 ### 🔧 Advanced Patterns Learned
 
@@ -169,8 +168,9 @@ listeners={({ navigation }) => ({
 
 ### 📋 Development TODOs
 
-- **Add linting setup**: Configure ESLint + Prettier for code consistency and quality
-- **Type safety cleanup**: Replace remaining `any` types with proper interfaces
+- **✅ Add linting setup**: Configure ESLint + Prettier for code consistency and quality
+- **✅ Video recording cleanup**: Confirmed CaptureButton.tsx and TestRecording.tsx files don't exist
+- **✅ Type safety cleanup**: Replaced all problematic `any` types with proper TypeScript types
 - **Real-time subscription cleanup**: Fix potential memory leaks in inbox/sent screens
 
 ### 🚀 Ready for Next Feature

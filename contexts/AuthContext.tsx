@@ -58,8 +58,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (error) throw error;
 
       Alert.alert('Success', 'Check your email for verification!');
-    } catch (error: any) {
-      Alert.alert('Error', error.message);
+    } catch (error: unknown) {
+      Alert.alert('Error', error instanceof Error ? error.message : String(error));
     } finally {
       setLoading(false);
     }
@@ -75,8 +75,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
 
       if (error) throw error;
-    } catch (error: any) {
-      Alert.alert('Error', error.message);
+    } catch (error: unknown) {
+      Alert.alert('Error', error instanceof Error ? error.message : String(error));
     } finally {
       setLoading(false);
     }
@@ -87,8 +87,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setLoading(true);
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
-    } catch (error: any) {
-      Alert.alert('Error', error.message);
+    } catch (error: unknown) {
+      Alert.alert('Error', error instanceof Error ? error.message : String(error));
     } finally {
       setLoading(false);
     }

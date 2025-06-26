@@ -1,23 +1,34 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { RouteProp } from '@react-navigation/native';
+import { CompositeNavigationProp } from '@react-navigation/native';
 import { theme } from '../../constants/theme';
 import { markSnapOpened, Snap } from '../../services/snaps';
 import { Story, markStoryViewed } from '../../services/stories';
 import { supabase } from '../../lib/supabase';
 import { FILTERS } from '../../types/filters';
 import FilteredImage from '../../components/FilteredImage';
+import { InboxStackParamList, SentStackParamList, FriendsStackParamList } from '../../types';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
+type SnapViewerNavigationProp = CompositeNavigationProp<
+  StackNavigationProp<InboxStackParamList, 'SnapViewer'>,
+  CompositeNavigationProp<
+    StackNavigationProp<SentStackParamList, 'SnapViewer'>,
+    StackNavigationProp<FriendsStackParamList, 'SnapViewer'>
+  >
+>;
+
+type SnapViewerRouteProp = RouteProp<InboxStackParamList, 'SnapViewer'> | 
+                         RouteProp<SentStackParamList, 'SnapViewer'> |
+                         RouteProp<FriendsStackParamList, 'SnapViewer'>;
+
 interface SnapViewerProps {
-  route: {
-    params: {
-      snap?: Snap;
-      story?: Story;
-    };
-  };
-  navigation: any;
+  route: SnapViewerRouteProp;
+  navigation: SnapViewerNavigationProp;
 }
 
 export default function SnapViewerScreen({ route, navigation }: SnapViewerProps) {

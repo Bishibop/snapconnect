@@ -9,23 +9,24 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { RouteProp } from '@react-navigation/native';
 import { theme } from '../../constants/theme';
 import { createStory } from '../../services/stories';
 import { uploadMedia } from '../../services/media';
 import { Filter, FILTERS } from '../../types/filters';
 import FilteredImage from '../../components/FilteredImage';
 import FilterSelector from '../../components/FilterSelector';
+import { CameraStackParamList } from '../../types';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
+type MediaPreviewScreenNavigationProp = StackNavigationProp<CameraStackParamList, 'MediaPreview'>;
+type MediaPreviewScreenRouteProp = RouteProp<CameraStackParamList, 'MediaPreview'>;
+
 interface MediaPreviewProps {
-  route: {
-    params: {
-      mediaUri: string;
-      mediaType: 'photo' | 'video';
-    };
-  };
-  navigation: any;
+  route: MediaPreviewScreenRouteProp;
+  navigation: MediaPreviewScreenNavigationProp;
 }
 
 export default function MediaPreview({ route, navigation }: MediaPreviewProps) {
@@ -82,9 +83,9 @@ export default function MediaPreview({ route, navigation }: MediaPreviewProps) {
           },
         ]
       );
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error creating story:', error);
-      Alert.alert('Failed to Post', error.message || 'Failed to post story. Please try again.');
+      Alert.alert('Failed to Post', (error instanceof Error ? error.message : String(error)) || 'Failed to post story. Please try again.');
     } finally {
       setUploading(false);
     }

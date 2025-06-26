@@ -76,9 +76,9 @@ export default function AddFriendsScreen({ navigation }: any) {
       Alert.alert('Success', `Friend request sent to ${userProfile.username}`);
       // Remove user from search results to prevent duplicate requests
       setSearchResults(prev => prev.filter(u => u.id !== userProfile.id));
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error sending friend request:', error);
-      Alert.alert('Error', error.message || 'Failed to send friend request');
+      Alert.alert('Error', (error instanceof Error ? error.message : String(error)) || 'Failed to send friend request');
     } finally {
       setSendingRequests(prev => {
         const newSet = new Set(prev);
