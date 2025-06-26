@@ -20,15 +20,11 @@ export async function uploadMedia(
   mediaType: 'photo' | 'video'
 ): Promise<UploadResult> {
   try {
-    console.log('Starting media upload:', mediaUri);
-    
     // Read the file as base64
     const fileInfo = await FileSystem.getInfoAsync(mediaUri);
     if (!fileInfo.exists) {
       throw new Error('File does not exist');
     }
-
-    console.log('File info:', fileInfo);
 
     // Read file as base64
     const base64 = await FileSystem.readAsStringAsync(mediaUri, {
@@ -37,7 +33,6 @@ export async function uploadMedia(
 
     // Generate unique filename
     const fileName = generateFileName(mediaType);
-    console.log('Generated filename:', fileName);
 
     // Convert base64 to blob for upload
     const arrayBuffer = Uint8Array.from(atob(base64), c => c.charCodeAt(0));
@@ -54,8 +49,6 @@ export async function uploadMedia(
       console.error('Upload error:', error);
       throw error;
     }
-
-    console.log('Upload successful:', data);
 
     // Get the public URL
     const { data: urlData } = supabase.storage
@@ -85,7 +78,6 @@ export async function deleteMedia(filePath: string): Promise<void> {
       throw error;
     }
 
-    console.log('Media deleted successfully:', filePath);
   } catch (error) {
     console.error('Error deleting media:', error);
     throw error;

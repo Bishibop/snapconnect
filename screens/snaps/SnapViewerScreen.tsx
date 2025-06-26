@@ -48,7 +48,6 @@ export default function SnapViewerScreen({ route, navigation }: SnapViewerProps)
     if (story && !story.is_viewed) {
       markStoryViewed(story.id).catch(error => {
         // Silently fail if already viewed or other non-critical error
-        console.log('Story view tracking:', error.message);
       });
     }
     

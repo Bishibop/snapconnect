@@ -80,7 +80,6 @@ export default function StoriesRow({ onCreateStory, onViewStory }: StoriesRowPro
           table: 'stories',
         },
         (payload) => {
-          console.log('Stories change:', payload);
           handleStoryChange(payload);
         }
       )
@@ -92,7 +91,6 @@ export default function StoriesRow({ onCreateStory, onViewStory }: StoriesRowPro
           table: 'story_views',
         },
         (payload) => {
-          console.log('Story views change:', payload);
           handleStoryViewChange(payload);
         }
       )

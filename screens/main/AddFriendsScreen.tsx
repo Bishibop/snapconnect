@@ -47,8 +47,6 @@ export default function AddFriendsScreen({ navigation }: any) {
   useEffect(() => {
     if (!user?.id) return;
 
-    console.log('Setting up real-time subscription for friend request confirmations:', user.id);
-
     const subscription = supabase
       .channel('add-friends-changes')
       .on('postgres_changes', 
@@ -59,14 +57,12 @@ export default function AddFriendsScreen({ navigation }: any) {
           filter: `requested_by=eq.${user.id}` 
         }, 
         (payload) => {
-          console.log('Friend request sent confirmed:', payload);
           // Could show a toast notification here
         }
       )
       .subscribe();
 
     return () => {
-      console.log('Cleaning up add friends subscription');
       subscription.unsubscribe();
     };
   }, [user?.id]);

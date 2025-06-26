@@ -57,7 +57,6 @@ export default function SnapInboxScreen({ navigation }: SnapInboxProps) {
     if (!user) return;
 
     const subscription = subscribeToInboxChanges(user.id, (payload) => {
-      console.log('Inbox change:', payload);
       loadSnaps(); // Refresh the list when changes occur
     });
 

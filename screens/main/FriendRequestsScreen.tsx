@@ -57,8 +57,6 @@ export default function FriendRequestsScreen({ navigation }: any) {
   useEffect(() => {
     if (!user?.id) return;
 
-    console.log('Setting up real-time subscription for friend requests:', user.id);
-
     const subscription = supabase
       .channel('friend-requests-changes')
       .on('postgres_changes', 
@@ -69,7 +67,6 @@ export default function FriendRequestsScreen({ navigation }: any) {
           filter: `user_id=eq.${user.id}` 
         }, 
         (payload) => {
-          console.log('Friend request change (sent):', payload);
           loadRequests(); // Refresh both lists
         }
       )
@@ -81,14 +78,12 @@ export default function FriendRequestsScreen({ navigation }: any) {
           filter: `friend_id=eq.${user.id}` 
         }, 
         (payload) => {
-          console.log('Friend request change (received):', payload);
           loadRequests(); // Refresh both lists
         }
       )
       .subscribe();
 
     return () => {
-      console.log('Cleaning up friend requests subscription');
       subscription.unsubscribe();
     };
   }, [user?.id]);

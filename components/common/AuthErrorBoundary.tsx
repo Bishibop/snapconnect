@@ -62,7 +62,6 @@ export class AuthErrorBoundary extends Component<Props, State> {
           text: 'Report', 
           onPress: () => {
             // In a real app, you'd send this to your error reporting service
-            console.log('Error reported:', this.state.error);
             Alert.alert('Thanks!', 'Your report has been sent.');
           }
         }

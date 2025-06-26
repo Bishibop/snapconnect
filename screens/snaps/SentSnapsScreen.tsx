@@ -56,7 +56,6 @@ export default function SentSnapsScreen({ navigation }: SentSnapsProps) {
     if (!user) return;
 
     const subscription = subscribeToSentSnapsChanges(user.id, (payload) => {
-      console.log('Sent snap status change:', payload);
       loadSnaps(); // Refresh the list when status updates occur
     });
 
