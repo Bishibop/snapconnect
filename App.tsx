@@ -3,6 +3,9 @@ import React from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AuthProvider } from './contexts/AuthContext';
+import { RealtimeProvider } from './contexts/RealtimeContext';
+import { StoriesProvider } from './contexts/StoriesContext';
+import { FriendsProvider } from './contexts/FriendsContext';
 import { RootNavigator } from './navigation/RootNavigator';
 import { ErrorBoundary } from './components/common/ErrorBoundary';
 import { AuthErrorBoundary } from './components/common/AuthErrorBoundary';
@@ -26,7 +29,13 @@ export default function App() {
       <SafeAreaProvider>
         <AuthErrorBoundary>
           <AuthProvider>
-            <AppContent />
+            <RealtimeProvider>
+              <StoriesProvider>
+                <FriendsProvider>
+                  <AppContent />
+                </FriendsProvider>
+              </StoriesProvider>
+            </RealtimeProvider>
           </AuthProvider>
         </AuthErrorBoundary>
       </SafeAreaProvider>

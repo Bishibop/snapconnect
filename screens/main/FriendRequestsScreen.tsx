@@ -1,16 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import {
-  getPendingRequests,
-  getSentRequests,
-  acceptFriendRequest,
-  declineFriendRequest,
-  FriendRequest,
-} from '../../services/friends';
+import { FriendRequest } from '../../services/friends';
 import { theme } from '../../constants/theme';
-import { useAuth } from '../../contexts/AuthContext';
-import { useFriendshipsSubscription } from '../../hooks/useRealtimeSubscription';
+import { useFriendsContext } from '../../contexts/FriendsContext';
 import ActionButton from '../../components/ui/ActionButton';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
 import EmptyState from '../../components/ui/EmptyState';
@@ -19,44 +12,27 @@ import RefreshableList from '../../components/ui/RefreshableList';
 type TabType = 'received' | 'sent';
 
 export default function FriendRequestsScreen({ navigation }: any) {
-  const { user } = useAuth();
+  const {
+    receivedRequests,
+    sentRequests,
+    loading,
+    acceptRequest,
+    declineRequest,
+    refreshRequests,
+  } = useFriendsContext();
   const [activeTab, setActiveTab] = useState<TabType>('received');
-  const [receivedRequests, setReceivedRequests] = useState<FriendRequest[]>([]);
-  const [sentRequests, setSentRequests] = useState<FriendRequest[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [_refreshing, _setRefreshing] = useState(false);
   const [processingRequests, setProcessingRequests] = useState<Set<string>>(new Set());
-
-  const loadRequests = async () => {
-    try {
-      const [received, sent] = await Promise.all([getPendingRequests(), getSentRequests()]);
-      setReceivedRequests(received);
-      setSentRequests(sent);
-    } catch (error) {
-      console.error('Error loading requests:', error);
-      Alert.alert('Error', 'Failed to load friend requests');
-    } finally {
-      setLoading(false);
-      _setRefreshing(false);
-    }
-  };
-
-  useEffect(() => {
-    loadRequests();
-  }, []);
-
-  // Real-time subscription for friend request changes
-  useFriendshipsSubscription(user?.id, () => {
-    loadRequests(); // Refresh both lists
-  });
 
   const handleAcceptRequest = async (request: FriendRequest) => {
     setProcessingRequests(prev => new Set(prev).add(request.id));
 
     try {
-      await acceptFriendRequest(request.id);
-      setReceivedRequests(prev => prev.filter(r => r.id !== request.id));
-      Alert.alert('Success', `You are now friends with ${request.requester_profile.username}`);
+      const success = await acceptRequest(request.id);
+      if (success) {
+        Alert.alert('Success', `You are now friends with ${request.requester_profile.username}`);
+      } else {
+        Alert.alert('Error', 'Failed to accept friend request');
+      }
     } catch (error) {
       console.error('Error accepting request:', error);
       Alert.alert('Error', 'Failed to accept friend request');
@@ -73,8 +49,10 @@ export default function FriendRequestsScreen({ navigation }: any) {
     setProcessingRequests(prev => new Set(prev).add(request.id));
 
     try {
-      await declineFriendRequest(request.id);
-      setReceivedRequests(prev => prev.filter(r => r.id !== request.id));
+      const success = await declineRequest(request.id);
+      if (!success) {
+        Alert.alert('Error', 'Failed to decline friend request');
+      }
     } catch (error) {
       console.error('Error declining request:', error);
       Alert.alert('Error', 'Failed to decline friend request');
@@ -180,6 +158,8 @@ export default function FriendRequestsScreen({ navigation }: any) {
         renderItem={activeTab === 'received' ? renderReceivedRequest : renderSentRequest}
         keyExtractor={item => item.id}
         style={styles.list}
+        onRefresh={refreshRequests}
+        refreshing={loading}
         ListEmptyComponent={() => (
           <EmptyState
             icon={activeTab === 'received' ? '👥' : '📤'}

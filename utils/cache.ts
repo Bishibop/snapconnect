@@ -142,6 +142,8 @@ export const cache = new CacheManager();
 // Cache keys for different data types
 export const CACHE_KEYS = {
   FRIENDS: 'friends',
+  FRIEND_REQUESTS_RECEIVED: 'friend_requests_received',
+  FRIEND_REQUESTS_SENT: 'friend_requests_sent',
   STORIES: 'stories',
   USER_STORY: 'user_story',
   INBOX_SNAPS: 'inbox_snaps',

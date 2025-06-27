@@ -1,45 +1,29 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { View, ScrollView, StyleSheet } from 'react-native';
 import { theme } from '../constants/theme';
 import { Story } from '../services/stories';
-import { supabase } from '../lib/supabase';
 import StoryCircle from './StoryCircle';
 import YourStoryCircle from './YourStoryCircle';
 import { useStories } from '../hooks/useStories';
+import { useAuth } from '../contexts/AuthContext';
+import { useProfileUsername } from '../hooks/useProfileUsername';
 
+/**
+ * Props for the StoriesRow component that displays user and friend stories
+ */
 interface StoriesRowProps {
+  /** Callback when user wants to create a new story */
   onCreateStory: () => void;
+  /** Callback when user wants to view an existing story */
   onViewStory: (story: Story) => void;
 }
 
 export default function StoriesRow({ onCreateStory, onViewStory }: StoriesRowProps) {
   const { friendStories: stories, myStory: userStory } = useStories();
-  const [username, setUsername] = useState<string>('');
+  const { user } = useAuth();
 
-  useEffect(() => {
-    loadUserProfile();
-  }, []);
-
-  const loadUserProfile = async () => {
-    try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (user) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('username')
-          .eq('id', user.id)
-          .single();
-
-        if (profile) {
-          setUsername(profile.username);
-        }
-      }
-    } catch (error: unknown) {
-      console.error('Error loading user profile:', error);
-    }
-  };
+  // Use lightweight hook that just gets username without global state management
+  const username = useProfileUsername(user?.id || '');
 
   // Always show stories row for consistency
   if (stories.length === 0 && !userStory) {

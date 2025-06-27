@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from 'react';
-import { supabase } from '../lib/supabase';
+import { useEffect, useRef } from 'react';
+import { useRealtimeContext } from '../contexts/RealtimeContext';
 
 interface SubscriptionConfig {
   table: string;
@@ -9,125 +9,64 @@ interface SubscriptionConfig {
 }
 
 interface UseRealtimeSubscriptionOptions {
-  channelName?: string;
   enabled?: boolean;
   dependencies?: any[];
 }
 
-type SubscriptionStatus = 'disconnected' | 'connecting' | 'connected' | 'error';
-
+/**
+ * Hook for subscribing to realtime events through the centralized RealtimeContext
+ * This replaces the previous implementation that created individual channels
+ */
 export function useRealtimeSubscription(
   configs: SubscriptionConfig | SubscriptionConfig[],
   callback: (payload: any) => void,
   options: UseRealtimeSubscriptionOptions = {}
 ) {
-  const {
-    channelName = `realtime-${Math.random().toString(36).substring(2, 9)}`,
-    enabled = true,
-    dependencies = [],
-  } = options;
+  const { subscribe, unsubscribe, updateSubscription, isConnected } = useRealtimeContext();
+  const { enabled = true, dependencies = [] } = options;
 
-  const subscriptionRef = useRef<any>(null);
+  // Generate stable subscription ID
+  const subscriptionIdRef = useRef(`sub-${Math.random().toString(36).substring(2, 9)}`);
   const callbackRef = useRef(callback);
-  const [status, setStatus] = useState<SubscriptionStatus>('disconnected');
-  const [error, setError] = useState<string | null>(null);
 
   // Update callback ref when it changes
   useEffect(() => {
     callbackRef.current = callback;
   }, [callback]);
 
-  // Safe cleanup function
-  const cleanupSubscription = () => {
-    if (subscriptionRef.current) {
-      try {
-        subscriptionRef.current.unsubscribe();
-      } catch (err) {
-        console.warn('Error unsubscribing from realtime channel:', err);
-      } finally {
-        subscriptionRef.current = null;
-        setStatus('disconnected');
-      }
-    }
-  };
-
+  // Set up subscription
   useEffect(() => {
     if (!enabled) {
-      cleanupSubscription();
+      unsubscribe(subscriptionIdRef.current);
       return;
     }
 
-    setStatus('connecting');
-    setError(null);
+    const configArray = Array.isArray(configs) ? configs : [configs];
 
-    try {
-      // Clean up existing subscription
-      cleanupSubscription();
+    // Use stable callback that forwards to current callback
+    const stableCallback = (payload: any) => {
+      try {
+        callbackRef.current(payload);
+      } catch {
+        // Error in realtime callback
+      }
+    };
 
-      // Create new subscription
-      let channel = supabase.channel(channelName);
+    updateSubscription(subscriptionIdRef.current, configArray, stableCallback, enabled);
 
-      // Handle both single config and array of configs
-      const configArray = Array.isArray(configs) ? configs : [configs];
-
-      configArray.forEach(config => {
-        channel = channel.on(
-          'postgres_changes' as any,
-          {
-            event: config.event || '*',
-            schema: config.schema || 'public',
-            table: config.table,
-            ...(config.filter && { filter: config.filter }),
-          },
-          (payload: any) => {
-            try {
-              callbackRef.current(payload);
-            } catch (err) {
-              console.error('Error in realtime callback:', err);
-              setError('Callback execution failed');
-            }
-          }
-        );
-      });
-
-      // Subscribe with state tracking
-      const subscription = channel.subscribe((status: string) => {
-        if (status === 'SUBSCRIBED') {
-          setStatus('connected');
-          setError(null);
-        } else if (status === 'CHANNEL_ERROR') {
-          setStatus('error');
-          setError('Channel subscription failed');
-        } else if (status === 'TIMED_OUT') {
-          setStatus('error');
-          setError('Subscription timed out');
-        }
-      });
-
-      subscriptionRef.current = subscription;
-
-      // Cleanup function
-      return cleanupSubscription;
-    } catch (err) {
-      console.error('Error setting up realtime subscription:', err);
-      setStatus('error');
-      setError(err instanceof Error ? err.message : 'Subscription setup failed');
-    }
-  }, [channelName, enabled, ...dependencies]);
-
-  // Cleanup on unmount - ensure no memory leaks
-  useEffect(() => {
-    return cleanupSubscription;
-  }, []);
+    return () => {
+      unsubscribe(subscriptionIdRef.current);
+    };
+  }, [enabled, subscribe, unsubscribe, updateSubscription, ...dependencies]);
 
   return {
-    status,
-    error,
-    unsubscribe: cleanupSubscription,
+    status: isConnected ? 'connected' : 'disconnected',
+    error: null,
+    unsubscribe: () => unsubscribe(subscriptionIdRef.current),
   };
 }
 
-// Convenience hooks for common patterns
+// Legacy compatibility hooks (now use centralized context)
 export function useStoriesSubscription(
   callback: (payload: any) => void,
   options: UseRealtimeSubscriptionOptions = {}
@@ -145,10 +84,7 @@ export function useFriendshipsSubscription(
   options: UseRealtimeSubscriptionOptions = {}
 ) {
   const configs = userId
-    ? [
-        { table: 'friendships', filter: `user_id=eq.${userId}` },
-        { table: 'friendships', filter: `friend_id=eq.${userId}` },
-      ]
+    ? [{ table: 'friendships' }] // Simplified - filter in callback if needed
     : [];
 
   return useRealtimeSubscription(configs, callback, {

@@ -8,6 +8,7 @@ import {
   InboxStackParamList,
   SentStackParamList,
   FriendsStackParamList,
+  ProfileStackParamList,
 } from '../types';
 
 // Common navigation prop types
@@ -30,6 +31,11 @@ export type SentNavigation = CompositeNavigationProp<
 
 export type FriendsNavigation = CompositeNavigationProp<
   StackNavigationProp<FriendsStackParamList>,
+  MainTabNavigation
+>;
+
+export type ProfileNavigation = CompositeNavigationProp<
+  StackNavigationProp<ProfileStackParamList>,
   MainTabNavigation
 >;
 
@@ -112,6 +118,26 @@ export class NavigationUtils {
   }
 
   /**
+   * Navigate to Profile tab
+   */
+  static navigateToProfileTab(navigation: MainTabNavigation) {
+    navigation.navigate('Profile');
+  }
+
+  /**
+   * Navigate to a user's profile from friends tab
+   */
+  static navigateToUserProfile(navigation: MainTabNavigation, userId: string) {
+    navigation.navigate(
+      'Profile' as any,
+      {
+        screen: 'ProfileScreen',
+        params: { userId },
+      } as any
+    );
+  }
+
+  /**
    * Navigate back to previous screen
    */
   static goBack(navigation: any) {
@@ -177,6 +203,9 @@ export function useNavigationHelpers(navigation: any) {
       NavigationUtils.navigateToFriendSelector(navigation, params),
     navigateToAddFriends: () => NavigationUtils.navigateToAddFriends(navigation),
     navigateToFriendRequests: () => NavigationUtils.navigateToFriendRequests(navigation),
+    navigateToUserProfile: (userId: string) =>
+      NavigationUtils.navigateToUserProfile(navigation, userId),
+    navigateToProfileTab: () => NavigationUtils.navigateToProfileTab(navigation),
     goBack: () => NavigationUtils.goBack(navigation),
     resetStack: (routeName: string) => NavigationUtils.resetStack(navigation, routeName),
     navigateToFriendsTab: () => NavigationUtils.navigateToFriendsTab(navigation),

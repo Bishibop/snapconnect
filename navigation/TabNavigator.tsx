@@ -9,6 +9,7 @@ import {
   CameraStackParamList,
   InboxStackParamList,
   SentStackParamList,
+  ProfileStackParamList,
 } from '../types';
 import { theme } from '../constants/theme';
 
@@ -27,11 +28,16 @@ import SnapInboxScreen from '../screens/snaps/SnapInboxScreen';
 import SnapViewerScreen from '../screens/snaps/SnapViewerScreen';
 import SentSnapsScreen from '../screens/snaps/SentSnapsScreen';
 
+// Profile screens
+import ProfileScreen from '../screens/Profile/ProfileScreen';
+import EditProfile from '../screens/Profile/EditProfile';
+
 const Tab = createBottomTabNavigator<MainTabParamList>();
 const FriendsStack = createStackNavigator<FriendsStackParamList>();
 const CameraStack = createStackNavigator<CameraStackParamList>();
 const InboxStack = createStackNavigator<InboxStackParamList>();
 const SentStack = createStackNavigator<SentStackParamList>();
+const ProfileStack = createStackNavigator<ProfileStackParamList>();
 
 // Friends Stack Navigator
 const FriendsStackNavigator = () => (
@@ -66,6 +72,14 @@ const SentStackNavigator = () => (
     <SentStack.Screen name="SentSnaps" component={SentSnapsScreen} />
     <SentStack.Screen name="SnapViewer" component={SnapViewerScreen} />
   </SentStack.Navigator>
+);
+
+// Profile Stack Navigator
+const ProfileStackNavigator = () => (
+  <ProfileStack.Navigator screenOptions={{ headerShown: false }}>
+    <ProfileStack.Screen name="ProfileScreen" component={ProfileScreen} />
+    <ProfileStack.Screen name="EditProfile" component={EditProfile} />
+  </ProfileStack.Navigator>
 );
 
 export const TabNavigator = () => {
@@ -149,6 +163,24 @@ export const TabNavigator = () => {
               CommonActions.reset({
                 index: 0,
                 routes: [{ name: 'Sent' }],
+              })
+            );
+          },
+        })}
+      />
+      <Tab.Screen
+        name="Profile"
+        component={ProfileStackNavigator}
+        options={{
+          tabBarIcon: ({ color, size }) => <Text style={{ color, fontSize: size }}>👤</Text>,
+        }}
+        listeners={({ navigation }) => ({
+          tabPress: e => {
+            e.preventDefault();
+            navigation.dispatch(
+              CommonActions.reset({
+                index: 0,
+                routes: [{ name: 'Profile' }],
               })
             );
           },

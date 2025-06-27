@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { searchUsers, sendFriendRequest } from '../../services/friends';
+import { searchUsers } from '../../services/friends';
 import { Profile } from '../../types';
 import { theme } from '../../constants/theme';
-import { useAuth } from '../../contexts/AuthContext';
-import { useRealtimeSubscription } from '../../hooks/useRealtimeSubscription';
+import { useFriendsContext } from '../../contexts/FriendsContext';
 import ActionButton from '../../components/ui/ActionButton';
 import FormInput from '../../components/ui/FormInput';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
@@ -13,7 +12,7 @@ import EmptyState from '../../components/ui/EmptyState';
 import RefreshableList from '../../components/ui/RefreshableList';
 
 export default function AddFriendsScreen({ navigation }: any) {
-  const { user } = useAuth();
+  const { sendRequest } = useFriendsContext();
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(false);
@@ -39,30 +38,18 @@ export default function AddFriendsScreen({ navigation }: any) {
     }
   };
 
-  // Real-time subscription for sent friend requests feedback
-  useRealtimeSubscription(
-    {
-      table: 'friendships',
-      event: 'INSERT',
-      filter: user?.id ? `requested_by=eq.${user.id}` : undefined,
-    },
-    _payload => {
-      // Could show a toast notification here
-    },
-    {
-      enabled: !!user?.id,
-      dependencies: [user?.id],
-    }
-  );
-
   const handleSendFriendRequest = async (userProfile: Profile) => {
     setSendingRequests(prev => new Set(prev).add(userProfile.id));
 
     try {
-      await sendFriendRequest(userProfile.id);
-      Alert.alert('Success', `Friend request sent to ${userProfile.username}`);
-      // Remove user from search results to prevent duplicate requests
-      setSearchResults(prev => prev.filter(u => u.id !== userProfile.id));
+      const success = await sendRequest(userProfile.id);
+      if (success) {
+        Alert.alert('Success', `Friend request sent to ${userProfile.username}`);
+        // Remove user from search results to prevent duplicate requests
+        setSearchResults(prev => prev.filter(u => u.id !== userProfile.id));
+      } else {
+        Alert.alert('Error', 'Failed to send friend request');
+      }
     } catch (error: unknown) {
       console.error('Error sending friend request:', error);
       Alert.alert(

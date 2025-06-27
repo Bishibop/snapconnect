@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, Alert } from 'react-native';
+import { View, Text, StyleSheet, Alert, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { FriendWithProfile } from '../../services/friends';
 import { Story } from '../../services/stories';
@@ -47,7 +47,10 @@ export default function FriendsListScreen({ navigation }: FriendsListProps) {
   };
 
   const renderFriendItem = ({ item }: { item: FriendWithProfile }) => (
-    <View style={styles.friendItem}>
+    <TouchableOpacity
+      style={styles.friendItem}
+      onPress={() => navHelpers.navigateToUserProfile(item.friend_id)}
+    >
       <View style={styles.friendInfo}>
         <Text style={styles.username}>{item.friend_profile.username}</Text>
         <Text style={styles.joinDate}>Friends since {formatFriendsSinceDate(item.created_at)}</Text>
@@ -58,7 +61,7 @@ export default function FriendsListScreen({ navigation }: FriendsListProps) {
         variant="danger"
         size="small"
       />
-    </View>
+    </TouchableOpacity>
   );
 
   return (

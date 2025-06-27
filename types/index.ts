@@ -3,6 +3,7 @@ export interface Profile {
   username: string;
   display_name?: string;
   avatar_url?: string;
+  bio?: string;
   created_at: string;
 }
 
@@ -51,6 +52,7 @@ export type MainTabParamList = {
   Camera: undefined;
   Inbox: undefined;
   Sent: undefined;
+  Profile: undefined;
 };
 
 export type InboxStackParamList = {
@@ -198,4 +200,9 @@ export type CameraStackParamList = {
       blendMode?: 'multiply' | 'overlay' | 'saturation';
     };
   };
+};
+
+export type ProfileStackParamList = {
+  ProfileScreen: { userId?: string };
+  EditProfile: undefined;
 };
