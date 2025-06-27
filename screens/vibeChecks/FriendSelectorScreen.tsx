@@ -5,8 +5,9 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { RouteProp } from '@react-navigation/native';
 import { theme } from '../../constants/theme';
 import { getFriends, FriendWithProfile } from '../../services/friends';
-import { createSnap } from '../../services/snaps';
+import { createVibeCheck } from '../../services/vibeChecks';
 import { uploadMedia } from '../../services/media';
+import { conversationsService } from '../../services/conversations';
 import { Filter } from '../../types/filters';
 import { CameraStackParamList } from '../../types';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
@@ -20,13 +21,7 @@ type FriendSelectorScreenNavigationProp = StackNavigationProp<
 type FriendSelectorScreenRouteProp = RouteProp<CameraStackParamList, 'FriendSelector'>;
 
 interface FriendSelectorProps {
-  route: FriendSelectorScreenRouteProp & {
-    params: {
-      mediaUri: string;
-      mediaType: 'photo' | 'video';
-      filter?: Filter;
-    };
-  };
+  route: FriendSelectorScreenRouteProp;
   navigation: FriendSelectorScreenNavigationProp;
 }
 
@@ -71,48 +66,95 @@ export default function FriendSelectorScreen({ route, navigation }: FriendSelect
   const selectedFriends = friends.filter(friend => friend.selected);
   const selectedCount = selectedFriends.length;
 
-  const handleSendSnap = async () => {
+  const handleSendVibeCheck = async () => {
     if (selectedCount === 0) {
-      Alert.alert('No Friends Selected', 'Please select at least one friend to send the snap to.');
+      Alert.alert('No Friends Selected', 'Please select at least one friend to send to.');
       return;
     }
 
     setSending(true);
 
     try {
-      // First upload the media
-      const uploadResult = await uploadMedia(mediaUri, mediaType);
-
-      // Create snaps for each selected friend
-      const snapPromises = selectedFriends.map(friend =>
-        createSnap({
-          recipientId: friend.friend_id, // Use the friend's profile ID, not the friendship ID
-          mediaUrl: uploadResult.path, // Use the storage path, not the public URL
-          snapType: mediaType,
-          filterType: filter?.id || 'original',
-        })
-      );
-
-      await Promise.all(snapPromises);
-
-      Alert.alert(
-        'Snap Sent!',
-        `Successfully sent ${mediaType} to ${selectedCount} friend${selectedCount > 1 ? 's' : ''}`,
-        [
-          {
-            text: 'OK',
-            onPress: () => {
-              navigation.navigate('CameraScreen');
+      // If sending to one friend, navigate immediately for better UX
+      if (selectedCount === 1) {
+        const friend = selectedFriends[0];
+        
+        // Get or create conversation first
+        const conversation = await conversationsService.getOrCreateConversation(friend.friend_id);
+        
+        // Navigate immediately with pending VibeCheck info
+        navigation.popToTop();
+        navigation.getParent()?.navigate('Conversations', {
+          screen: 'ConversationDetail',
+          params: {
+            conversationId: conversation.id,
+            scrollToBottom: true,
+            pendingVibeCheck: {
+              localUri: mediaUri,
+              mediaType: mediaType,
+              filter: filter,
             },
           },
-        ]
-      );
+        });
+
+        // Upload and send in the background
+        uploadMedia(mediaUri, mediaType)
+          .then(uploadResult => {
+            return createVibeCheck({
+              recipientId: friend.friend_id,
+              mediaUrl: uploadResult.path,
+              vibeCheckType: mediaType,
+              filterType: filter?.id || 'original',
+            });
+          })
+          .then(vibeCheck => {
+            return conversationsService.sendVibeCheckMessage(conversation.id, vibeCheck.id);
+          })
+          .catch(error => {
+            console.error('Error sending VibeCheck:', error);
+            Alert.alert(
+              'Send Failed',
+              'Failed to send VibeCheck. Please try again.'
+            );
+          });
+      } else {
+        // For multiple friends, use the original flow
+        const uploadResult = await uploadMedia(mediaUri, mediaType);
+
+        const conversationPromises = selectedFriends.map(async friend => {
+          const vibeCheck = await createVibeCheck({
+            recipientId: friend.friend_id,
+            mediaUrl: uploadResult.path,
+            vibeCheckType: mediaType,
+            filterType: filter?.id || 'original',
+          });
+
+          const conversation = await conversationsService.getOrCreateConversation(friend.friend_id);
+          return conversationsService.sendVibeCheckMessage(conversation.id, vibeCheck.id);
+        });
+
+        await Promise.all(conversationPromises);
+
+        Alert.alert(
+          'VibeCheck Sent!',
+          `Successfully sent to ${selectedCount} conversations`,
+          [
+            {
+              text: 'OK',
+              onPress: () => {
+                navigation.popToTop();
+                navigation.getParent()?.navigate('Conversations');
+              },
+            },
+          ]
+        );
+      }
     } catch (error: unknown) {
-      console.error('Error sending snap:', error);
+      console.error('Error sending VibeCheck:', error);
       Alert.alert(
         'Send Failed',
         (error instanceof Error ? error.message : String(error)) ||
-          'Failed to send snap. Please try again.'
+          'Failed to send VibeCheck. Please try again.'
       );
     } finally {
       setSending(false);
@@ -151,7 +193,9 @@ export default function FriendSelectorScreen({ route, navigation }: FriendSelect
           variant="secondary"
           size="small"
         />
-        <Text style={styles.headerTitle}>Send to...</Text>
+        <Text style={styles.headerTitle}>
+          Send to...
+        </Text>
         <View style={styles.placeholder} />
       </View>
 
@@ -165,7 +209,9 @@ export default function FriendSelectorScreen({ route, navigation }: FriendSelect
           ListEmptyComponent={() => (
             <View style={styles.centerContainer}>
               <Text style={styles.emptyText}>No friends yet!</Text>
-              <Text style={styles.emptySubtext}>Add some friends to start sending snaps</Text>
+              <Text style={styles.emptySubtext}>
+                Add some friends to start sending VibeChecks
+              </Text>
             </View>
           )}
         />
@@ -175,8 +221,11 @@ export default function FriendSelectorScreen({ route, navigation }: FriendSelect
       {selectedCount > 0 && (
         <View style={styles.sendContainer}>
           <ActionButton
-            title={selectedCount === 1 ? 'Send' : `Send to ${selectedCount} friends`}
-            onPress={handleSendSnap}
+            title={selectedCount === 1 
+              ? 'Send' 
+              : `Send to ${selectedCount} friends`
+            }
+            onPress={handleSendVibeCheck}
             loading={sending}
             disabled={sending}
             variant="primary"

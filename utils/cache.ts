@@ -148,6 +148,8 @@ export const CACHE_KEYS = {
   USER_STORY: 'user_story',
   INBOX_SNAPS: 'inbox_snaps',
   SENT_SNAPS: 'sent_snaps',
+  INBOX_VIBE_CHECKS: 'inbox_vibe_checks',
+  SENT_VIBE_CHECKS: 'sent_vibe_checks',
   USER_PROFILE: 'user_profile',
   CONVERSATIONS: 'conversations',
   CONVERSATION_MESSAGES: 'conversation_messages',
@@ -158,6 +160,7 @@ export const CACHE_DURATIONS = {
   FRIENDS: 10 * 60 * 1000, // 10 minutes
   STORIES: 2 * 60 * 1000, // 2 minutes (stories change frequently)
   SNAPS: 5 * 60 * 1000, // 5 minutes
+  VIBE_CHECKS: 5 * 60 * 1000, // 5 minutes (same as snaps)
   PROFILE: 30 * 60 * 1000, // 30 minutes
   CONVERSATIONS: 2 * 60 * 1000, // 2 minutes (conversations change with new messages)
   MESSAGES: 30 * 1000, // 30 seconds (messages need to be fresh but can cache briefly)

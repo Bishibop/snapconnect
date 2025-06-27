@@ -109,7 +109,7 @@ export default function FriendsListScreen({ navigation }: FriendsListProps) {
       </View>
 
       {friends.length === 0 ? (
-        <EmptyState title="No friends yet" subtitle="Add some friends to start sharing snaps!" />
+        <EmptyState title="No friends yet" subtitle="Add some friends to start sharing VibeChecks!" />
       ) : (
         <RefreshableList
           data={friends}

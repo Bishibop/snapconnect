@@ -1,5 +1,5 @@
 import { supabase } from '../lib/supabase';
-import { Conversation, TextMessage } from '../types';
+import { Conversation, TextMessage, VibeCheckMessage, ConversationMessage } from '../types';
 
 export const conversationsService = {
   async getConversations(): Promise<Conversation[]> {
@@ -90,13 +90,14 @@ export const conversationsService = {
     return data;
   },
 
-  async getMessages(conversationId: string): Promise<TextMessage[]> {
+  async getMessages(conversationId: string): Promise<ConversationMessage[]> {
     const { data, error } = await supabase
       .from('messages')
       .select(
         `
         *,
-        sender:sender_id(id, username, bio)
+        sender:sender_id(id, username, bio),
+        vibe_check:vibe_check_id(*)
       `
       )
       .eq('conversation_id', conversationId)
@@ -116,6 +117,7 @@ export const conversationsService = {
         conversation_id: conversationId,
         sender_id: user.user.id,
         content: content.trim(),
+        message_type: 'text',
       })
       .select(
         `
@@ -126,7 +128,32 @@ export const conversationsService = {
       .single();
 
     if (error) throw error;
-    return data;
+    return { ...data, message_type: 'text' as const };
+  },
+
+  async sendVibeCheckMessage(conversationId: string, vibeCheckId: string): Promise<VibeCheckMessage> {
+    const { data: user } = await supabase.auth.getUser();
+    if (!user.user) throw new Error('User not authenticated');
+
+    const { data, error } = await supabase
+      .from('messages')
+      .insert({
+        conversation_id: conversationId,
+        sender_id: user.user.id,
+        vibe_check_id: vibeCheckId,
+        message_type: 'vibe_check',
+      })
+      .select(
+        `
+        *,
+        sender:sender_id(id, username, bio),
+        vibe_check:vibe_check_id(*)
+      `
+      )
+      .single();
+
+    if (error) throw error;
+    return { ...data, message_type: 'vibe_check' as const };
   },
 
   async markMessagesAsRead(conversationId: string): Promise<void> {
@@ -162,7 +189,7 @@ export const conversationsService = {
     };
   },
 
-  subscribeToMessages(conversationId: string, onNewMessage: (message: TextMessage) => void) {
+  subscribeToMessages(conversationId: string, onNewMessage: (message: ConversationMessage) => void) {
     const subscription = supabase
       .channel(`messages:${conversationId}`)
       .on(
@@ -181,7 +208,8 @@ export const conversationsService = {
               .select(
                 `
                 *,
-                sender:sender_id(id, username, bio)
+                sender:sender_id(id, username, bio),
+                vibe_check:vibe_check_id(*)
               `
               )
               .eq('id', payload.new.id)

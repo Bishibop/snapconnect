@@ -178,7 +178,7 @@ export const TIME_CONSTANTS = {
   DAY: 24 * 60 * 60 * 1000,
   WEEK: 7 * 24 * 60 * 60 * 1000,
 
-  // Snap expiration times
-  SNAP_EXPIRY_DEFAULT: 10, // seconds
+  // VibeCheck expiration times
+  VIBECHECK_EXPIRY_DEFAULT: 10, // seconds
   STORY_EXPIRY_DEFAULT: 24 * 60 * 60, // 24 hours in seconds
 } as const;

@@ -63,13 +63,13 @@ export class NavigationUtils {
   }
 
   /**
-   * Navigate to snap viewer with snap data
+   * Navigate to VibeCheck viewer with VibeCheck data
    */
-  static navigateToSnapViewer(
+  static navigateToVibeCheckViewer(
     navigation: InboxNavigation | SentNavigation | FriendsNavigation,
-    snap: InboxStackParamList['SnapViewer']['snap']
+    vibeCheck: InboxStackParamList['VibeCheckViewer']['vibeCheck']
   ) {
-    (navigation as any).navigate('SnapViewer', { snap });
+    (navigation as any).navigate('VibeCheckViewer', { vibeCheck });
   }
 
   /**
@@ -77,9 +77,9 @@ export class NavigationUtils {
    */
   static navigateToStoryViewer(
     navigation: InboxNavigation | SentNavigation | FriendsNavigation,
-    story: InboxStackParamList['SnapViewer']['story']
+    story: InboxStackParamList['VibeCheckViewer']['story']
   ) {
-    (navigation as any).navigate('SnapViewer', { story });
+    (navigation as any).navigate('VibeCheckViewer', { story });
   }
 
   /**
@@ -180,14 +180,16 @@ export class NavigationUtils {
   }
 }
 
+import { useMemo } from 'react';
+
 // Hook-based navigation utilities for cleaner component usage
 export function useNavigationHelpers(navigation: any) {
-  return {
+  return useMemo(() => ({
     navigateToCamera: () => NavigationUtils.navigateToCamera(navigation),
     navigateToCameraForStory: () => NavigationUtils.navigateToCameraForStory(navigation),
-    navigateToSnapViewer: (snap: InboxStackParamList['SnapViewer']['snap']) =>
-      NavigationUtils.navigateToSnapViewer(navigation, snap),
-    navigateToStoryViewer: (story: InboxStackParamList['SnapViewer']['story']) =>
+    navigateToVibeCheckViewer: (vibeCheck: InboxStackParamList['VibeCheckViewer']['vibeCheck']) =>
+      NavigationUtils.navigateToVibeCheckViewer(navigation, vibeCheck),
+    navigateToStoryViewer: (story: InboxStackParamList['VibeCheckViewer']['story']) =>
       NavigationUtils.navigateToStoryViewer(navigation, story),
     navigateToMediaPreview: (mediaUri: string, mediaType: 'photo' | 'video') =>
       NavigationUtils.navigateToMediaPreview(navigation, mediaUri, mediaType),
@@ -203,7 +205,7 @@ export function useNavigationHelpers(navigation: any) {
     navigateToFriendsTab: () => NavigationUtils.navigateToFriendsTab(navigation),
     navigateToCameraTab: () => NavigationUtils.navigateToCameraTab(navigation),
     navigateToConversationsTab: () => NavigationUtils.navigateToConversationsTab(navigation),
-  };
+  }), [navigation]);
 }
 
 // Common navigation patterns as constants
@@ -212,15 +214,15 @@ export const NAVIGATION_PATTERNS = {
     TAKE_PHOTO: 'take-photo',
     PREVIEW_MEDIA: 'preview-media',
     SELECT_FRIENDS: 'select-friends',
-    SEND_SNAP: 'send-snap',
+    SEND_VIBE_CHECK: 'send-vibe-check',
   },
   STORY_WORKFLOW: {
     CREATE_STORY: 'create-story',
     VIEW_STORY: 'view-story',
   },
-  SNAP_WORKFLOW: {
-    VIEW_SNAP: 'view-snap',
-    SEND_SNAP: 'send-snap',
+  VIBE_CHECK_WORKFLOW: {
+    VIEW_VIBE_CHECK: 'view-vibe-check',
+    SEND_VIBE_CHECK: 'send-vibe-check',
   },
 } as const;
 

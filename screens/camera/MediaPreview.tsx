@@ -40,7 +40,7 @@ export default function MediaPreview({ route, navigation }: MediaPreviewProps) {
     navigation.goBack();
   };
 
-  const handleSendSnap = () => {
+  const handleSend = () => {
     // Navigate to friend selector with media and filter
     navigation.navigate('FriendSelector', {
       mediaUri,
@@ -109,43 +109,49 @@ export default function MediaPreview({ route, navigation }: MediaPreviewProps) {
 
       {/* Controls */}
       <View style={styles.controls}>
-        <TouchableOpacity
-          style={[styles.button, styles.retakeButton]}
-          onPress={handleRetake}
-          disabled={uploading}
-        >
-          <Text style={styles.retakeButtonText}>Retake</Text>
-        </TouchableOpacity>
+        {/* Top row */}
+        <View style={styles.controlsRow}>
+          <TouchableOpacity
+            style={[styles.button, styles.retakeButton]}
+            onPress={handleRetake}
+            disabled={uploading}
+          >
+            <Text style={styles.retakeButtonText}>Retake</Text>
+          </TouchableOpacity>
 
-        <TouchableOpacity
-          style={[styles.button, styles.filterButton, showFilters && styles.filterButtonActive]}
-          onPress={handleToggleFilters}
-          disabled={uploading}
-        >
-          <Text style={[styles.filterButtonText, showFilters && styles.filterButtonTextActive]}>
-            Filters
-          </Text>
-        </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.button, styles.filterButton, showFilters && styles.filterButtonActive]}
+            onPress={handleToggleFilters}
+            disabled={uploading}
+          >
+            <Text style={[styles.filterButtonText, showFilters && styles.filterButtonTextActive]}>
+              Filters
+            </Text>
+          </TouchableOpacity>
 
-        <TouchableOpacity
-          style={[styles.button, styles.storyButton, uploading && styles.buttonDisabled]}
-          onPress={handleAddToStory}
-          disabled={uploading}
-        >
-          {uploading ? (
-            <ActivityIndicator size="small" color={theme.colors.white} />
-          ) : (
-            <Text style={styles.storyButtonText}>Story</Text>
-          )}
-        </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.button, styles.storyButton, uploading && styles.buttonDisabled]}
+            onPress={handleAddToStory}
+            disabled={uploading}
+          >
+            {uploading ? (
+              <ActivityIndicator size="small" color={theme.colors.white} />
+            ) : (
+              <Text style={styles.storyButtonText}>Story</Text>
+            )}
+          </TouchableOpacity>
+        </View>
 
-        <TouchableOpacity
-          style={[styles.button, styles.useButton]}
-          onPress={handleSendSnap}
-          disabled={uploading}
-        >
-          <Text style={styles.useButtonText}>Snap</Text>
-        </TouchableOpacity>
+        {/* Bottom row */}
+        <View style={styles.controlsRow}>
+          <TouchableOpacity
+            style={[styles.button, styles.sendButton]}
+            onPress={handleSend}
+            disabled={uploading}
+          >
+            <Text style={styles.sendButtonText}>VibeCheck</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       {/* Filter Selector */}
@@ -175,12 +181,20 @@ const styles = StyleSheet.create({
     height: screenHeight * 0.7,
   },
   controls: {
+    flexDirection: 'column',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: theme.spacing.lg,
+    paddingHorizontal: theme.spacing.sm,
+    backgroundColor: 'rgba(0, 0, 0, 0.1)',
+    gap: theme.spacing.sm,
+  },
+  controlsRow: {
     flexDirection: 'row',
     justifyContent: 'space-around',
     alignItems: 'center',
-    paddingVertical: theme.spacing.xl,
-    paddingHorizontal: theme.spacing.md,
-    backgroundColor: 'rgba(0, 0, 0, 0.1)',
+    width: '100%',
+    paddingHorizontal: theme.spacing.sm,
   },
   button: {
     paddingHorizontal: theme.spacing.sm,
@@ -226,12 +240,15 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: 'bold',
   },
-  useButton: {
+  sendButton: {
     backgroundColor: theme.colors.primary,
+    flex: 0,
+    paddingHorizontal: theme.spacing.xl,
+    minWidth: 120,
   },
-  useButtonText: {
+  sendButtonText: {
     color: theme.colors.secondary,
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: 'bold',
   },
   buttonDisabled: {

@@ -6,9 +6,13 @@ import { theme } from '../constants/theme';
  */
 
 // Type definitions for better type safety
-export type SnapStatus = 'sent' | 'delivered' | 'opened' | 'expired';
+export type VibeCheckStatus = 'sent' | 'delivered' | 'opened' | 'expired';
 export type FriendshipStatus = 'pending' | 'accepted' | 'blocked';
-export type SnapType = 'photo' | 'video';
+export type VibeCheckType = 'photo' | 'video';
+
+// Backward compatibility type aliases
+export type SnapStatus = VibeCheckStatus;
+export type SnapType = VibeCheckType;
 
 /**
  * Icon constants for consistent usage across the app
@@ -20,7 +24,7 @@ export const ICONS = {
   OPENED: '👁️',
   EXPIRED: '💨',
 
-  // Snap type icons
+  // VibeCheck type icons
   PHOTO: '📸',
   VIDEO: '🎥',
 
@@ -47,11 +51,11 @@ export const ICONS = {
 } as const;
 
 /**
- * Get icon for snap status
- * @param status - The snap status
+ * Get icon for VibeCheck status
+ * @param status - The VibeCheck status
  * @returns Emoji icon for the status
  */
-export function getStatusIcon(status: SnapStatus): string {
+export function getStatusIcon(status: VibeCheckStatus): string {
   switch (status) {
     case 'sent':
       return ICONS.SENT;
@@ -67,11 +71,11 @@ export function getStatusIcon(status: SnapStatus): string {
 }
 
 /**
- * Get color for snap status
- * @param status - The snap status
+ * Get color for VibeCheck status
+ * @param status - The VibeCheck status
  * @returns Theme color for the status
  */
-export function getStatusColor(status: SnapStatus): string {
+export function getStatusColor(status: VibeCheckStatus): string {
   switch (status) {
     case 'sent':
       return theme.colors.textSecondary;
@@ -87,20 +91,23 @@ export function getStatusColor(status: SnapStatus): string {
 }
 
 /**
- * Get icon for snap type
- * @param snapType - The type of snap (photo or video)
- * @returns Emoji icon for the snap type
+ * Get icon for VibeCheck type
+ * @param vibeCheckType - The type of VibeCheck (photo or video)
+ * @returns Emoji icon for the VibeCheck type
  */
-export function getSnapTypeIcon(snapType: SnapType): string {
-  return snapType === 'photo' ? ICONS.PHOTO : ICONS.VIDEO;
+export function getVibeCheckTypeIcon(vibeCheckType: VibeCheckType): string {
+  return vibeCheckType === 'photo' ? ICONS.PHOTO : ICONS.VIDEO;
 }
+
+// Backward compatibility alias
+export const getSnapTypeIcon = getVibeCheckTypeIcon;
 
 /**
  * Get human-readable status text
- * @param status - The snap status
+ * @param status - The VibeCheck status
  * @returns Formatted status text
  */
-export function getStatusText(status: SnapStatus): string {
+export function getStatusText(status: VibeCheckStatus): string {
   switch (status) {
     case 'sent':
       return 'Sent';
@@ -152,22 +159,28 @@ export function getFriendshipStatusText(status: FriendshipStatus): string {
 }
 
 /**
- * Check if a snap status indicates it can be viewed
- * @param status - The snap status
- * @returns True if the snap can be viewed
+ * Check if a VibeCheck status indicates it can be viewed
+ * @param status - The VibeCheck status
+ * @returns True if the VibeCheck can be viewed
  */
-export function isSnapViewable(status: SnapStatus): boolean {
+export function isVibeCheckViewable(status: VibeCheckStatus): boolean {
   return status === 'delivered' || status === 'sent';
 }
 
+// Backward compatibility alias
+export const isSnapViewable = isVibeCheckViewable;
+
 /**
- * Check if a snap status indicates it has been interacted with
- * @param status - The snap status
- * @returns True if the snap has been opened or expired
+ * Check if a VibeCheck status indicates it has been interacted with
+ * @param status - The VibeCheck status
+ * @returns True if the VibeCheck has been opened or expired
  */
-export function isSnapInteracted(status: SnapStatus): boolean {
+export function isVibeCheckInteracted(status: VibeCheckStatus): boolean {
   return status === 'opened' || status === 'expired';
 }
+
+// Backward compatibility alias
+export const isSnapInteracted = isVibeCheckInteracted;
 
 /**
  * Get appropriate emoji for empty states
@@ -195,30 +208,33 @@ export function getEmptyStateIcon(type: 'inbox' | 'sent' | 'friends' | 'stories'
 export class StatusUtils {
   /**
    * Get complete status info for display
-   * @param status - The snap status
+   * @param status - The VibeCheck status
    * @returns Object with icon, color, and text
    */
-  static getStatusInfo(status: SnapStatus) {
+  static getStatusInfo(status: VibeCheckStatus) {
     return {
       icon: getStatusIcon(status),
       color: getStatusColor(status),
       text: getStatusText(status),
-      isViewable: isSnapViewable(status),
-      isInteracted: isSnapInteracted(status),
+      isViewable: isVibeCheckViewable(status),
+      isInteracted: isVibeCheckInteracted(status),
     };
   }
 
   /**
-   * Get complete snap type info for display
-   * @param snapType - The snap type
+   * Get complete VibeCheck type info for display
+   * @param vibeCheckType - The VibeCheck type
    * @returns Object with icon and text
    */
-  static getSnapTypeInfo(snapType: SnapType) {
+  static getVibeCheckTypeInfo(vibeCheckType: VibeCheckType) {
     return {
-      icon: getSnapTypeIcon(snapType),
-      text: snapType.charAt(0).toUpperCase() + snapType.slice(1),
+      icon: getVibeCheckTypeIcon(vibeCheckType),
+      text: vibeCheckType.charAt(0).toUpperCase() + vibeCheckType.slice(1),
     };
   }
+
+  // Backward compatibility alias
+  static getSnapTypeInfo = StatusUtils.getVibeCheckTypeInfo;
 
   /**
    * Get complete friendship status info

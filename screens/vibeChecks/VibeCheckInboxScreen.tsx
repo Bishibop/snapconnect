@@ -2,29 +2,29 @@ import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { theme } from '../../constants/theme';
-import { Snap } from '../../services/snaps';
+import { VibeCheck } from '../../services/vibeChecks';
 import { Story } from '../../services/stories';
 import StoriesRow from '../../components/StoriesRow';
 import TabHeader from '../../components/TabHeader';
 import EmptyState from '../../components/ui/EmptyState';
 import RefreshableList from '../../components/ui/RefreshableList';
-import { useSnaps } from '../../hooks/useSnaps';
+import { useVibeChecks } from '../../hooks/useVibeChecks';
 import { useStories } from '../../hooks/useStories';
 import { useNavigationHelpers, InboxNavigation } from '../../utils/navigation';
 import { formatTimeAgo } from '../../utils/dateTime';
 import { getSnapTypeIcon, getEmptyStateIcon } from '../../utils/status';
 
-interface SnapInboxProps {
+interface VibeCheckInboxProps {
   navigation: InboxNavigation;
 }
 
-export default function SnapInboxScreen({ navigation }: SnapInboxProps) {
-  const { snaps, refreshing: snapsRefreshing, refresh: refreshSnaps } = useSnaps({ type: 'inbox' });
+export default function VibeCheckInboxScreen({ navigation }: VibeCheckInboxProps) {
+  const { vibeChecks, refreshing: vibeChecksRefreshing, refresh: refreshVibeChecks } = useVibeChecks({ type: 'inbox' });
   const { refreshing: storiesRefreshing } = useStories();
   const navHelpers = useNavigationHelpers(navigation);
 
-  const handleSnapPress = (snap: Snap) => {
-    navHelpers.navigateToSnapViewer(snap);
+  const handleVibeCheckPress = (vibeCheck: VibeCheck) => {
+    navHelpers.navigateToVibeCheckViewer(vibeCheck);
   };
 
   const handleCreateStory = () => {
@@ -35,18 +35,18 @@ export default function SnapInboxScreen({ navigation }: SnapInboxProps) {
     navHelpers.navigateToStoryViewer(story);
   };
 
-  const renderSnapItem = ({ item }: { item: Snap }) => (
-    <TouchableOpacity style={styles.snapItem} onPress={() => handleSnapPress(item)}>
-      <View style={styles.snapIcon}>
-        <Text style={styles.snapIconText}>{getSnapTypeIcon(item.snap_type)}</Text>
+  const renderVibeCheckItem = ({ item }: { item: VibeCheck }) => (
+    <TouchableOpacity style={styles.vibeCheckItem} onPress={() => handleVibeCheckPress(item)}>
+      <View style={styles.vibeCheckIcon}>
+        <Text style={styles.vibeCheckIconText}>{getSnapTypeIcon(item.vibe_check_type)}</Text>
       </View>
 
-      <View style={styles.snapContent}>
+      <View style={styles.vibeCheckContent}>
         <Text style={styles.senderName}>{item.sender_profile?.username || 'Unknown'}</Text>
-        <Text style={styles.snapDetails}>Sent a {item.snap_type}</Text>
+        <Text style={styles.vibeCheckDetails}>Sent a VibeCheck</Text>
       </View>
 
-      <View style={styles.snapMeta}>
+      <View style={styles.vibeCheckMeta}>
         <Text style={styles.timeAgo}>{formatTimeAgo(item.created_at)}</Text>
         <View style={[styles.statusDot, { backgroundColor: theme.colors.primary }]} />
       </View>
@@ -56,8 +56,8 @@ export default function SnapInboxScreen({ navigation }: SnapInboxProps) {
   const renderEmptyState = () => (
     <EmptyState
       icon={getEmptyStateIcon('inbox')}
-      title="No snaps yet!"
-      subtitle="When friends send you snaps, they'll appear here"
+      title="No VibeChecks yet!"
+      subtitle="When friends send you VibeChecks, they'll appear here"
     />
   );
 
@@ -68,12 +68,12 @@ export default function SnapInboxScreen({ navigation }: SnapInboxProps) {
       <StoriesRow onCreateStory={handleCreateStory} onViewStory={handleViewStory} />
 
       <RefreshableList
-        data={snaps}
-        renderItem={renderSnapItem}
+        data={vibeChecks}
+        renderItem={renderVibeCheckItem}
         keyExtractor={item => item.id}
-        style={styles.snapsList}
-        refreshing={snapsRefreshing}
-        onRefresh={refreshSnaps}
+        style={styles.vibeChecksList}
+        refreshing={vibeChecksRefreshing}
+        onRefresh={refreshVibeChecks}
         ListEmptyComponent={renderEmptyState}
       />
     </SafeAreaView>
@@ -85,10 +85,10 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: theme.colors.background,
   },
-  snapsList: {
+  vibeChecksList: {
     flex: 1,
   },
-  snapItem: {
+  vibeCheckItem: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: theme.spacing.md,
@@ -96,7 +96,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: theme.colors.border,
   },
-  snapIcon: {
+  vibeCheckIcon: {
     width: 50,
     height: 50,
     borderRadius: 25,
@@ -105,10 +105,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginRight: theme.spacing.md,
   },
-  snapIconText: {
+  vibeCheckIconText: {
     fontSize: 20,
   },
-  snapContent: {
+  vibeCheckContent: {
     flex: 1,
   },
   senderName: {
@@ -117,11 +117,11 @@ const styles = StyleSheet.create({
     color: theme.colors.text,
     marginBottom: theme.spacing.xs,
   },
-  snapDetails: {
+  vibeCheckDetails: {
     fontSize: 14,
     color: theme.colors.textSecondary,
   },
-  snapMeta: {
+  vibeCheckMeta: {
     alignItems: 'flex-end',
   },
   timeAgo: {

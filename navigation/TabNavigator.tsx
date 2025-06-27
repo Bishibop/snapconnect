@@ -20,10 +20,10 @@ import FriendRequestsScreen from '../screens/main/FriendRequestsScreen';
 // Camera screens
 import CameraScreen from '../screens/camera/CameraScreen';
 import MediaPreview from '../screens/camera/MediaPreview';
-import FriendSelectorScreen from '../screens/snaps/FriendSelectorScreen';
+import FriendSelectorScreen from '../screens/vibeChecks/FriendSelectorScreen';
 
-// Snap screens
-import SnapViewerScreen from '../screens/snaps/SnapViewerScreen';
+// VibeCheck screens
+import VibeCheckViewerScreen from '../screens/vibeChecks/VibeCheckViewerScreen';
 
 // Conversations screens
 import ConversationsListScreen from '../screens/conversations/ConversationsListScreen';
@@ -45,7 +45,7 @@ const FriendsStackNavigator = () => (
     <FriendsStack.Screen name="FriendsList" component={FriendsListScreen} />
     <FriendsStack.Screen name="AddFriends" component={AddFriendsScreen} />
     <FriendsStack.Screen name="FriendRequests" component={FriendRequestsScreen} />
-    <FriendsStack.Screen name="SnapViewer" component={SnapViewerScreen} />
+    <FriendsStack.Screen name="VibeCheckViewer" component={VibeCheckViewerScreen} />
   </FriendsStack.Navigator>
 );
 
@@ -63,7 +63,7 @@ const ConversationsStackNavigator = () => (
   <ConversationsStack.Navigator screenOptions={{ headerShown: false }}>
     <ConversationsStack.Screen name="ConversationsList" component={ConversationsListScreen} />
     <ConversationsStack.Screen name="ConversationDetail" component={ConversationDetailScreen} />
-    <ConversationsStack.Screen name="SnapViewer" component={SnapViewerScreen} />
+    <ConversationsStack.Screen name="VibeCheckViewer" component={VibeCheckViewerScreen} />
   </ConversationsStack.Navigator>
 );
 

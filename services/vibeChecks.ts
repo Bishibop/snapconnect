@@ -1,12 +1,12 @@
 import { supabase } from '../lib/supabase';
 import { ErrorHandler } from '../utils/errorHandler';
 
-export interface Snap {
+export interface VibeCheck {
   id: string;
   sender_id: string;
   recipient_id: string;
   media_url: string;
-  snap_type: 'photo' | 'video';
+  vibe_check_type: 'photo' | 'video';
   filter_type?: string;
   duration?: number;
   status: 'sent' | 'delivered' | 'opened' | 'expired';
@@ -25,28 +25,28 @@ export interface Snap {
   };
 }
 
-export interface CreateSnapParams {
+export interface CreateVibeCheckParams {
   recipientId: string;
   mediaUrl: string;
-  snapType: 'photo' | 'video';
+  vibeCheckType: 'photo' | 'video';
   filterType?: string;
   duration?: number;
 }
 
-// Create a new snap
-export async function createSnap(params: CreateSnapParams): Promise<Snap> {
+// Create a new vibe check
+export async function createVibeCheck(params: CreateVibeCheckParams): Promise<VibeCheck> {
   const {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) throw new Error('User not authenticated');
 
   const { data, error } = await supabase
-    .from('snaps')
+    .from('vibe_checks')
     .insert({
       sender_id: user.id,
       recipient_id: params.recipientId,
       media_url: params.mediaUrl,
-      snap_type: params.snapType,
+      vibe_check_type: params.vibeCheckType,
       filter_type: params.filterType,
       duration: params.duration,
       status: 'sent',
@@ -54,32 +54,32 @@ export async function createSnap(params: CreateSnapParams): Promise<Snap> {
     .select(
       `
       *,
-      sender_profile:profiles!snaps_sender_id_fkey(*),
-      recipient_profile:profiles!snaps_recipient_id_fkey(*)
+      sender_profile:profiles!vibe_checks_sender_id_fkey(*),
+      recipient_profile:profiles!vibe_checks_recipient_id_fkey(*)
     `
     )
     .single();
 
   if (error) {
-    throw ErrorHandler.handleApiError(error, 'create snap', true).originalError;
+    throw ErrorHandler.handleApiError(error, 'create vibe check', true).originalError;
   }
 
   return data;
 }
 
-// Get inbox snaps (received by current user)
-export async function getInboxSnaps(): Promise<Snap[]> {
+// Get inbox vibe checks (received by current user)
+export async function getInboxVibeChecks(): Promise<VibeCheck[]> {
   const {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) throw new Error('User not authenticated');
 
   const { data, error } = await supabase
-    .from('snaps')
+    .from('vibe_checks')
     .select(
       `
       *,
-      sender_profile:profiles!snaps_sender_id_fkey(*)
+      sender_profile:profiles!vibe_checks_sender_id_fkey(*)
     `
     )
     .eq('recipient_id', user.id)
@@ -87,68 +87,68 @@ export async function getInboxSnaps(): Promise<Snap[]> {
     .order('created_at', { ascending: false });
 
   if (error) {
-    throw ErrorHandler.handleApiError(error, 'fetch inbox snaps', true).originalError;
+    throw ErrorHandler.handleApiError(error, 'fetch inbox vibe checks', true).originalError;
   }
 
   return data || [];
 }
 
-// Get sent snaps (sent by current user)
-export async function getSentSnaps(): Promise<Snap[]> {
+// Get sent vibe checks (sent by current user)
+export async function getSentVibeChecks(): Promise<VibeCheck[]> {
   const {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) throw new Error('User not authenticated');
 
   const { data, error } = await supabase
-    .from('snaps')
+    .from('vibe_checks')
     .select(
       `
       *,
-      recipient_profile:profiles!snaps_recipient_id_fkey(*)
+      recipient_profile:profiles!vibe_checks_recipient_id_fkey(*)
     `
     )
     .eq('sender_id', user.id)
     .order('created_at', { ascending: false });
 
   if (error) {
-    throw ErrorHandler.handleApiError(error, 'fetch sent snaps', true).originalError;
+    throw ErrorHandler.handleApiError(error, 'fetch sent vibe checks', true).originalError;
   }
 
   return data || [];
 }
 
-// Mark a snap as opened
-export async function markSnapOpened(snapId: string): Promise<void> {
+// Mark a vibe check as opened
+export async function markVibeCheckOpened(vibeCheckId: string): Promise<void> {
   const {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) throw new Error('User not authenticated');
 
   const { error } = await supabase
-    .from('snaps')
+    .from('vibe_checks')
     .update({
       status: 'opened',
       opened_at: new Date().toISOString(),
     })
-    .eq('id', snapId)
-    .eq('recipient_id', user.id); // Ensure user can only mark their own received snaps
+    .eq('id', vibeCheckId)
+    .eq('recipient_id', user.id); // Ensure user can only mark their own received vibe checks
 
   if (error) {
-    throw ErrorHandler.handleApiError(error, 'mark snap as opened', true).originalError;
+    throw ErrorHandler.handleApiError(error, 'mark vibe check as opened', true).originalError;
   }
 }
 
-// Subscribe to inbox changes
-export function subscribeToInboxChanges(userId: string, callback: (payload: any) => void) {
+// Subscribe to inbox vibe check changes
+export function subscribeToInboxVibeCheckChanges(userId: string, callback: (payload: any) => void) {
   return supabase
-    .channel('inbox-changes')
+    .channel('inbox-vibe-check-changes')
     .on(
       'postgres_changes',
       {
         event: '*',
         schema: 'public',
-        table: 'snaps',
+        table: 'vibe_checks',
         filter: `recipient_id=eq.${userId}`,
       },
       callback
@@ -156,16 +156,16 @@ export function subscribeToInboxChanges(userId: string, callback: (payload: any)
     .subscribe();
 }
 
-// Subscribe to sent snaps changes (for status updates)
-export function subscribeToSentSnapsChanges(userId: string, callback: (payload: any) => void) {
+// Subscribe to sent vibe check changes (for status updates)
+export function subscribeToSentVibeCheckChanges(userId: string, callback: (payload: any) => void) {
   return supabase
-    .channel('sent-snaps-changes')
+    .channel('sent-vibe-check-changes')
     .on(
       'postgres_changes',
       {
         event: 'UPDATE',
         schema: 'public',
-        table: 'snaps',
+        table: 'vibe_checks',
         filter: `sender_id=eq.${userId}`,
       },
       callback

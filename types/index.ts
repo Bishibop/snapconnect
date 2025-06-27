@@ -27,7 +27,7 @@ export interface Conversation {
   updated_at: string;
   participant1?: Profile;
   participant2?: Profile;
-  last_message?: TextMessage;
+  last_message?: ConversationMessage;
   unread_count?: number;
 }
 
@@ -40,7 +40,23 @@ export interface TextMessage {
   created_at: string;
   updated_at: string;
   sender?: Profile;
+  message_type: 'text';
 }
+
+export interface VibeCheckMessage {
+  id: string;
+  conversation_id: string;
+  sender_id: string;
+  vibe_check_id: string;
+  read_at?: string;
+  created_at: string;
+  updated_at: string;
+  sender?: Profile;
+  vibe_check?: VibeCheck;
+  message_type: 'vibe_check';
+}
+
+export type ConversationMessage = TextMessage | VibeCheckMessage;
 
 export interface Story {
   id: string;
@@ -49,6 +65,30 @@ export interface Story {
   caption?: string;
   expires_at: string;
   created_at: string;
+}
+
+export interface VibeCheck {
+  id: string;
+  sender_id: string;
+  recipient_id: string;
+  media_url: string;
+  vibe_check_type: 'photo' | 'video';
+  filter_type?: string;
+  duration?: number;
+  status: 'sent' | 'delivered' | 'opened' | 'expired';
+  created_at: string;
+  delivered_at?: string;
+  opened_at?: string;
+  sender_profile?: {
+    id: string;
+    username: string;
+    avatar_url?: string;
+  };
+  recipient_profile?: {
+    id: string;
+    username: string;
+    avatar_url?: string;
+  };
 }
 
 export interface Friendship {
@@ -79,14 +119,14 @@ export type MainTabParamList = {
 };
 
 export type InboxStackParamList = {
-  SnapInbox: undefined;
-  SnapViewer: {
-    snap?: {
+  VibeCheckInbox: undefined;
+  VibeCheckViewer: {
+    vibeCheck?: {
       id: string;
       sender_id: string;
       recipient_id: string;
       media_url: string;
-      snap_type: 'photo' | 'video';
+      vibe_check_type: 'photo' | 'video';
       filter_type?: string;
       duration?: number;
       status: 'sent' | 'delivered' | 'opened' | 'expired';
@@ -120,14 +160,14 @@ export type InboxStackParamList = {
 };
 
 export type SentStackParamList = {
-  SentSnaps: undefined;
-  SnapViewer: {
-    snap?: {
+  SentVibeChecks: undefined;
+  VibeCheckViewer: {
+    vibeCheck?: {
       id: string;
       sender_id: string;
       recipient_id: string;
       media_url: string;
-      snap_type: 'photo' | 'video';
+      vibe_check_type: 'photo' | 'video';
       filter_type?: string;
       duration?: number;
       status: 'sent' | 'delivered' | 'opened' | 'expired';
@@ -164,13 +204,13 @@ export type FriendsStackParamList = {
   FriendsList: undefined;
   AddFriends: undefined;
   FriendRequests: undefined;
-  SnapViewer: {
-    snap?: {
+  VibeCheckViewer: {
+    vibeCheck?: {
       id: string;
       sender_id: string;
       recipient_id: string;
       media_url: string;
-      snap_type: 'photo' | 'video';
+      vibe_check_type: 'photo' | 'video';
       filter_type?: string;
       duration?: number;
       status: 'sent' | 'delivered' | 'opened' | 'expired';
@@ -235,14 +275,29 @@ export type ConversationsStackParamList = {
   ConversationDetail: {
     conversationId?: string;
     recipientId?: string;
+    scrollToBottom?: boolean;
+    pendingVibeCheck?: {
+      localUri: string;
+      mediaType: 'photo' | 'video';
+      filter?: {
+        id: string;
+        name: string;
+        tintColor?: string;
+        opacity?: number;
+        saturation?: number;
+        brightness?: number;
+        contrast?: number;
+        blendMode?: 'multiply' | 'overlay' | 'saturation';
+      };
+    };
   };
-  SnapViewer: {
-    snap?: {
+  VibeCheckViewer: {
+    vibeCheck?: {
       id: string;
       sender_id: string;
       recipient_id: string;
       media_url: string;
-      snap_type: 'photo' | 'video';
+      vibe_check_type: 'photo' | 'video';
       filter_type?: string;
       duration?: number;
       status: 'sent' | 'delivered' | 'opened' | 'expired';

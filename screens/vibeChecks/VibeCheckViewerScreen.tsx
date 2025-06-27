@@ -5,7 +5,7 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { RouteProp } from '@react-navigation/native';
 import { CompositeNavigationProp } from '@react-navigation/native';
 import { theme } from '../../constants/theme';
-import { markSnapOpened, Snap } from '../../services/snaps';
+import { markVibeCheckOpened, VibeCheck } from '../../services/vibeChecks';
 import { Story, markStoryViewed } from '../../services/stories';
 import { supabase } from '../../lib/supabase';
 import { FILTERS } from '../../types/filters';
@@ -14,42 +14,52 @@ import { InboxStackParamList, SentStackParamList, FriendsStackParamList } from '
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
-type SnapViewerNavigationProp = CompositeNavigationProp<
-  StackNavigationProp<InboxStackParamList, 'SnapViewer'>,
+type VibeCheckViewerNavigationProp = CompositeNavigationProp<
+  StackNavigationProp<InboxStackParamList, 'VibeCheckViewer'>,
   CompositeNavigationProp<
-    StackNavigationProp<SentStackParamList, 'SnapViewer'>,
-    StackNavigationProp<FriendsStackParamList, 'SnapViewer'>
+    StackNavigationProp<SentStackParamList, 'VibeCheckViewer'>,
+    StackNavigationProp<FriendsStackParamList, 'VibeCheckViewer'>
   >
 >;
 
-type SnapViewerRouteProp =
-  | RouteProp<InboxStackParamList, 'SnapViewer'>
-  | RouteProp<SentStackParamList, 'SnapViewer'>
-  | RouteProp<FriendsStackParamList, 'SnapViewer'>;
+type VibeCheckViewerRouteProp =
+  | RouteProp<InboxStackParamList, 'VibeCheckViewer'>
+  | RouteProp<SentStackParamList, 'VibeCheckViewer'>
+  | RouteProp<FriendsStackParamList, 'VibeCheckViewer'>;
 
-interface SnapViewerProps {
-  route: SnapViewerRouteProp;
-  navigation: SnapViewerNavigationProp;
+interface VibeCheckViewerProps {
+  route: VibeCheckViewerRouteProp;
+  navigation: VibeCheckViewerNavigationProp;
 }
 
-export default function SnapViewerScreen({ route, navigation }: SnapViewerProps) {
-  const { snap, story } = route.params;
-  const content = snap || story; // Use snap if available, otherwise story
+export default function VibeCheckViewerScreen({ route, navigation }: VibeCheckViewerProps) {
+  const { vibeCheck, story } = route.params;
+  const content = vibeCheck || story; // Use vibeCheck if available, otherwise story
   const isStory = !!story;
 
-  const [timeLeft, setTimeLeft] = useState(5); // 5 seconds for photos
+  const [timeLeft, setTimeLeft] = useState(30); // 30 seconds for photos
   const [mediaUrl, setMediaUrl] = useState<string>('');
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Helper function to get the content type (handles both VibeCheck and Story)
+  const getContentType = (): 'photo' | 'video' | undefined => {
+    if (!content) return undefined;
+    if (isStory) {
+      return (content as Story).snap_type;
+    } else {
+      return (content as VibeCheck).vibe_check_type;
+    }
+  };
 
   useEffect(() => {
     if (!content) return;
 
-    // Mark snap as opened when viewer opens (only for snaps, not stories)
-    if (snap) {
-      markSnapOpened(snap.id).catch(console.error);
+    // Mark VibeCheck as opened when viewer opens (only for VibeChecks, not stories)
+    if (vibeCheck) {
+      markVibeCheckOpened(vibeCheck.id).catch(console.error);
     }
 
-    // Mark story as viewed when viewer opens (only for stories, not snaps)
+    // Mark story as viewed when viewer opens (only for stories, not VibeChecks)
     if (story && !story.is_viewed) {
       markStoryViewed(story.id).catch(_error => {
         // Silently fail if already viewed or other non-critical error
@@ -63,7 +73,7 @@ export default function SnapViewerScreen({ route, navigation }: SnapViewerProps)
   // Simple countdown timer for photos
   useEffect(() => {
     // Only start timer for photos when media is loaded
-    if (!content || content.snap_type !== 'photo' || !mediaUrl) {
+    if (!content || getContentType() !== 'photo' || !mediaUrl) {
       return;
     }
 
@@ -72,8 +82,8 @@ export default function SnapViewerScreen({ route, navigation }: SnapViewerProps)
       clearInterval(timerRef.current);
     }
 
-    // Reset to 5 seconds
-    setTimeLeft(5);
+    // Reset to 30 seconds
+    setTimeLeft(30);
 
     // Start simple 1-second interval countdown
     timerRef.current = setInterval(() => {
@@ -97,14 +107,14 @@ export default function SnapViewerScreen({ route, navigation }: SnapViewerProps)
         timerRef.current = null;
       }
     };
-  }, [content?.snap_type, mediaUrl]);
+  }, [getContentType(), mediaUrl]);
 
   // Handle auto-close when timer reaches 0
   useEffect(() => {
-    if (timeLeft === 0 && content?.snap_type === 'photo') {
+    if (timeLeft === 0 && getContentType() === 'photo') {
       navigation.goBack();
     }
-  }, [timeLeft, content?.snap_type, navigation]);
+  }, [timeLeft, getContentType(), navigation]);
 
   const getMediaUrl = () => {
     if (!content) return;
@@ -130,7 +140,7 @@ export default function SnapViewerScreen({ route, navigation }: SnapViewerProps)
       </TouchableOpacity>
 
       {/* Countdown timer for photos */}
-      {content?.snap_type === 'photo' && timeLeft > 0 && (
+      {getContentType() === 'photo' && timeLeft > 0 && (
         <View style={styles.timerContainer}>
           <Text style={styles.timerText}>{timeLeft}</Text>
         </View>
@@ -141,10 +151,10 @@ export default function SnapViewerScreen({ route, navigation }: SnapViewerProps)
         <Text style={styles.senderName}>
           {isStory
             ? (story as Story)?.user_profile?.username
-            : (snap as Snap)?.sender_profile?.username}
+            : (vibeCheck as VibeCheck)?.sender_profile?.username}
         </Text>
-        <Text style={styles.snapType}>
-          {isStory ? `posted a ${content?.snap_type} story` : `sent a ${content?.snap_type}`}
+        <Text style={styles.vibeCheckType}>
+          {isStory ? `posted a ${getContentType()} story` : `sent a VibeCheck`}
         </Text>
       </View>
 
@@ -221,7 +231,7 @@ const styles = StyleSheet.create({
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 3,
   },
-  snapType: {
+  vibeCheckType: {
     color: theme.colors.white,
     fontSize: 14,
     marginTop: 2,

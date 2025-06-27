@@ -35,27 +35,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, newSession) => {
-      const previousSession = session;
-      setSession(newSession);
-
-      // Clear cache when user logs out for security
-      if (previousSession && !newSession) {
-        // User logged out - clear all cached data
-        cache.clearAll();
-      } else if (!previousSession && newSession) {
-        // User logged in - clear any stale cache from previous session
-        cache.clearAll();
-      } else if (previousSession?.user?.id !== newSession?.user?.id) {
-        // Different user - clear previous user's cache
-        if (previousSession?.user?.id) {
-          cache.clearUser(previousSession.user.id);
+    } = supabase.auth.onAuthStateChange((event, newSession) => {
+      
+      setSession(currentSession => {
+        // Clear cache when user logs out for security
+        if (currentSession && !newSession) {
+          // User logged out - clear all cached data
+          cache.clearAll();
+        } else if (!currentSession && newSession) {
+          // User logged in - clear any stale cache from previous session
+          cache.clearAll();
+        } else if (currentSession?.user?.id !== newSession?.user?.id) {
+          // Different user - clear previous user's cache
+          if (currentSession?.user?.id) {
+            cache.clearUser(currentSession.user.id);
+          }
         }
-      }
+        
+        return newSession;
+      });
     });
 
     return () => subscription.unsubscribe();
-  }, [session]);
+  }, []); // Remove session dependency - we don't need it
 
   const signUp = async (email: string, password: string, username: string) => {
     try {
@@ -118,14 +120,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const value = {
+  const value = React.useMemo(() => ({
     session,
     user: session?.user ?? null,
     loading,
     signUp,
     signIn,
     signOut,
-  };
+  }), [session, loading]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

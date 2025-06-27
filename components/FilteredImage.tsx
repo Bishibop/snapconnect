@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { StyleSheet, Image, View, ViewStyle } from 'react-native';
 import { Filter } from '../types/filters';
 
@@ -9,12 +9,12 @@ interface FilteredImageProps {
   resizeMode?: 'cover' | 'contain' | 'stretch' | 'center';
 }
 
-export default function FilteredImage({
+const FilteredImage = memo(({
   imageUri,
   filter,
   style,
   resizeMode = 'contain',
-}: FilteredImageProps) {
+}: FilteredImageProps) => {
   if (filter.id === 'original') {
     // Original - no filter
     return <Image source={{ uri: imageUri }} style={styles.image} resizeMode={resizeMode} />;
@@ -44,7 +44,7 @@ export default function FilteredImage({
       ) : null}
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   container: {
@@ -64,3 +64,5 @@ const styles = StyleSheet.create({
     bottom: 0,
   },
 });
+
+export default FilteredImage;

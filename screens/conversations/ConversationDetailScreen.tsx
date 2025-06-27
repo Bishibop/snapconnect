@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, memo } from 'react';
 import {
   View,
   Text,
@@ -12,22 +12,50 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRoute, useNavigation, RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { ConversationsStackParamList, TextMessage, Conversation } from '../../types';
+import { ConversationsStackParamList, TextMessage, VibeCheckMessage, ConversationMessage, Conversation } from '../../types';
 import { theme } from '../../constants/theme';
 import { conversationsService } from '../../services/conversations';
 import { useAuth } from '../../contexts/AuthContext';
 import { useProfile } from '../../hooks/useProfile';
 import { formatMessageTime } from '../../utils/dateTime';
 import { cache, CACHE_KEYS, CACHE_DURATIONS } from '../../utils/cache';
+import VibeCheckMessageComponent from '../../components/VibeCheckMessage';
+import { useNavigationHelpers } from '../../utils/navigation';
 
 type RouteParams = RouteProp<ConversationsStackParamList, 'ConversationDetail'>;
 type NavigationProp = StackNavigationProp<ConversationsStackParamList, 'ConversationDetail'>;
 
+// Memoized TextMessage component to prevent unnecessary re-renders
+const TextMessageComponent = memo(({ 
+  message, 
+  isOwnMessage 
+}: { 
+  message: TextMessage; 
+  isOwnMessage: boolean;
+}) => {
+  return (
+    <View style={[styles.messageContainer, isOwnMessage && styles.ownMessageContainer]}>
+      <View
+        style={[styles.messageBubble, isOwnMessage ? styles.ownMessage : styles.otherMessage]}
+      >
+        <Text style={[styles.messageText, isOwnMessage && styles.ownMessageText]}>
+          {message.content}
+        </Text>
+        <Text style={[styles.messageTime, isOwnMessage && styles.ownMessageTime]}>
+          {formatMessageTime(message.created_at)}
+        </Text>
+      </View>
+    </View>
+  );
+});
+
 const ConversationDetailScreen = () => {
   const route = useRoute<RouteParams>();
   const navigation = useNavigation<NavigationProp>();
+  const navHelpers = useNavigationHelpers(navigation);
   const { user } = useAuth();
   const { profile: currentUserProfile } = useProfile(user?.id || '');
+  
   const flatListRef = useRef<FlatList>(null);
 
   const [conversation, setConversation] = useState<Conversation | null>(() => {
@@ -41,12 +69,12 @@ const ConversationDetailScreen = () => {
     );
     return cached?.find(c => c.id === route.params.conversationId) || null;
   });
-  const [messages, setMessages] = useState<TextMessage[]>(() => {
+  const [messages, setMessages] = useState<ConversationMessage[]>(() => {
     // Initialize with cached messages if available
     if (!user?.id || !route.params?.conversationId) return [];
 
     return (
-      cache.get<TextMessage[]>(
+      cache.get<ConversationMessage[]>(
         CACHE_KEYS.CONVERSATION_MESSAGES,
         `${user.id}:${route.params.conversationId}`,
         CACHE_DURATIONS.MESSAGES
@@ -58,7 +86,7 @@ const ConversationDetailScreen = () => {
     // Initialize loading state based on whether we have cached messages
     if (!user?.id || !route.params?.conversationId) return false;
 
-    const cachedMessages = cache.get<TextMessage[]>(
+    const cachedMessages = cache.get<ConversationMessage[]>(
       CACHE_KEYS.CONVERSATION_MESSAGES,
       `${user.id}:${route.params.conversationId}`,
       CACHE_DURATIONS.MESSAGES
@@ -70,6 +98,8 @@ const ConversationDetailScreen = () => {
   const [messageText, setMessageText] = useState('');
   const [sending, setSending] = useState(false);
   const optimisticMessageIdRef = useRef<string | null>(null);
+  const [pendingVibeCheck, setPendingVibeCheck] = useState(route.params?.pendingVibeCheck);
+  const isScrollingRef = useRef(false);
 
   const loadMessages = useCallback(
     async (silent = false) => {
@@ -89,6 +119,11 @@ const ConversationDetailScreen = () => {
 
         // Mark messages as read
         await conversationsService.markMessagesAsRead(conversation.id);
+        
+        // Scroll to bottom after loading messages
+        setTimeout(() => {
+          flatListRef.current?.scrollToEnd({ animated: false });
+        }, 100);
       } catch (error) {
         console.error('Error loading messages:', error);
       } finally {
@@ -146,6 +181,40 @@ const ConversationDetailScreen = () => {
     loadConversation();
   }, [loadConversation]);
 
+
+  // Add pending VibeCheck message when navigating from friend selector
+  useEffect(() => {
+    if (pendingVibeCheck && conversation && user?.id) {
+      const tempId = `pending-${Date.now()}`;
+      const pendingMessage: TextMessage = {
+        id: tempId,
+        conversation_id: conversation.id,
+        sender_id: user.id,
+        message_type: 'text',
+        content: `📸 Sending ${pendingVibeCheck.mediaType}...`,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        sender: currentUserProfile || {
+          id: user.id,
+          username: 'You',
+          created_at: new Date().toISOString(),
+        },
+      };
+
+      // Track this pending message ID
+      optimisticMessageIdRef.current = tempId;
+
+      // Add pending message to the list
+      setMessages(prev => [...prev, pendingMessage]);
+      
+      // Clear pending state
+      setPendingVibeCheck(undefined);
+
+      // Scroll to bottom without delay for immediate feedback
+      flatListRef.current?.scrollToEnd({ animated: false });
+    }
+  }, [pendingVibeCheck, conversation, user?.id, currentUserProfile]);
+
   useEffect(() => {
     if (!conversation || !user?.id) return;
 
@@ -174,7 +243,10 @@ const ConversationDetailScreen = () => {
 
         // Special handling for our own messages during optimistic updates
         if (newMessage.sender_id === user?.id && optimisticMessageIdRef.current) {
-          return prev;
+          // Replace the optimistic message with the real one
+          const updated = prev.filter(msg => msg.id !== optimisticMessageIdRef.current);
+          optimisticMessageIdRef.current = null;
+          return [...updated, newMessage];
         }
 
         const updatedMessages = [...prev, newMessage];
@@ -226,6 +298,7 @@ const ConversationDetailScreen = () => {
       content: text,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
+      message_type: 'text',
       sender: currentUserProfile || {
         id: user.id,
         username: 'You',
@@ -236,6 +309,7 @@ const ConversationDetailScreen = () => {
     // Track the optimistic message to prevent real-time duplicates
     optimisticMessageIdRef.current = tempId;
 
+    // Batch the state update and cache update together
     setMessages(prev => {
       const updated = [...prev, optimisticMessage];
       // Update cache with optimistic message
@@ -244,32 +318,34 @@ const ConversationDetailScreen = () => {
       return updated;
     });
 
-    // Scroll to bottom immediately
+    // For own messages, scroll without animation to reduce repaints
     setTimeout(() => {
-      flatListRef.current?.scrollToEnd({ animated: true });
-    }, 100);
+      flatListRef.current?.scrollToEnd({ animated: false });
+    }, 50);
 
     try {
       const sentMessage = await conversationsService.sendMessage(conversation.id, text);
 
-      // Replace optimistic message with real message
+      // Replace optimistic message with real message efficiently
       setMessages(prev => {
         // Find the optimistic message and replace it
-        const optimisticIndex = prev.findIndex(msg => msg.id === optimisticMessage.id);
+        const optimisticIndex = prev.findIndex(msg => msg.id === tempId);
         if (optimisticIndex === -1) {
-          const updated = [...prev, sentMessage];
-          const messagesCacheKey = `${user.id}:${conversation.id}`;
-          cache.set(CACHE_KEYS.CONVERSATION_MESSAGES, updated, messagesCacheKey);
-          return updated;
+          // Optimistic message not found, just append
+          return [...prev, sentMessage];
         }
 
         // Replace the optimistic message with the real one
+        // Use splice for better performance with large arrays
         const updated = [...prev];
-        updated[optimisticIndex] = sentMessage;
+        updated.splice(optimisticIndex, 1, sentMessage);
 
-        // Update cache with real message
+        // Update cache with real message after state update
         const messagesCacheKey = `${user.id}:${conversation.id}`;
-        cache.set(CACHE_KEYS.CONVERSATION_MESSAGES, updated, messagesCacheKey);
+        setTimeout(() => {
+          cache.set(CACHE_KEYS.CONVERSATION_MESSAGES, updated, messagesCacheKey);
+        }, 0);
+        
         return updated;
       });
 
@@ -279,15 +355,10 @@ const ConversationDetailScreen = () => {
       console.error('Error sending message:', error);
 
       // Remove optimistic message on error
-      setMessages(prev => {
-        const updated = prev.filter(msg => msg.id !== optimisticMessage.id);
-
-        // Update cache after removing failed message
-        const messagesCacheKey = `${user.id}:${conversation.id}`;
-        cache.set(CACHE_KEYS.CONVERSATION_MESSAGES, updated, messagesCacheKey);
-        return updated;
-      });
-      setMessageText(text); // Restore message on error
+      setMessages(prev => prev.filter(msg => msg.id !== tempId));
+      
+      // Restore message text for retry
+      setMessageText(text);
 
       // Clear the optimistic message tracking on error too
       optimisticMessageIdRef.current = null;
@@ -296,26 +367,39 @@ const ConversationDetailScreen = () => {
     }
   };
 
-  const renderMessage = ({ item }: { item: TextMessage }) => {
+  const handleVibeCheckPress = useCallback((vibeCheck: VibeCheckMessage) => {
+    if (vibeCheck.vibe_check) {
+      navHelpers.navigateToVibeCheckViewer(vibeCheck.vibe_check);
+    }
+  }, [navHelpers]);
+
+  // Create stable callback ref for VibeCheck press
+  const handleVibeCheckPressRef = useRef(handleVibeCheckPress);
+  handleVibeCheckPressRef.current = handleVibeCheckPress;
+
+  const renderMessage = useCallback(({ item }: { item: ConversationMessage }) => {
     const isOwnMessage = item.sender_id === user?.id;
 
-    return (
-      <View style={[styles.messageContainer, isOwnMessage && styles.ownMessageContainer]}>
-        <View
-          style={[styles.messageBubble, isOwnMessage ? styles.ownMessage : styles.otherMessage]}
-        >
-          <Text style={[styles.messageText, isOwnMessage && styles.ownMessageText]}>
-            {item.content}
-          </Text>
-          <Text style={[styles.messageTime, isOwnMessage && styles.ownMessageTime]}>
-            {formatMessageTime(item.created_at)}
-          </Text>
-        </View>
-      </View>
-    );
-  };
+    if (item.message_type === 'vibe_check') {
+      return (
+        <VibeCheckMessageComponent
+          message={item as VibeCheckMessage}
+          isOwnMessage={isOwnMessage}
+          onPress={() => handleVibeCheckPressRef.current(item as VibeCheckMessage)}
+        />
+      );
+    }
 
-  const renderHeader = () => {
+    // Render text message
+    return (
+      <TextMessageComponent
+        message={item as TextMessage}
+        isOwnMessage={isOwnMessage}
+      />
+    );
+  }, [user?.id]);
+
+  const renderHeader = useCallback(() => {
     // Show header immediately with loading state
     const otherParticipant = conversation
       ? conversation.participant1_id === user?.id
@@ -345,7 +429,7 @@ const ConversationDetailScreen = () => {
         </View>
       </View>
     );
-  };
+  }, [conversation, user?.id, loadingConversation, navigation]);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -361,7 +445,18 @@ const ConversationDetailScreen = () => {
           renderItem={renderMessage}
           keyExtractor={item => item.id}
           contentContainerStyle={styles.messagesList}
-          onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: false })}
+          onContentSizeChange={() => {
+            // Scroll to bottom when content changes
+            if (messages.length > 0) {
+              flatListRef.current?.scrollToEnd({ animated: false });
+            }
+          }}
+          removeClippedSubviews={true}
+          maxToRenderPerBatch={10}
+          windowSize={10}
+          initialNumToRender={15}
+          updateCellsBatchingPeriod={50}
+          keyboardShouldPersistTaps="handled"
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
               {loadingMessages ? (
