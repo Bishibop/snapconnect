@@ -13,6 +13,8 @@ SnapConnect follows a client-server architecture with a React Native mobile clie
 5. **Realtime Service** - WebSocket connections for live updates
 6. **Messaging Service** - Real-time text messaging with conversations
 7. **CDN** - Content delivery for media files
+8. **Edge Functions** - Serverless functions for AI/ML integrations
+9. **Vector Database** - pgvector for similarity search
 
 ## Service Boundaries
 
@@ -40,8 +42,8 @@ SnapConnect follows a client-server architecture with a React Native mobile clie
 
 ### Database Service
 
-- **Responsibilities**: Data persistence, business logic (via RLS), data integrity
-- **Technology**: PostgreSQL 15
+- **Responsibilities**: Data persistence, business logic (via RLS), data integrity, vector similarity search
+- **Technology**: PostgreSQL 15 with pgvector extension
 - **Key Tables**:
   - `profiles` - User information (including bio text)
   - `friendships` - Friend connections
@@ -50,6 +52,8 @@ SnapConnect follows a client-server architecture with a React Native mobile clie
   - `vibe_checks` - Ephemeral media messages (formerly snaps)
   - `stories` - 24-hour posts
   - `story_views` - View tracking
+  - `art_pieces` - User-created art with CLIP embeddings for similarity search
+  - `vibe_reels` - Collaborative art stories combining multiple art pieces
 
 ### Storage Service
 
@@ -58,6 +62,7 @@ SnapConnect follows a client-server architecture with a React Native mobile clie
 - **Buckets**:
   - `media` - Private media files for VibeChecks and stories
   - `profiles` - User profile images
+  - `art-pieces` - Public art images for VibeReels (public read access)
 
 ### Realtime Service
 
@@ -70,6 +75,26 @@ SnapConnect follows a client-server architecture with a React Native mobile clie
   - VibeCheck updates
   - Story updates
   - Status updates
+  - Art pieces updates (vibe count changes)
+  - VibeReel creation notifications
+
+### Edge Functions Service
+
+- **Responsibilities**: Serverless compute for AI/ML operations, third-party API integrations
+- **Technology**: Deno runtime on Supabase Edge Functions
+- **Functions**:
+  - `generate-art-embeddings` - CLIP model integration via Replicate API
+- **Integration**: Called from client via supabase.functions.invoke()
+
+### Vector Search Service
+
+- **Responsibilities**: Similarity search for art discovery, semantic matching
+- **Technology**: PostgreSQL with pgvector extension
+- **Features**:
+  - 512-dimensional CLIP embeddings
+  - Cosine similarity search
+  - IVFFlat indexing for performance
+  - Configurable similarity thresholds
 
 ## Core Data Flow
 
@@ -128,6 +153,20 @@ SnapConnect follows a client-server architecture with a React Native mobile clie
 5. Friendship record created if accepted
 6. Both users' friend lists update in real-time
 
+### Art Similarity Flow (Future - Feature 5)
+
+1. User captures art photo via camera
+2. Photo uploaded to art-pieces storage bucket (public)
+3. App calls Edge Function with image URL
+4. Edge Function calls Replicate API for CLIP embedding
+5. 512-dimensional embedding vector returned
+6. Art piece record created with embedding
+7. Vector similarity search finds related art
+8. User selects up to 7 similar pieces for VibeReel
+9. VibeReel record created with selected art IDs
+10. Selected art pieces' vibe counts increment
+11. Art enters global pool for discovery by others
+
 ## Technology Integration Points
 
 ### Mobile App ↔ Supabase Auth
@@ -158,6 +197,18 @@ SnapConnect follows a client-server architecture with a React Native mobile clie
 
 - **Integration**: Storage URLs saved in database
 - **Access Control**: RLS policies reference storage
+
+### Mobile App ↔ Edge Functions
+
+- **Protocol**: HTTPS REST API
+- **Authentication**: JWT tokens in Authorization header
+- **Operations**: Invoke functions via supabase.functions.invoke()
+
+### Edge Functions ↔ External APIs
+
+- **Replicate API**: HTTPS with API token authentication
+- **Pattern**: Async predictions with polling
+- **Error Handling**: Graceful degradation on API failures
 
 ## Security Overview
 
@@ -252,7 +303,8 @@ App.tsx
 │   ├── vibeChecks.ts (VibeCheck operations)
 │   ├── stories.ts (Story operations)
 │   ├── profiles.ts (Profile management)
-│   └── media.ts (File upload/processing)
+│   ├── media.ts (File upload/processing)
+│   └── artSimilarity.ts (CLIP embeddings & vector search)
 ├── Hooks/
 │   ├── useAuth.ts (Authentication state)
 │   ├── useFriends.ts (Friend data + context)
@@ -279,16 +331,20 @@ messages (id, conversation_id, sender_id, message_type, content, vibe_check_id, 
 vibe_checks (id, sender_id, recipient_id, media_url, vibe_check_type, filter_type, status, opened_at)
 stories (id, user_id, media_url, snap_type, filter_type, expires_at)
 story_views (story_id, viewer_id, viewed_at)
+art_pieces (id, user_id, image_url, embedding VECTOR(512), vibe_count, created_at)
+vibe_reels (id, creator_id, primary_art_id, selected_art_ids UUID[], created_at)
 
 -- Recent migrations
 -- Migration 008: ALTER TABLE profiles ADD COLUMN bio TEXT;
 -- Migration 009: Real-time messaging system (conversations & messages)
 -- Migration 010: Enable real-time publication for messaging tables
 -- Migration 011: Rename snaps to vibe_checks
--- Migration 012: Update vibe_checks indexes and policies
--- Migration 013: Add message_type and vibe_check_id to messages table
--- Migration 014: Rename snap_type to vibe_check_type
--- Migration 015: Enable real-time publication for vibe_checks
+-- Migration 012: Enable pgvector extension for vector similarity search
+-- Migration 013: Create art_pieces table with CLIP embeddings
+-- Migration 014: Create vibe_reels table for collaborative art stories
+-- Migration 015: Add similarity search functions (find_similar_art)
+-- Migration 016: Add vibe count increment function
+-- Migration 017: Create art-pieces storage bucket
 
 -- Indexes for performance
 idx_friendships_user_id
@@ -303,6 +359,18 @@ idx_messages_vibe_check_id
 idx_vibe_checks_recipient_id
 idx_vibe_checks_status
 idx_stories_expires_at
+idx_art_pieces_user
+idx_art_pieces_popular
+art_pieces_embedding_idx (IVFFlat vector index)
+idx_vibe_reels_creator
+idx_vibe_reels_art (GIN index)
+idx_vibe_reels_primary_art
+
+-- RPC Functions
+find_similar_art(query_embedding, match_threshold, match_count) - Vector similarity search
+increment_vibe_count(art_piece_id) - Atomic vibe count increment
+create_or_get_conversation(user1_id, user2_id) - Conversation management
+update_conversation_activity(conversation_id) - Activity timestamp update
 ```
 
 ### Caching Strategy
@@ -345,6 +413,10 @@ idx_stories_expires_at
 - Mount state tracking to prevent memory leaks
 - CDN for media delivery
 - One-time viewing enforcement at database level
+- Vector indexing (IVFFlat) for fast similarity search
+- Public storage bucket for art to avoid signed URL overhead
+- Edge Function for scalable ML inference
+- Async embedding generation to prevent UI blocking
 
 ### Future Scalability
 
@@ -355,6 +427,65 @@ idx_stories_expires_at
 - Horizontal scaling of services
 - Geographic distribution
 - Message archive/pagination for large conversation histories
+
+## Feature: AI-Powered Art Similarity
+
+### Overview
+
+The art similarity feature enables semantic discovery of artwork using CLIP (Contrastive Language-Image Pre-training) embeddings. This infrastructure supports the upcoming VibeReel feature for collaborative visual storytelling.
+
+### Architecture Components
+
+1. **Edge Functions**: Serverless Deno runtime for API integrations
+2. **Replicate API**: External ML service providing CLIP model inference
+3. **pgvector**: PostgreSQL extension for vector similarity operations
+4. **Public Storage**: Art pieces bucket for globally accessible images
+
+### Technical Implementation
+
+1. **Embedding Generation**:
+   - Client uploads art to public storage bucket
+   - Calls Edge Function with image URL
+   - Edge Function invokes Replicate CLIP model
+   - Returns 512-dimensional embedding vector
+
+2. **Similarity Search**:
+   - Uses pgvector's cosine similarity operator (<=>)
+   - IVFFlat index for performant nearest neighbor search
+   - Configurable similarity threshold (default 0.8)
+   - Returns up to 50 similar art pieces
+
+3. **Data Model**:
+   ```sql
+   art_pieces:
+   - embedding: VECTOR(512) - CLIP feature vector
+   - vibe_count: INTEGER - Popularity metric
+   - image_url: TEXT - Public storage reference
+   
+   vibe_reels:
+   - primary_art_id: UUID - User's original art
+   - selected_art_ids: UUID[] - Up to 7 similar pieces
+   ```
+
+4. **Performance Considerations**:
+   - IVFFlat indexing with 100 lists for balance of speed/accuracy
+   - Async Edge Function calls to avoid blocking UI
+   - Cached embeddings to prevent recomputation
+   - Public bucket eliminates signed URL overhead
+
+### Security & Privacy
+
+- Art pieces are public by design for viral sharing
+- User association maintained for attribution
+- RLS policies control modification rights
+- Edge Function secrets stored encrypted
+
+### Future Enhancements
+
+- Multiple embedding models for different art styles
+- Text-to-image search using CLIP's multimodal capabilities
+- Batch embedding generation for efficiency
+- Regional Edge Function deployment for lower latency
 
 ## Feature: VibeChecks Integration
 
