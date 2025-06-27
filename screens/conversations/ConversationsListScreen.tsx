@@ -28,6 +28,11 @@ const ConversationsListScreen = () => {
     );
   });
   const [refreshing, setRefreshing] = useState(false);
+  const [hasLoadedOnce, setHasLoadedOnce] = useState(() => {
+    // If we have cached data, consider it as already loaded
+    if (!user?.id) return false;
+    return cache.has(CACHE_KEYS.CONVERSATIONS, user.id, CACHE_DURATIONS.CONVERSATIONS);
+  });
 
   const loadConversations = useCallback(
     async (silent = false) => {
@@ -43,6 +48,9 @@ const ConversationsListScreen = () => {
         if (user?.id) {
           cache.set(CACHE_KEYS.CONVERSATIONS, data, user.id);
         }
+        
+        // Mark that we've completed at least one load
+        setHasLoadedOnce(true);
       } catch (error) {
         console.error('Error loading conversations:', error);
       } finally {
@@ -151,11 +159,13 @@ const ConversationsListScreen = () => {
         refreshing={refreshing}
         onRefresh={handleRefresh}
         ListEmptyComponent={
-          <EmptyState
-            icon="💬"
-            title="No Conversations Yet"
-            subtitle="Start a conversation with your friends!"
-          />
+          hasLoadedOnce ? (
+            <EmptyState
+              icon="💬"
+              title="No Conversations Yet"
+              subtitle="Start a conversation with your friends!"
+            />
+          ) : null
         }
       />
     </SafeAreaView>

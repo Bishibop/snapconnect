@@ -11,7 +11,8 @@ SnapConnect follows a client-server architecture with a React Native mobile clie
 3. **Database** - PostgreSQL with Row Level Security
 4. **Storage Service** - Supabase Storage for media files
 5. **Realtime Service** - WebSocket connections for live updates
-6. **CDN** - Content delivery for media files
+6. **Messaging Service** - Real-time text messaging with conversations
+7. **CDN** - Content delivery for media files
 
 ## Service Boundaries
 
@@ -23,6 +24,7 @@ SnapConnect follows a client-server architecture with a React Native mobile clie
   - Authentication (context provider)
   - Camera system (photo capture)
   - Friend management (context provider with realtime)
+  - Messaging system (conversations and real-time text messaging)
   - Snap sending/receiving
   - Story posting/viewing (context provider with caching)
   - Profile management (bio editing, user profiles)
@@ -43,6 +45,8 @@ SnapConnect follows a client-server architecture with a React Native mobile clie
 - **Key Tables**:
   - `profiles` - User information (including bio text)
   - `friendships` - Friend connections
+  - `conversations` - Direct message conversations between users
+  - `messages` - Real-time text messages with read receipts
   - `snaps` - Ephemeral messages
   - `stories` - 24-hour posts
   - `story_views` - View tracking
@@ -61,6 +65,8 @@ SnapConnect follows a client-server architecture with a React Native mobile clie
 - **Technology**: Supabase Realtime
 - **Channels**:
   - Friendship changes
+  - Conversation updates
+  - Real-time messaging (per conversation)
   - New snaps
   - Story updates
   - Status updates
@@ -93,6 +99,18 @@ SnapConnect follows a client-server architecture with a React Native mobile clie
 4. Realtime broadcast to all friends
 5. Story appears in friends' story rows
 6. Auto-expires after 24 hours via database
+
+### Real-time Messaging Flow
+
+1. User opens conversation (or creates new one)
+2. App subscribes to real-time message updates
+3. User types and sends message
+4. Message appears instantly via optimistic update
+5. Message saved to database with timestamps
+6. Real-time notification sent to recipient
+7. Recipient receives message in real-time
+8. Read receipts updated when message viewed
+9. Conversation list updates with latest message
 
 ### Friend Connection Flow
 
@@ -153,6 +171,8 @@ SnapConnect follows a client-server architecture with a React Native mobile clie
 ### Access Control Patterns
 
 - **Friends Only**: Snaps visible only to sender/recipient
+- **Conversation Access**: Users can only see conversations they participate in
+- **Message Privacy**: Messages visible only to conversation participants
 - **Public Profiles**: Usernames searchable by all
 - **Friend Stories**: Stories visible to friends only
 - **Owner Only**: Profile edits, snap deletion
@@ -164,6 +184,19 @@ SnapConnect follows a client-server architecture with a React Native mobile clie
 CREATE POLICY "Users can view snaps sent to them"
 ON snaps FOR SELECT
 USING (auth.uid() = recipient_id);
+
+-- Messaging RLS policies
+CREATE POLICY "Users can see their conversations"
+ON conversations FOR SELECT
+USING (auth.uid() = participant1_id OR auth.uid() = participant2_id);
+
+CREATE POLICY "Users can see messages in their conversations"
+ON messages FOR SELECT
+USING (EXISTS (
+  SELECT 1 FROM conversations 
+  WHERE conversations.id = messages.conversation_id 
+  AND (conversations.participant1_id = auth.uid() OR conversations.participant2_id = auth.uid())
+));
 
 -- Example storage policy
 Bucket 'snaps' - Authenticated users only
@@ -182,12 +215,13 @@ App.tsx
 │   ├── StoriesContext.tsx (Stories + caching)
 │   └── RealtimeContext.tsx (Centralized subscriptions)
 ├── Navigation/
-│   ├── MainTabs (Friends, Camera, Inbox, Sent, Profile)
+│   ├── MainTabs (Friends, Camera, Conversations, Profile)
 │   └── Stack Navigators per tab
 ├── Screens/
 │   ├── Auth/ (Login, Signup)
 │   ├── Camera/ (Capture, Preview, Filters)
 │   ├── Main/ (Friends: List, Requests, Search)
+│   ├── Conversations/ (ConversationsList, ConversationDetail)
 │   ├── Snaps/ (Inbox, Sent, Viewer)
 │   └── Profile/ (ProfileScreen, EditProfile)
 ├── Components/
@@ -197,6 +231,7 @@ App.tsx
 ├── Services/
 │   ├── supabase.ts (Client setup)
 │   ├── friends.ts (Friend operations)
+│   ├── conversations.ts (Real-time messaging & conversations)
 │   ├── snaps.ts (Snap operations)
 │   ├── stories.ts (Story operations)
 │   ├── profiles.ts (Profile management)
@@ -221,16 +256,25 @@ App.tsx
 -- Core tables with relationships
 profiles (id, username, email, avatar_url, bio)
 friendships (user_id, friend_id, status, created_at)
+conversations (id, participant1_id, participant2_id, last_message_at)
+messages (id, conversation_id, sender_id, content, read_at, created_at)
 snaps (id, sender_id, recipient_id, media_url, status, expires_at)
 stories (id, user_id, media_url, expires_at)
 story_views (story_id, viewer_id, viewed_at)
 
--- Recent additions (Epic 1 Phase 1)
+-- Recent additions
 -- Migration 008: ALTER TABLE profiles ADD COLUMN bio TEXT;
+-- Migration 009: Real-time messaging system (conversations & messages)
+-- Migration 010: Enable real-time publication for messaging tables
 
 -- Indexes for performance
 idx_friendships_user_id
 idx_friendships_friend_id
+idx_conversations_participant1
+idx_conversations_participant2
+idx_conversations_last_message
+idx_messages_conversation
+idx_messages_created
 idx_snaps_recipient_status
 idx_stories_expires_at
 ```
@@ -246,6 +290,11 @@ idx_stories_expires_at
   - `set()` - Store with automatic expiration
   - `invalidate()` - Force refresh on realtime updates
   - `clear()` - User logout cleanup
+- **Messaging-Specific Caching**:
+  - **Conversations**: 2-minute TTL for conversation list updates
+  - **Messages**: 30-second TTL for individual conversation messages
+  - **Cache-First Loading**: Instant UI display from cache while refreshing in background
+  - **Optimistic Updates**: Messages appear immediately, replaced with real data
 - **Performance Optimizations**:
   - Background refresh maintains cache while showing stale data
   - Lazy loading for initial render
@@ -259,7 +308,9 @@ idx_stories_expires_at
 - Efficient database indexes
 - Lazy loading of images
 - Centralized realtime subscription management
+- Real-time messaging with optimistic updates
 - Multi-level client-side caching with user isolation
+- Cache-first data loading for instant UI responses
 - Standardized error handling with user notifications
 - Context-based state management with background refresh
 - Mount state tracking to prevent memory leaks
@@ -268,10 +319,12 @@ idx_stories_expires_at
 ### Future Scalability
 
 - Database read replicas
-- Redis caching layer
+- Redis caching layer for messaging
+- Message queuing for high-volume messaging
 - Media processing pipeline
 - Horizontal scaling of services
 - Geographic distribution
+- Message archive/pagination for large conversation histories
 
 ## Monitoring & Observability
 
