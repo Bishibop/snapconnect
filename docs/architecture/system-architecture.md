@@ -22,10 +22,10 @@ SnapConnect follows a client-server architecture with a React Native mobile clie
 - **Technologies**: React Native, Expo, TypeScript
 - **Key Modules**:
   - Authentication (context provider)
-  - Camera system (photo capture)
+  - Camera system (photo/video capture)
   - Friend management (context provider with realtime)
-  - Messaging system (conversations and real-time text messaging)
-  - Snap sending/receiving
+  - Messaging system (conversations with text and VibeCheck messages)
+  - VibeCheck sending/receiving (ephemeral media messages)
   - Story posting/viewing (context provider with caching)
   - Profile management (bio editing, user profiles)
   - Filter application
@@ -46,8 +46,8 @@ SnapConnect follows a client-server architecture with a React Native mobile clie
   - `profiles` - User information (including bio text)
   - `friendships` - Friend connections
   - `conversations` - Direct message conversations between users
-  - `messages` - Real-time text messages with read receipts
-  - `snaps` - Ephemeral messages
+  - `messages` - Multi-type messages (text and VibeCheck) with read receipts
+  - `vibe_checks` - Ephemeral media messages (formerly snaps)
   - `stories` - 24-hour posts
   - `story_views` - View tracking
 
@@ -56,8 +56,8 @@ SnapConnect follows a client-server architecture with a React Native mobile clie
 - **Responsibilities**: Media file storage, URL generation, access control
 - **Technology**: Supabase Storage (S3-compatible)
 - **Buckets**:
-  - `snaps` - Private photos for direct messages
-  - `stories` - Semi-public photos for stories
+  - `media` - Private media files for VibeChecks and stories
+  - `profiles` - User profile images
 
 ### Realtime Service
 
@@ -67,7 +67,7 @@ SnapConnect follows a client-server architecture with a React Native mobile clie
   - Friendship changes
   - Conversation updates
   - Real-time messaging (per conversation)
-  - New snaps
+  - VibeCheck updates
   - Story updates
   - Status updates
 
@@ -81,15 +81,19 @@ SnapConnect follows a client-server architecture with a React Native mobile clie
 4. App stores token securely
 5. Profile created in database via trigger
 
-### Snap Sharing Flow
+### VibeCheck Sharing Flow
 
-1. User captures photo via camera
-2. Photo uploaded to Supabase Storage
-3. Snap record created in database
-4. Realtime notification sent to recipient
-5. Recipient receives notification and fetches snap
-6. 5-second timer starts on view
-7. Snap marked as viewed in database
+1. User captures photo/video via camera
+2. User selects filter (optional)
+3. User selects friends to send to
+4. Media uploaded to Supabase Storage
+5. VibeCheck record created in database
+6. Message record created in conversation with recipient
+7. Realtime notification sent via conversation channel
+8. Recipient sees VibeCheck message in conversation
+9. Recipient taps to view (one-time viewing)
+10. 30-second timer starts for photos
+11. VibeCheck marked as opened in database
 
 ### Story Posting Flow
 
@@ -104,13 +108,16 @@ SnapConnect follows a client-server architecture with a React Native mobile clie
 
 1. User opens conversation (or creates new one)
 2. App subscribes to real-time message updates
-3. User types and sends message
+3. User sends either:
+   - **Text Message**: Types and sends text
+   - **VibeCheck**: Captures media → selects friend → creates VibeCheck message
 4. Message appears instantly via optimistic update
-5. Message saved to database with timestamps
+5. Message saved to database with appropriate type
 6. Real-time notification sent to recipient
 7. Recipient receives message in real-time
 8. Read receipts updated when message viewed
 9. Conversation list updates with latest message
+10. For VibeChecks: One-time viewing enforced for recipients
 
 ### Friend Connection Flow
 
@@ -170,37 +177,46 @@ SnapConnect follows a client-server architecture with a React Native mobile clie
 
 ### Access Control Patterns
 
-- **Friends Only**: Snaps visible only to sender/recipient
+- **Friends Only**: VibeChecks visible only to sender/recipient
 - **Conversation Access**: Users can only see conversations they participate in
-- **Message Privacy**: Messages visible only to conversation participants
+- **Message Privacy**: All message types visible only to conversation participants
+- **One-Time Viewing**: VibeChecks can only be viewed once by recipients
 - **Public Profiles**: Usernames searchable by all
 - **Friend Stories**: Stories visible to friends only
-- **Owner Only**: Profile edits, snap deletion
+- **Owner Only**: Profile edits, VibeCheck deletion
 
 ### Security Policies
 
 ```sql
--- Example RLS policy for snaps
-CREATE POLICY "Users can view snaps sent to them"
-ON snaps FOR SELECT
-USING (auth.uid() = recipient_id);
+-- Example RLS policy for VibeChecks
+CREATE POLICY "Users can view vibe_checks sent to them"
+ON vibe_checks FOR SELECT
+USING (auth.uid() = recipient_id OR auth.uid() = sender_id);
 
--- Messaging RLS policies
+-- Messaging RLS policies with multi-type support
 CREATE POLICY "Users can see their conversations"
 ON conversations FOR SELECT
 USING (auth.uid() = participant1_id OR auth.uid() = participant2_id);
 
-CREATE POLICY "Users can see messages in their conversations"
+CREATE POLICY "Users can view conversation messages"
 ON messages FOR SELECT
-USING (EXISTS (
-  SELECT 1 FROM conversations
-  WHERE conversations.id = messages.conversation_id
-  AND (conversations.participant1_id = auth.uid() OR conversations.participant2_id = auth.uid())
-));
+USING (
+  auth.uid() IN (
+    SELECT participant1_id FROM conversations WHERE id = conversation_id
+    UNION
+    SELECT participant2_id FROM conversations WHERE id = conversation_id
+  )
+);
+
+-- VibeCheck one-time viewing enforcement
+CREATE POLICY "Recipients can update vibe_check status"
+ON vibe_checks FOR UPDATE
+USING (auth.uid() = recipient_id)
+WITH CHECK (status IN ('opened', 'expired'));
 
 -- Example storage policy
-Bucket 'snaps' - Authenticated users only
-Bucket 'stories' - Public read with signed URLs
+Bucket 'media' - Authenticated users only with signed URLs
+Bucket 'profiles' - Public read for avatars
 ```
 
 ## Component Details
@@ -219,20 +235,21 @@ App.tsx
 │   └── Stack Navigators per tab
 ├── Screens/
 │   ├── Auth/ (Login, Signup)
-│   ├── Camera/ (Capture, Preview, Filters)
+│   ├── Camera/ (Capture, MediaPreview, Filters)
 │   ├── Main/ (Friends: List, Requests, Search)
 │   ├── Conversations/ (ConversationsList, ConversationDetail)
-│   ├── Snaps/ (Inbox, Sent, Viewer)
+│   ├── VibeChecks/ (FriendSelector, Inbox, Sent, Viewer)
 │   └── Profile/ (ProfileScreen, EditProfile)
 ├── Components/
-│   ├── UI/ (ActionButton, FormInput, LoadingSpinner)
+│   ├── UI/ (ActionButton, FormInput, LoadingSpinner, RefreshableList)
 │   ├── Common/ (ErrorBoundary, AuthErrorBoundary)
-│   └── Features/ (StoriesRow, StoryCircle, FilteredImage)
+│   ├── Features/ (StoriesRow, StoryCircle, FilteredImage)
+│   └── Messages/ (VibeCheckMessage)
 ├── Services/
 │   ├── supabase.ts (Client setup)
 │   ├── friends.ts (Friend operations)
-│   ├── conversations.ts (Real-time messaging & conversations)
-│   ├── snaps.ts (Snap operations)
+│   ├── conversations.ts (Multi-type messaging & conversations)
+│   ├── vibeChecks.ts (VibeCheck operations)
 │   ├── stories.ts (Story operations)
 │   ├── profiles.ts (Profile management)
 │   └── media.ts (File upload/processing)
@@ -240,6 +257,7 @@ App.tsx
 │   ├── useAuth.ts (Authentication state)
 │   ├── useFriends.ts (Friend data + context)
 │   ├── useStories.ts (Story data + context)
+│   ├── useVibeChecks.ts (VibeCheck data management)
 │   ├── useProfile.ts (Profile management + sync)
 │   ├── useProfileUsername.ts (Lightweight profile data)
 │   └── useRealtimeSubscription.ts (Subscription lifecycle)
@@ -257,15 +275,20 @@ App.tsx
 profiles (id, username, email, avatar_url, bio)
 friendships (user_id, friend_id, status, created_at)
 conversations (id, participant1_id, participant2_id, last_message_at)
-messages (id, conversation_id, sender_id, content, read_at, created_at)
-snaps (id, sender_id, recipient_id, media_url, status, expires_at)
-stories (id, user_id, media_url, expires_at)
+messages (id, conversation_id, sender_id, message_type, content, vibe_check_id, read_at, created_at)
+vibe_checks (id, sender_id, recipient_id, media_url, vibe_check_type, filter_type, status, opened_at)
+stories (id, user_id, media_url, snap_type, filter_type, expires_at)
 story_views (story_id, viewer_id, viewed_at)
 
--- Recent additions
+-- Recent migrations
 -- Migration 008: ALTER TABLE profiles ADD COLUMN bio TEXT;
 -- Migration 009: Real-time messaging system (conversations & messages)
 -- Migration 010: Enable real-time publication for messaging tables
+-- Migration 011: Rename snaps to vibe_checks
+-- Migration 012: Update vibe_checks indexes and policies
+-- Migration 013: Add message_type and vibe_check_id to messages table
+-- Migration 014: Rename snap_type to vibe_check_type
+-- Migration 015: Enable real-time publication for vibe_checks
 
 -- Indexes for performance
 idx_friendships_user_id
@@ -275,7 +298,10 @@ idx_conversations_participant2
 idx_conversations_last_message
 idx_messages_conversation
 idx_messages_created
-idx_snaps_recipient_status
+idx_messages_message_type
+idx_messages_vibe_check_id
+idx_vibe_checks_recipient_id
+idx_vibe_checks_status
 idx_stories_expires_at
 ```
 
@@ -293,8 +319,10 @@ idx_stories_expires_at
 - **Messaging-Specific Caching**:
   - **Conversations**: 2-minute TTL for conversation list updates
   - **Messages**: 30-second TTL for individual conversation messages
+  - **VibeChecks**: Cached until status changes (opened/expired)
   - **Cache-First Loading**: Instant UI display from cache while refreshing in background
   - **Optimistic Updates**: Messages appear immediately, replaced with real data
+  - **Pending VibeChecks**: Temporary optimistic state for media uploads
 - **Performance Optimizations**:
   - Background refresh maintains cache while showing stale data
   - Lazy loading for initial render
@@ -305,16 +333,18 @@ idx_stories_expires_at
 
 ### Current Optimizations
 
-- Efficient database indexes
+- Efficient database indexes for message types and VibeChecks
 - Lazy loading of images
 - Centralized realtime subscription management
-- Real-time messaging with optimistic updates
+- Multi-type messaging with optimistic updates
+- Component memoization for conversation rendering
 - Multi-level client-side caching with user isolation
 - Cache-first data loading for instant UI responses
 - Standardized error handling with user notifications
 - Context-based state management with background refresh
 - Mount state tracking to prevent memory leaks
 - CDN for media delivery
+- One-time viewing enforcement at database level
 
 ### Future Scalability
 
@@ -325,6 +355,35 @@ idx_stories_expires_at
 - Horizontal scaling of services
 - Geographic distribution
 - Message archive/pagination for large conversation histories
+
+## Feature: VibeChecks Integration
+
+### Overview
+VibeChecks (formerly Snaps) are ephemeral media messages integrated directly into conversations. Unlike traditional ephemeral messaging apps where disappearing messages exist separately, VibeChecks appear inline with text messages in conversations.
+
+### Key Features
+- **Unified Conversations**: Text and media messages in single conversation flow
+- **One-Time Viewing**: Recipients can view VibeChecks only once
+- **Timed Viewing**: 30-second timer for photos
+- **Filter Support**: Apply visual filters before sending
+- **Multi-Friend Sending**: Send same VibeCheck to multiple conversations
+- **Optimistic UI**: Immediate feedback while uploading
+
+### Technical Implementation
+1. **Message Types**: Extended messages table with `message_type` enum ('text' | 'vibe_check')
+2. **Foreign Key Reference**: Messages link to vibe_checks table via `vibe_check_id`
+3. **Status Tracking**: VibeCheck status transitions: sent → delivered → opened → expired
+4. **Real-time Updates**: Leverages existing conversation subscriptions
+5. **Preview States**: 
+   - Recipients see placeholder with tap-to-view
+   - Senders see thumbnail preview
+   - Opened VibeChecks show "Already viewed" state
+
+### Security & Privacy
+- Row Level Security ensures only participants can view
+- One-time viewing enforced at database level
+- Media files stored with signed URLs
+- Automatic expiration after viewing
 
 ## Monitoring & Observability
 
