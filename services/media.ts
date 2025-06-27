@@ -1,5 +1,6 @@
 import { supabase } from '../lib/supabase';
 import * as FileSystem from 'expo-file-system';
+import { ErrorHandler } from '../utils/errorHandler';
 
 export interface UploadResult {
   url: string;
@@ -46,8 +47,7 @@ export async function uploadMedia(
       });
 
     if (error) {
-      console.error('Upload error:', error);
-      throw error;
+      throw ErrorHandler.handleApiError(error, 'upload media', true).originalError;
     }
 
     // Get the public URL
@@ -58,8 +58,7 @@ export async function uploadMedia(
       path: fileName,
     };
   } catch (error) {
-    console.error('Error uploading media:', error);
-    throw error;
+    throw ErrorHandler.handleApiError(error, 'upload media', true).originalError;
   }
 }
 
@@ -69,12 +68,10 @@ export async function deleteMedia(filePath: string): Promise<void> {
     const { error } = await supabase.storage.from('media').remove([filePath]);
 
     if (error) {
-      console.error('Delete error:', error);
-      throw error;
+      throw ErrorHandler.handleApiError(error, 'delete media', true).originalError;
     }
   } catch (error) {
-    console.error('Error deleting media:', error);
-    throw error;
+    throw ErrorHandler.handleApiError(error, 'delete media', true).originalError;
   }
 }
 
@@ -91,7 +88,6 @@ export async function getSignedUrl(filePath: string, expiresIn: number = 3600): 
 
     return data.signedUrl;
   } catch (error) {
-    console.error('Error creating signed URL:', error);
-    throw error;
+    throw ErrorHandler.handleApiError(error, 'create signed URL', true).originalError;
   }
 }

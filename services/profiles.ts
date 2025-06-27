@@ -1,5 +1,6 @@
 import { supabase } from '../lib/supabase';
 import { Profile } from '../types';
+import { ErrorHandler } from '../utils/errorHandler';
 
 export const profilesService = {
   async getUserProfile(userId: string): Promise<Profile | null> {
@@ -9,7 +10,7 @@ export const profilesService = {
       if (error) throw error;
       return data;
     } catch (error) {
-      console.error('Error fetching profile:', error);
+      ErrorHandler.handleApiError(error, 'fetch profile', true);
       return null;
     }
   },
@@ -21,7 +22,7 @@ export const profilesService = {
       if (error) throw error;
       return true;
     } catch (error) {
-      console.error('Error updating bio:', error);
+      ErrorHandler.handleApiError(error, 'update bio', true);
       return false;
     }
   },

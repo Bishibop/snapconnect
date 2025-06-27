@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -39,6 +39,7 @@ export default function SnapViewerScreen({ route, navigation }: SnapViewerProps)
 
   const [timeLeft, setTimeLeft] = useState(5); // 5 seconds for photos
   const [mediaUrl, setMediaUrl] = useState<string>('');
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     if (!content) return;
@@ -57,22 +58,46 @@ export default function SnapViewerScreen({ route, navigation }: SnapViewerProps)
 
     // Get the public URL for the media
     getMediaUrl();
+  }, [content?.id]);
 
-    // Start countdown for photos
-    if (content.snap_type === 'photo') {
-      const timer = setInterval(() => {
-        setTimeLeft(prev => {
-          if (prev <= 1) {
-            clearInterval(timer);
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-
-      return () => clearInterval(timer);
+  // Simple countdown timer for photos
+  useEffect(() => {
+    // Only start timer for photos when media is loaded
+    if (!content || content.snap_type !== 'photo' || !mediaUrl) {
+      return;
     }
-  }, [content?.id, content?.snap_type, navigation]);
+
+    // Clear any existing timer
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+    }
+
+    // Reset to 5 seconds
+    setTimeLeft(5);
+
+    // Start simple 1-second interval countdown
+    timerRef.current = setInterval(() => {
+      setTimeLeft(prevTime => {
+        if (prevTime <= 1) {
+          // Timer finished
+          if (timerRef.current) {
+            clearInterval(timerRef.current);
+            timerRef.current = null;
+          }
+          return 0;
+        }
+        return prevTime - 1;
+      });
+    }, 1000);
+
+    // Cleanup function
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+    };
+  }, [content?.snap_type, mediaUrl]);
 
   // Handle auto-close when timer reaches 0
   useEffect(() => {
@@ -85,7 +110,6 @@ export default function SnapViewerScreen({ route, navigation }: SnapViewerProps)
     if (!content) return;
 
     const { data } = supabase.storage.from('media').getPublicUrl(content.media_url);
-
     setMediaUrl(data.publicUrl);
   };
 
@@ -100,6 +124,7 @@ export default function SnapViewerScreen({ route, navigation }: SnapViewerProps)
 
   return (
     <SafeAreaView style={styles.container}>
+      
       {/* Close button */}
       <TouchableOpacity style={styles.closeButton} onPress={handleClose}>
         <Text style={styles.closeButtonText}>✕</Text>

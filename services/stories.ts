@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabase';
+import { ErrorHandler } from '../utils/errorHandler';
 
 export interface Story {
   id: string;
@@ -59,8 +60,7 @@ export async function createStory(params: CreateStoryParams): Promise<Story> {
     .single();
 
   if (error) {
-    console.error('Error creating story:', error);
-    throw error;
+    throw ErrorHandler.handleApiError(error, 'create story', true).originalError;
   }
 
   return data;
@@ -100,8 +100,7 @@ export async function getStoriesFromFriends(): Promise<Story[]> {
   const { data, error } = await query.order('created_at', { ascending: false });
 
   if (error) {
-    console.error('Error fetching stories:', error);
-    throw error;
+    throw ErrorHandler.handleApiError(error, 'fetch stories', true).originalError;
   }
 
   // Add view status to each story
@@ -122,7 +121,7 @@ async function getFriendIds(userId: string): Promise<string | null> {
     .eq('status', 'accepted');
 
   if (error) {
-    console.error('Error fetching friend IDs:', error);
+    ErrorHandler.handleApiError(error, 'fetch friend IDs', true);
     return null;
   }
 
@@ -152,8 +151,7 @@ export async function getCurrentUserStory(): Promise<Story | null> {
 
   if (error && error.code !== 'PGRST116') {
     // PGRST116 is "no rows returned"
-    console.error('Error fetching user story:', error);
-    throw error;
+    throw ErrorHandler.handleApiError(error, 'fetch user story', true).originalError;
   }
 
   return data || null;
@@ -173,8 +171,7 @@ export async function deactivateStory(storyId: string): Promise<void> {
     .eq('user_id', user.id); // Ensure user can only deactivate their own stories
 
   if (error) {
-    console.error('Error deactivating story:', error);
-    throw error;
+    throw ErrorHandler.handleApiError(error, 'deactivate story', true).originalError;
   }
 }
 
@@ -202,8 +199,7 @@ export async function markStoryViewed(storyId: string): Promise<void> {
     });
 
     if (error) {
-      console.error('Error marking story as viewed:', error);
-      throw error;
+      throw ErrorHandler.handleApiError(error, 'mark story as viewed', true).originalError;
     }
   }
 }

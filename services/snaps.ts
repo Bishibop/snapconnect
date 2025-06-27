@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabase';
+import { ErrorHandler } from '../utils/errorHandler';
 
 export interface Snap {
   id: string;
@@ -60,8 +61,7 @@ export async function createSnap(params: CreateSnapParams): Promise<Snap> {
     .single();
 
   if (error) {
-    console.error('Error creating snap:', error);
-    throw error;
+    throw ErrorHandler.handleApiError(error, 'create snap', true).originalError;
   }
 
   return data;
@@ -87,8 +87,7 @@ export async function getInboxSnaps(): Promise<Snap[]> {
     .order('created_at', { ascending: false });
 
   if (error) {
-    console.error('Error fetching inbox snaps:', error);
-    throw error;
+    throw ErrorHandler.handleApiError(error, 'fetch inbox snaps', true).originalError;
   }
 
   return data || [];
@@ -113,8 +112,7 @@ export async function getSentSnaps(): Promise<Snap[]> {
     .order('created_at', { ascending: false });
 
   if (error) {
-    console.error('Error fetching sent snaps:', error);
-    throw error;
+    throw ErrorHandler.handleApiError(error, 'fetch sent snaps', true).originalError;
   }
 
   return data || [];
@@ -137,8 +135,7 @@ export async function markSnapOpened(snapId: string): Promise<void> {
     .eq('recipient_id', user.id); // Ensure user can only mark their own received snaps
 
   if (error) {
-    console.error('Error marking snap as opened:', error);
-    throw error;
+    throw ErrorHandler.handleApiError(error, 'mark snap as opened', true).originalError;
   }
 }
 
