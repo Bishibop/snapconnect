@@ -18,6 +18,30 @@ export interface Message {
   created_at: string;
 }
 
+export interface Conversation {
+  id: string;
+  participant1_id: string;
+  participant2_id: string;
+  last_message_at?: string;
+  created_at: string;
+  updated_at: string;
+  participant1?: Profile;
+  participant2?: Profile;
+  last_message?: TextMessage;
+  unread_count?: number;
+}
+
+export interface TextMessage {
+  id: string;
+  conversation_id: string;
+  sender_id: string;
+  content: string;
+  read_at?: string;
+  created_at: string;
+  updated_at: string;
+  sender?: Profile;
+}
+
 export interface Story {
   id: string;
   user_id: string;
@@ -50,8 +74,7 @@ export type AuthStackParamList = {
 export type MainTabParamList = {
   Friends: undefined;
   Camera: undefined;
-  Inbox: undefined;
-  Sent: undefined;
+  Conversations: undefined;
   Profile: undefined;
 };
 
@@ -205,4 +228,32 @@ export type CameraStackParamList = {
 export type ProfileStackParamList = {
   ProfileScreen: { userId?: string };
   EditProfile: undefined;
+};
+
+export type ConversationsStackParamList = {
+  ConversationsList: undefined;
+  ConversationDetail: {
+    conversationId?: string;
+    recipientId?: string;
+  };
+  SnapViewer: {
+    snap?: {
+      id: string;
+      sender_id: string;
+      recipient_id: string;
+      media_url: string;
+      snap_type: 'photo' | 'video';
+      filter_type?: string;
+      duration?: number;
+      status: 'sent' | 'delivered' | 'opened' | 'expired';
+      created_at: string;
+      delivered_at?: string;
+      opened_at?: string;
+      sender_profile?: {
+        id: string;
+        username: string;
+        avatar_url?: string;
+      };
+    };
+  };
 };

@@ -21,7 +21,7 @@ SnapConnect follows a client-server architecture with a React Native mobile clie
 - **Technologies**: React Native, Expo, TypeScript
 - **Key Modules**:
   - Authentication (context provider)
-  - Camera system (photo capture)  
+  - Camera system (photo capture)
   - Friend management (context provider with realtime)
   - Snap sending/receiving
   - Story posting/viewing (context provider with caching)
@@ -308,7 +308,7 @@ ErrorHandler.handleSubscriptionError(error, 'stories');
 ErrorHandler.handle(error, {
   context: 'profile update',
   showAlert: true,
-  alertMessage: 'Failed to save profile changes'
+  alertMessage: 'Failed to save profile changes',
 });
 ```
 

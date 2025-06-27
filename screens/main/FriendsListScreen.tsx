@@ -46,6 +46,16 @@ export default function FriendsListScreen({ navigation }: FriendsListProps) {
     );
   };
 
+  const handleMessageFriend = (friend: FriendWithProfile) => {
+    // Navigate to conversation detail with recipientId
+    navigation.getParent()?.navigate('Conversations', {
+      screen: 'ConversationDetail',
+      params: {
+        recipientId: friend.friend_id,
+      },
+    });
+  };
+
   const renderFriendItem = ({ item }: { item: FriendWithProfile }) => (
     <TouchableOpacity
       style={styles.friendItem}
@@ -55,12 +65,20 @@ export default function FriendsListScreen({ navigation }: FriendsListProps) {
         <Text style={styles.username}>{item.friend_profile.username}</Text>
         <Text style={styles.joinDate}>Friends since {formatFriendsSinceDate(item.created_at)}</Text>
       </View>
-      <ActionButton
-        title="Remove"
-        onPress={() => handleRemoveFriend(item)}
-        variant="danger"
-        size="small"
-      />
+      <View style={styles.friendActions}>
+        <ActionButton
+          title="Message"
+          onPress={() => handleMessageFriend(item)}
+          variant="primary"
+          size="small"
+        />
+        <ActionButton
+          title="Remove"
+          onPress={() => handleRemoveFriend(item)}
+          variant="danger"
+          size="small"
+        />
+      </View>
     </TouchableOpacity>
   );
 
@@ -127,6 +145,10 @@ const styles = StyleSheet.create({
   },
   friendInfo: {
     flex: 1,
+  },
+  friendActions: {
+    flexDirection: 'row',
+    gap: 8,
   },
   username: {
     fontSize: 16,

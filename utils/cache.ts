@@ -149,6 +149,8 @@ export const CACHE_KEYS = {
   INBOX_SNAPS: 'inbox_snaps',
   SENT_SNAPS: 'sent_snaps',
   USER_PROFILE: 'user_profile',
+  CONVERSATIONS: 'conversations',
+  CONVERSATION_MESSAGES: 'conversation_messages',
 } as const;
 
 // Cache durations
@@ -157,6 +159,8 @@ export const CACHE_DURATIONS = {
   STORIES: 2 * 60 * 1000, // 2 minutes (stories change frequently)
   SNAPS: 5 * 60 * 1000, // 5 minutes
   PROFILE: 30 * 60 * 1000, // 30 minutes
+  CONVERSATIONS: 2 * 60 * 1000, // 2 minutes (conversations change with new messages)
+  MESSAGES: 30 * 1000, // 30 seconds (messages need to be fresh but can cache briefly)
 } as const;
 
 /**

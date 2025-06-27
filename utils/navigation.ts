@@ -172,19 +172,11 @@ export class NavigationUtils {
   }
 
   /**
-   * Navigate to Inbox tab and reset its stack
+   * Navigate to Conversations tab and reset its stack
    */
-  static navigateToInboxTab(navigation: MainTabNavigation) {
-    navigation.navigate('Inbox');
-    this.resetStack(navigation, 'SnapInbox');
-  }
-
-  /**
-   * Navigate to Sent tab and reset its stack
-   */
-  static navigateToSentTab(navigation: MainTabNavigation) {
-    navigation.navigate('Sent');
-    this.resetStack(navigation, 'SentSnaps');
+  static navigateToConversationsTab(navigation: MainTabNavigation) {
+    navigation.navigate('Conversations');
+    this.resetStack(navigation, 'ConversationsList');
   }
 }
 
@@ -210,8 +202,7 @@ export function useNavigationHelpers(navigation: any) {
     resetStack: (routeName: string) => NavigationUtils.resetStack(navigation, routeName),
     navigateToFriendsTab: () => NavigationUtils.navigateToFriendsTab(navigation),
     navigateToCameraTab: () => NavigationUtils.navigateToCameraTab(navigation),
-    navigateToInboxTab: () => NavigationUtils.navigateToInboxTab(navigation),
-    navigateToSentTab: () => NavigationUtils.navigateToSentTab(navigation),
+    navigateToConversationsTab: () => NavigationUtils.navigateToConversationsTab(navigation),
   };
 }
 

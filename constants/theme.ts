@@ -5,6 +5,7 @@ export const theme = {
     secondary: '#000000',
     background: '#FFFFFF',
     white: '#FFFFFF',
+    black: '#000000',
     gray: '#666666',
     lightGray: '#F5F5F5',
     text: '#000000',

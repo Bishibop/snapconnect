@@ -7,8 +7,7 @@ import {
   MainTabParamList,
   FriendsStackParamList,
   CameraStackParamList,
-  InboxStackParamList,
-  SentStackParamList,
+  ConversationsStackParamList,
   ProfileStackParamList,
 } from '../types';
 import { theme } from '../constants/theme';
@@ -24,9 +23,11 @@ import MediaPreview from '../screens/camera/MediaPreview';
 import FriendSelectorScreen from '../screens/snaps/FriendSelectorScreen';
 
 // Snap screens
-import SnapInboxScreen from '../screens/snaps/SnapInboxScreen';
 import SnapViewerScreen from '../screens/snaps/SnapViewerScreen';
-import SentSnapsScreen from '../screens/snaps/SentSnapsScreen';
+
+// Conversations screens
+import ConversationsListScreen from '../screens/conversations/ConversationsListScreen';
+import ConversationDetailScreen from '../screens/conversations/ConversationDetailScreen';
 
 // Profile screens
 import ProfileScreen from '../screens/Profile/ProfileScreen';
@@ -35,8 +36,7 @@ import EditProfile from '../screens/Profile/EditProfile';
 const Tab = createBottomTabNavigator<MainTabParamList>();
 const FriendsStack = createStackNavigator<FriendsStackParamList>();
 const CameraStack = createStackNavigator<CameraStackParamList>();
-const InboxStack = createStackNavigator<InboxStackParamList>();
-const SentStack = createStackNavigator<SentStackParamList>();
+const ConversationsStack = createStackNavigator<ConversationsStackParamList>();
 const ProfileStack = createStackNavigator<ProfileStackParamList>();
 
 // Friends Stack Navigator
@@ -58,20 +58,13 @@ const CameraStackNavigator = () => (
   </CameraStack.Navigator>
 );
 
-// Inbox Stack Navigator
-const InboxStackNavigator = () => (
-  <InboxStack.Navigator screenOptions={{ headerShown: false }}>
-    <InboxStack.Screen name="SnapInbox" component={SnapInboxScreen} />
-    <InboxStack.Screen name="SnapViewer" component={SnapViewerScreen} />
-  </InboxStack.Navigator>
-);
-
-// Sent Stack Navigator
-const SentStackNavigator = () => (
-  <SentStack.Navigator screenOptions={{ headerShown: false }}>
-    <SentStack.Screen name="SentSnaps" component={SentSnapsScreen} />
-    <SentStack.Screen name="SnapViewer" component={SnapViewerScreen} />
-  </SentStack.Navigator>
+// Conversations Stack Navigator
+const ConversationsStackNavigator = () => (
+  <ConversationsStack.Navigator screenOptions={{ headerShown: false }}>
+    <ConversationsStack.Screen name="ConversationsList" component={ConversationsListScreen} />
+    <ConversationsStack.Screen name="ConversationDetail" component={ConversationDetailScreen} />
+    <ConversationsStack.Screen name="SnapViewer" component={SnapViewerScreen} />
+  </ConversationsStack.Navigator>
 );
 
 // Profile Stack Navigator
@@ -133,10 +126,10 @@ export const TabNavigator = () => {
         }}
       />
       <Tab.Screen
-        name="Inbox"
-        component={InboxStackNavigator}
+        name="Conversations"
+        component={ConversationsStackNavigator}
         options={{
-          tabBarIcon: ({ color, size }) => <Text style={{ color, fontSize: size }}>📥</Text>,
+          tabBarIcon: ({ color, size }) => <Text style={{ color, fontSize: size }}>💬</Text>,
         }}
         listeners={({ navigation }) => ({
           tabPress: e => {
@@ -144,25 +137,7 @@ export const TabNavigator = () => {
             navigation.dispatch(
               CommonActions.reset({
                 index: 0,
-                routes: [{ name: 'Inbox' }],
-              })
-            );
-          },
-        })}
-      />
-      <Tab.Screen
-        name="Sent"
-        component={SentStackNavigator}
-        options={{
-          tabBarIcon: ({ color, size }) => <Text style={{ color, fontSize: size }}>📤</Text>,
-        }}
-        listeners={({ navigation }) => ({
-          tabPress: e => {
-            e.preventDefault();
-            navigation.dispatch(
-              CommonActions.reset({
-                index: 0,
-                routes: [{ name: 'Sent' }],
+                routes: [{ name: 'Conversations' }],
               })
             );
           },

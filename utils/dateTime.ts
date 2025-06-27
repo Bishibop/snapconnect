@@ -139,6 +139,36 @@ export function formatDuration(seconds: number): string {
 }
 
 /**
+ * Format relative time for conversation list
+ * @param dateString - ISO date string
+ * @returns Short relative time like "now", "5m", "2h", "yesterday"
+ */
+export function formatRelativeTime(dateString: string | null | undefined): string {
+  if (!dateString) return '';
+
+  const now = new Date();
+  const targetTime = new Date(dateString);
+  const diffInSeconds = Math.floor((now.getTime() - targetTime.getTime()) / 1000);
+
+  if (diffInSeconds < 60) {
+    return 'now';
+  } else if (diffInSeconds < 3600) {
+    const minutes = Math.floor(diffInSeconds / 60);
+    return `${minutes}m`;
+  } else if (diffInSeconds < 86400) {
+    const hours = Math.floor(diffInSeconds / 3600);
+    return `${hours}h`;
+  } else if (diffInSeconds < 172800) {
+    return 'yesterday';
+  } else {
+    return targetTime.toLocaleDateString([], {
+      month: 'short',
+      day: 'numeric',
+    });
+  }
+}
+
+/**
  * Constants for common time periods
  */
 export const TIME_CONSTANTS = {
