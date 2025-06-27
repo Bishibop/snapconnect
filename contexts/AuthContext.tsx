@@ -36,7 +36,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, newSession) => {
-      
       setSession(currentSession => {
         // Clear cache when user logs out for security
         if (currentSession && !newSession) {
@@ -51,7 +50,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             cache.clearUser(currentSession.user.id);
           }
         }
-        
+
         return newSession;
       });
     });
@@ -120,14 +119,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const value = React.useMemo(() => ({
-    session,
-    user: session?.user ?? null,
-    loading,
-    signUp,
-    signIn,
-    signOut,
-  }), [session, loading]);
+  const value = React.useMemo(
+    () => ({
+      session,
+      user: session?.user ?? null,
+      loading,
+      signUp,
+      signIn,
+      signOut,
+    }),
+    [session, loading]
+  );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

@@ -24,7 +24,11 @@ interface SentVibeChecksProps {
 }
 
 export default function SentVibeChecksScreen({ navigation }: SentVibeChecksProps) {
-  const { vibeChecks, refreshing: vibeChecksRefreshing, refresh: refreshVibeChecks } = useVibeChecks({ type: 'sent' });
+  const {
+    vibeChecks,
+    refreshing: vibeChecksRefreshing,
+    refresh: refreshVibeChecks,
+  } = useVibeChecks({ type: 'sent' });
   const { refreshing: storiesRefreshing } = useStories();
   const navHelpers = useNavigationHelpers(navigation);
 
@@ -44,9 +48,7 @@ export default function SentVibeChecksScreen({ navigation }: SentVibeChecksProps
 
       <View style={styles.vibeCheckContent}>
         <Text style={styles.recipientName}>{item.recipient_profile?.username || 'Unknown'}</Text>
-        <Text style={styles.vibeCheckDetails}>
-          VibeCheck • {formatTimeAgo(item.created_at)}
-        </Text>
+        <Text style={styles.vibeCheckDetails}>VibeCheck • {formatTimeAgo(item.created_at)}</Text>
       </View>
 
       <View style={styles.vibeCheckStatus}>

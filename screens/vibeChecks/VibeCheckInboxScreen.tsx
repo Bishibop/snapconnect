@@ -19,7 +19,11 @@ interface VibeCheckInboxProps {
 }
 
 export default function VibeCheckInboxScreen({ navigation }: VibeCheckInboxProps) {
-  const { vibeChecks, refreshing: vibeChecksRefreshing, refresh: refreshVibeChecks } = useVibeChecks({ type: 'inbox' });
+  const {
+    vibeChecks,
+    refreshing: vibeChecksRefreshing,
+    refresh: refreshVibeChecks,
+  } = useVibeChecks({ type: 'inbox' });
   const { refreshing: storiesRefreshing } = useStories();
   const navHelpers = useNavigationHelpers(navigation);
 

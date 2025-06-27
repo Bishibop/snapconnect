@@ -37,7 +37,8 @@ export function useVibeChecks({ type }: UseVibeChecksOptions) {
         clearError();
         if (!silent) setRefreshing(true);
 
-        const vibeChecksList = type === 'inbox' ? await getInboxVibeChecks() : await getSentVibeChecks();
+        const vibeChecksList =
+          type === 'inbox' ? await getInboxVibeChecks() : await getSentVibeChecks();
         setVibeChecks(vibeChecksList);
 
         // Cache the new data
@@ -71,7 +72,9 @@ export function useVibeChecks({ type }: UseVibeChecksOptions) {
           current => {
             const vibeChecks = current || [];
             return vibeChecks.map(vibeCheck =>
-              vibeCheck.id === vibeCheckId ? { ...vibeCheck, opened_at: new Date().toISOString() } : vibeCheck
+              vibeCheck.id === vibeCheckId
+                ? { ...vibeCheck, opened_at: new Date().toISOString() }
+                : vibeCheck
             );
           },
           user.id

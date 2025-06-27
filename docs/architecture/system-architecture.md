@@ -193,8 +193,8 @@ USING (auth.uid() = participant1_id OR auth.uid() = participant2_id);
 CREATE POLICY "Users can see messages in their conversations"
 ON messages FOR SELECT
 USING (EXISTS (
-  SELECT 1 FROM conversations 
-  WHERE conversations.id = messages.conversation_id 
+  SELECT 1 FROM conversations
+  WHERE conversations.id = messages.conversation_id
   AND (conversations.participant1_id = auth.uid() OR conversations.participant2_id = auth.uid())
 ));
 

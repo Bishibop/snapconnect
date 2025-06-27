@@ -184,28 +184,31 @@ import { useMemo } from 'react';
 
 // Hook-based navigation utilities for cleaner component usage
 export function useNavigationHelpers(navigation: any) {
-  return useMemo(() => ({
-    navigateToCamera: () => NavigationUtils.navigateToCamera(navigation),
-    navigateToCameraForStory: () => NavigationUtils.navigateToCameraForStory(navigation),
-    navigateToVibeCheckViewer: (vibeCheck: InboxStackParamList['VibeCheckViewer']['vibeCheck']) =>
-      NavigationUtils.navigateToVibeCheckViewer(navigation, vibeCheck),
-    navigateToStoryViewer: (story: InboxStackParamList['VibeCheckViewer']['story']) =>
-      NavigationUtils.navigateToStoryViewer(navigation, story),
-    navigateToMediaPreview: (mediaUri: string, mediaType: 'photo' | 'video') =>
-      NavigationUtils.navigateToMediaPreview(navigation, mediaUri, mediaType),
-    navigateToFriendSelector: (params: CameraStackParamList['FriendSelector']) =>
-      NavigationUtils.navigateToFriendSelector(navigation, params),
-    navigateToAddFriends: () => NavigationUtils.navigateToAddFriends(navigation),
-    navigateToFriendRequests: () => NavigationUtils.navigateToFriendRequests(navigation),
-    navigateToUserProfile: (userId: string) =>
-      NavigationUtils.navigateToUserProfile(navigation, userId),
-    navigateToProfileTab: () => NavigationUtils.navigateToProfileTab(navigation),
-    goBack: () => NavigationUtils.goBack(navigation),
-    resetStack: (routeName: string) => NavigationUtils.resetStack(navigation, routeName),
-    navigateToFriendsTab: () => NavigationUtils.navigateToFriendsTab(navigation),
-    navigateToCameraTab: () => NavigationUtils.navigateToCameraTab(navigation),
-    navigateToConversationsTab: () => NavigationUtils.navigateToConversationsTab(navigation),
-  }), [navigation]);
+  return useMemo(
+    () => ({
+      navigateToCamera: () => NavigationUtils.navigateToCamera(navigation),
+      navigateToCameraForStory: () => NavigationUtils.navigateToCameraForStory(navigation),
+      navigateToVibeCheckViewer: (vibeCheck: InboxStackParamList['VibeCheckViewer']['vibeCheck']) =>
+        NavigationUtils.navigateToVibeCheckViewer(navigation, vibeCheck),
+      navigateToStoryViewer: (story: InboxStackParamList['VibeCheckViewer']['story']) =>
+        NavigationUtils.navigateToStoryViewer(navigation, story),
+      navigateToMediaPreview: (mediaUri: string, mediaType: 'photo' | 'video') =>
+        NavigationUtils.navigateToMediaPreview(navigation, mediaUri, mediaType),
+      navigateToFriendSelector: (params: CameraStackParamList['FriendSelector']) =>
+        NavigationUtils.navigateToFriendSelector(navigation, params),
+      navigateToAddFriends: () => NavigationUtils.navigateToAddFriends(navigation),
+      navigateToFriendRequests: () => NavigationUtils.navigateToFriendRequests(navigation),
+      navigateToUserProfile: (userId: string) =>
+        NavigationUtils.navigateToUserProfile(navigation, userId),
+      navigateToProfileTab: () => NavigationUtils.navigateToProfileTab(navigation),
+      goBack: () => NavigationUtils.goBack(navigation),
+      resetStack: (routeName: string) => NavigationUtils.resetStack(navigation, routeName),
+      navigateToFriendsTab: () => NavigationUtils.navigateToFriendsTab(navigation),
+      navigateToCameraTab: () => NavigationUtils.navigateToCameraTab(navigation),
+      navigateToConversationsTab: () => NavigationUtils.navigateToConversationsTab(navigation),
+    }),
+    [navigation]
+  );
 }
 
 // Common navigation patterns as constants

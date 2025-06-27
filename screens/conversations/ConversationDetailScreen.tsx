@@ -12,7 +12,13 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRoute, useNavigation, RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { ConversationsStackParamList, TextMessage, VibeCheckMessage, ConversationMessage, Conversation } from '../../types';
+import {
+  ConversationsStackParamList,
+  TextMessage,
+  VibeCheckMessage,
+  ConversationMessage,
+  Conversation,
+} from '../../types';
 import { theme } from '../../constants/theme';
 import { conversationsService } from '../../services/conversations';
 import { useAuth } from '../../contexts/AuthContext';
@@ -26,28 +32,24 @@ type RouteParams = RouteProp<ConversationsStackParamList, 'ConversationDetail'>;
 type NavigationProp = StackNavigationProp<ConversationsStackParamList, 'ConversationDetail'>;
 
 // Memoized TextMessage component to prevent unnecessary re-renders
-const TextMessageComponent = memo(({ 
-  message, 
-  isOwnMessage 
-}: { 
-  message: TextMessage; 
-  isOwnMessage: boolean;
-}) => {
-  return (
-    <View style={[styles.messageContainer, isOwnMessage && styles.ownMessageContainer]}>
-      <View
-        style={[styles.messageBubble, isOwnMessage ? styles.ownMessage : styles.otherMessage]}
-      >
-        <Text style={[styles.messageText, isOwnMessage && styles.ownMessageText]}>
-          {message.content}
-        </Text>
-        <Text style={[styles.messageTime, isOwnMessage && styles.ownMessageTime]}>
-          {formatMessageTime(message.created_at)}
-        </Text>
+const TextMessageComponent = memo(
+  ({ message, isOwnMessage }: { message: TextMessage; isOwnMessage: boolean }) => {
+    return (
+      <View style={[styles.messageContainer, isOwnMessage && styles.ownMessageContainer]}>
+        <View
+          style={[styles.messageBubble, isOwnMessage ? styles.ownMessage : styles.otherMessage]}
+        >
+          <Text style={[styles.messageText, isOwnMessage && styles.ownMessageText]}>
+            {message.content}
+          </Text>
+          <Text style={[styles.messageTime, isOwnMessage && styles.ownMessageTime]}>
+            {formatMessageTime(message.created_at)}
+          </Text>
+        </View>
       </View>
-    </View>
-  );
-});
+    );
+  }
+);
 
 const ConversationDetailScreen = () => {
   const route = useRoute<RouteParams>();
@@ -55,7 +57,7 @@ const ConversationDetailScreen = () => {
   const navHelpers = useNavigationHelpers(navigation);
   const { user } = useAuth();
   const { profile: currentUserProfile } = useProfile(user?.id || '');
-  
+
   const flatListRef = useRef<FlatList>(null);
 
   const [conversation, setConversation] = useState<Conversation | null>(() => {
@@ -99,7 +101,6 @@ const ConversationDetailScreen = () => {
   const [sending, setSending] = useState(false);
   const optimisticMessageIdRef = useRef<string | null>(null);
   const [pendingVibeCheck, setPendingVibeCheck] = useState(route.params?.pendingVibeCheck);
-  const isScrollingRef = useRef(false);
 
   const loadMessages = useCallback(
     async (silent = false) => {
@@ -119,7 +120,7 @@ const ConversationDetailScreen = () => {
 
         // Mark messages as read
         await conversationsService.markMessagesAsRead(conversation.id);
-        
+
         // Scroll to bottom after loading messages
         setTimeout(() => {
           flatListRef.current?.scrollToEnd({ animated: false });
@@ -181,7 +182,6 @@ const ConversationDetailScreen = () => {
     loadConversation();
   }, [loadConversation]);
 
-
   // Add pending VibeCheck message when navigating from friend selector
   useEffect(() => {
     if (pendingVibeCheck && conversation && user?.id) {
@@ -206,7 +206,7 @@ const ConversationDetailScreen = () => {
 
       // Add pending message to the list
       setMessages(prev => [...prev, pendingMessage]);
-      
+
       // Clear pending state
       setPendingVibeCheck(undefined);
 
@@ -345,7 +345,7 @@ const ConversationDetailScreen = () => {
         setTimeout(() => {
           cache.set(CACHE_KEYS.CONVERSATION_MESSAGES, updated, messagesCacheKey);
         }, 0);
-        
+
         return updated;
       });
 
@@ -356,7 +356,7 @@ const ConversationDetailScreen = () => {
 
       // Remove optimistic message on error
       setMessages(prev => prev.filter(msg => msg.id !== tempId));
-      
+
       // Restore message text for retry
       setMessageText(text);
 
@@ -367,37 +367,63 @@ const ConversationDetailScreen = () => {
     }
   };
 
-  const handleVibeCheckPress = useCallback((vibeCheck: VibeCheckMessage) => {
-    if (vibeCheck.vibe_check) {
-      navHelpers.navigateToVibeCheckViewer(vibeCheck.vibe_check);
-    }
-  }, [navHelpers]);
+  const handleVibeCheckPress = useCallback(
+    (vibeCheck: VibeCheckMessage) => {
+      if (vibeCheck.vibe_check) {
+        // Senders can always view their own VibeChecks
+        // Recipients can only view if not yet opened
+        const isOwnMessage = vibeCheck.sender_id === user?.id;
+        if (isOwnMessage || vibeCheck.vibe_check.status !== 'opened') {
+          // If recipient is viewing, update the status locally immediately
+          if (!isOwnMessage && vibeCheck.vibe_check.status !== 'opened') {
+            // Update the message in our local state
+            setMessages(prev =>
+              prev.map(msg => {
+                if (msg.id === vibeCheck.id && msg.message_type === 'vibe_check') {
+                  return {
+                    ...msg,
+                    vibe_check: {
+                      ...msg.vibe_check!,
+                      status: 'opened' as const,
+                      opened_at: new Date().toISOString(),
+                    },
+                  };
+                }
+                return msg;
+              })
+            );
+          }
+
+          navHelpers.navigateToVibeCheckViewer(vibeCheck.vibe_check);
+        }
+      }
+    },
+    [navHelpers, user?.id]
+  );
 
   // Create stable callback ref for VibeCheck press
   const handleVibeCheckPressRef = useRef(handleVibeCheckPress);
   handleVibeCheckPressRef.current = handleVibeCheckPress;
 
-  const renderMessage = useCallback(({ item }: { item: ConversationMessage }) => {
-    const isOwnMessage = item.sender_id === user?.id;
+  const renderMessage = useCallback(
+    ({ item }: { item: ConversationMessage }) => {
+      const isOwnMessage = item.sender_id === user?.id;
 
-    if (item.message_type === 'vibe_check') {
-      return (
-        <VibeCheckMessageComponent
-          message={item as VibeCheckMessage}
-          isOwnMessage={isOwnMessage}
-          onPress={() => handleVibeCheckPressRef.current(item as VibeCheckMessage)}
-        />
-      );
-    }
+      if (item.message_type === 'vibe_check') {
+        return (
+          <VibeCheckMessageComponent
+            message={item as VibeCheckMessage}
+            isOwnMessage={isOwnMessage}
+            onPress={() => handleVibeCheckPressRef.current(item as VibeCheckMessage)}
+          />
+        );
+      }
 
-    // Render text message
-    return (
-      <TextMessageComponent
-        message={item as TextMessage}
-        isOwnMessage={isOwnMessage}
-      />
-    );
-  }, [user?.id]);
+      // Render text message
+      return <TextMessageComponent message={item as TextMessage} isOwnMessage={isOwnMessage} />;
+    },
+    [user?.id]
+  );
 
   const renderHeader = useCallback(() => {
     // Show header immediately with loading state

@@ -131,7 +131,10 @@ export const conversationsService = {
     return { ...data, message_type: 'text' as const };
   },
 
-  async sendVibeCheckMessage(conversationId: string, vibeCheckId: string): Promise<VibeCheckMessage> {
+  async sendVibeCheckMessage(
+    conversationId: string,
+    vibeCheckId: string
+  ): Promise<VibeCheckMessage> {
     const { data: user } = await supabase.auth.getUser();
     if (!user.user) throw new Error('User not authenticated');
 
@@ -189,7 +192,10 @@ export const conversationsService = {
     };
   },
 
-  subscribeToMessages(conversationId: string, onNewMessage: (message: ConversationMessage) => void) {
+  subscribeToMessages(
+    conversationId: string,
+    onNewMessage: (message: ConversationMessage) => void
+  ) {
     const subscription = supabase
       .channel(`messages:${conversationId}`)
       .on(

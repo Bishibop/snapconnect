@@ -11,6 +11,7 @@ import { supabase } from '../../lib/supabase';
 import { FILTERS } from '../../types/filters';
 import FilteredImage from '../../components/FilteredImage';
 import { InboxStackParamList, SentStackParamList, FriendsStackParamList } from '../../types';
+import { useAuth } from '../../contexts/AuthContext';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
@@ -36,6 +37,7 @@ export default function VibeCheckViewerScreen({ route, navigation }: VibeCheckVi
   const { vibeCheck, story } = route.params;
   const content = vibeCheck || story; // Use vibeCheck if available, otherwise story
   const isStory = !!story;
+  const { user } = useAuth();
 
   const [timeLeft, setTimeLeft] = useState(30); // 30 seconds for photos
   const [mediaUrl, setMediaUrl] = useState<string>('');
@@ -52,10 +54,10 @@ export default function VibeCheckViewerScreen({ route, navigation }: VibeCheckVi
   };
 
   useEffect(() => {
-    if (!content) return;
+    if (!content || !user) return;
 
-    // Mark VibeCheck as opened when viewer opens (only for VibeChecks, not stories)
-    if (vibeCheck) {
+    // Mark VibeCheck as opened when viewer opens (only if recipient is viewing)
+    if (vibeCheck && vibeCheck.recipient_id === user.id) {
       markVibeCheckOpened(vibeCheck.id).catch(console.error);
     }
 
@@ -68,7 +70,7 @@ export default function VibeCheckViewerScreen({ route, navigation }: VibeCheckVi
 
     // Get the public URL for the media
     getMediaUrl();
-  }, [content?.id]);
+  }, [content?.id, user?.id]);
 
   // Simple countdown timer for photos
   useEffect(() => {

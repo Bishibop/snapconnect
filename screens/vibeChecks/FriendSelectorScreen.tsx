@@ -8,7 +8,6 @@ import { getFriends, FriendWithProfile } from '../../services/friends';
 import { createVibeCheck } from '../../services/vibeChecks';
 import { uploadMedia } from '../../services/media';
 import { conversationsService } from '../../services/conversations';
-import { Filter } from '../../types/filters';
 import { CameraStackParamList } from '../../types';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
 import RefreshableList from '../../components/ui/RefreshableList';
@@ -78,10 +77,10 @@ export default function FriendSelectorScreen({ route, navigation }: FriendSelect
       // If sending to one friend, navigate immediately for better UX
       if (selectedCount === 1) {
         const friend = selectedFriends[0];
-        
+
         // Get or create conversation first
         const conversation = await conversationsService.getOrCreateConversation(friend.friend_id);
-        
+
         // Navigate immediately with pending VibeCheck info
         navigation.popToTop();
         navigation.getParent()?.navigate('Conversations', {
@@ -112,10 +111,7 @@ export default function FriendSelectorScreen({ route, navigation }: FriendSelect
           })
           .catch(error => {
             console.error('Error sending VibeCheck:', error);
-            Alert.alert(
-              'Send Failed',
-              'Failed to send VibeCheck. Please try again.'
-            );
+            Alert.alert('Send Failed', 'Failed to send VibeCheck. Please try again.');
           });
       } else {
         // For multiple friends, use the original flow
@@ -135,19 +131,15 @@ export default function FriendSelectorScreen({ route, navigation }: FriendSelect
 
         await Promise.all(conversationPromises);
 
-        Alert.alert(
-          'VibeCheck Sent!',
-          `Successfully sent to ${selectedCount} conversations`,
-          [
-            {
-              text: 'OK',
-              onPress: () => {
-                navigation.popToTop();
-                navigation.getParent()?.navigate('Conversations');
-              },
+        Alert.alert('VibeCheck Sent!', `Successfully sent to ${selectedCount} conversations`, [
+          {
+            text: 'OK',
+            onPress: () => {
+              navigation.popToTop();
+              navigation.getParent()?.navigate('Conversations');
             },
-          ]
-        );
+          },
+        ]);
       }
     } catch (error: unknown) {
       console.error('Error sending VibeCheck:', error);
@@ -193,9 +185,7 @@ export default function FriendSelectorScreen({ route, navigation }: FriendSelect
           variant="secondary"
           size="small"
         />
-        <Text style={styles.headerTitle}>
-          Send to...
-        </Text>
+        <Text style={styles.headerTitle}>Send to...</Text>
         <View style={styles.placeholder} />
       </View>
 
@@ -209,9 +199,7 @@ export default function FriendSelectorScreen({ route, navigation }: FriendSelect
           ListEmptyComponent={() => (
             <View style={styles.centerContainer}>
               <Text style={styles.emptyText}>No friends yet!</Text>
-              <Text style={styles.emptySubtext}>
-                Add some friends to start sending VibeChecks
-              </Text>
+              <Text style={styles.emptySubtext}>Add some friends to start sending VibeChecks</Text>
             </View>
           )}
         />
@@ -221,10 +209,7 @@ export default function FriendSelectorScreen({ route, navigation }: FriendSelect
       {selectedCount > 0 && (
         <View style={styles.sendContainer}>
           <ActionButton
-            title={selectedCount === 1 
-              ? 'Send' 
-              : `Send to ${selectedCount} friends`
-            }
+            title={selectedCount === 1 ? 'Send' : `Send to ${selectedCount} friends`}
             onPress={handleSendVibeCheck}
             loading={sending}
             disabled={sending}

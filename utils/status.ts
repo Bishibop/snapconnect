@@ -161,7 +161,7 @@ export function getFriendshipStatusText(status: FriendshipStatus): string {
 /**
  * Check if a VibeCheck status indicates it can be viewed
  * @param status - The VibeCheck status
- * @returns True if the VibeCheck can be viewed
+ * @returns True if the VibeCheck can be viewed (not yet opened)
  */
 export function isVibeCheckViewable(status: VibeCheckStatus): boolean {
   return status === 'delivered' || status === 'sent';

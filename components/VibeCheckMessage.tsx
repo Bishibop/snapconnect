@@ -16,12 +16,17 @@ interface VibeCheckMessageProps {
   onPress?: () => void;
 }
 
-function VibeCheckMessage({
-  message,
-  isOwnMessage,
-  onPress,
-}: VibeCheckMessageProps) {
+function VibeCheckMessage({ message, isOwnMessage, onPress }: VibeCheckMessageProps) {
   const [mediaUrl, setMediaUrl] = useState<string>('');
+
+  // Simplified display logic for recipients
+  const isVideo = message.vibe_check?.vibe_check_type === 'video';
+  const isViewed = message.vibe_check?.status === 'opened';
+  const canView = isOwnMessage || !isViewed;
+
+  // Display values for recipients
+  const displayText = isViewed ? 'Already viewed' : 'Tap to view';
+  const displayIcon = isViewed ? '👁️' : isVideo ? '🎥' : '📸';
 
   React.useEffect(() => {
     if (message.vibe_check?.media_url && !mediaUrl) {
@@ -31,7 +36,7 @@ function VibeCheckMessage({
   }, [message.vibe_check?.media_url, mediaUrl]);
 
   const handlePress = () => {
-    if (onPress && message.vibe_check) {
+    if (onPress && message.vibe_check && canView) {
       onPress();
     }
   };
@@ -48,31 +53,37 @@ function VibeCheckMessage({
 
   return (
     <View style={[styles.container, isOwnMessage ? styles.ownMessage : styles.otherMessage]}>
-      <TouchableOpacity style={styles.vibeCheckContainer} onPress={handlePress} disabled={!onPress}>
+      <TouchableOpacity
+        style={styles.vibeCheckContainer}
+        onPress={handlePress}
+        disabled={!onPress || !canView}
+      >
         {/* VibeCheck Media */}
         <View style={styles.mediaContainer}>
           {!isOwnMessage ? (
             // Recipients see a placeholder
-            <View style={[styles.media, styles.mediaPlaceholder]}>
-              <Text style={styles.mediaPlaceholderText}>
-                {message.vibe_check?.vibe_check_type === 'video' ? '🎥' : '📸'}
-              </Text>
-              <Text style={styles.placeholderSubtext}>Tap to view</Text>
+            <View
+              style={[
+                styles.media,
+                styles.mediaPlaceholder,
+                isViewed && styles.mediaPlaceholderOpened,
+              ]}
+            >
+              <Text style={styles.mediaPlaceholderText}>{displayIcon}</Text>
+              <Text style={styles.placeholderSubtext}>{displayText}</Text>
             </View>
+          ) : // Senders see the thumbnail
+          mediaUrl ? (
+            <FilteredImage
+              imageUri={mediaUrl}
+              filter={FILTERS.find(f => f.id === message.vibe_check?.filter_type) || FILTERS[0]}
+              style={styles.media}
+              resizeMode="cover"
+            />
           ) : (
-            // Senders see the thumbnail
-            mediaUrl ? (
-              <FilteredImage
-                imageUri={mediaUrl}
-                filter={FILTERS.find(f => f.id === message.vibe_check?.filter_type) || FILTERS[0]}
-                style={styles.media}
-                resizeMode="cover"
-              />
-            ) : (
-              <View style={[styles.media, styles.mediaPlaceholder]}>
-                <Text style={styles.mediaPlaceholderText}>📸</Text>
-              </View>
-            )
+            <View style={[styles.media, styles.mediaPlaceholder]}>
+              <Text style={styles.mediaPlaceholderText}>📸</Text>
+            </View>
           )}
 
           {/* VibeCheck Type Indicator */}
@@ -141,6 +152,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     flexDirection: 'column',
+  },
+  mediaPlaceholderOpened: {
+    backgroundColor: '#f0f0f0',
+    opacity: 0.7,
   },
   mediaPlaceholderText: {
     fontSize: 40,
