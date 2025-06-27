@@ -21,11 +21,14 @@ SnapConnect follows a client-server architecture with a React Native mobile clie
 - **Technologies**: React Native, Expo, TypeScript
 - **Key Modules**:
   - Authentication (context provider)
-  - Camera system (photo capture)
-  - Friend management
+  - Camera system (photo capture)  
+  - Friend management (context provider with realtime)
   - Snap sending/receiving
-  - Story posting/viewing
+  - Story posting/viewing (context provider with caching)
+  - Profile management (bio editing, user profiles)
   - Filter application
+  - Realtime subscription management (centralized)
+  - Error handling (standardized utility)
 
 ### Authentication Service
 
@@ -38,7 +41,7 @@ SnapConnect follows a client-server architecture with a React Native mobile clie
 - **Responsibilities**: Data persistence, business logic (via RLS), data integrity
 - **Technology**: PostgreSQL 15
 - **Key Tables**:
-  - `profiles` - User information
+  - `profiles` - User information (including bio text)
   - `friendships` - Friend connections
   - `snaps` - Ephemeral messages
   - `stories` - 24-hour posts
@@ -173,43 +176,57 @@ Bucket 'stories' - Public read with signed URLs
 
 ```
 App.tsx
+├── Contexts/ (Global state providers)
+│   ├── AuthContext.tsx (User authentication)
+│   ├── FriendsContext.tsx (Friend management + realtime)
+│   ├── StoriesContext.tsx (Stories + caching)
+│   └── RealtimeContext.tsx (Centralized subscriptions)
 ├── Navigation/
-│   ├── MainTabs (Friends, Camera, Inbox, Sent)
+│   ├── MainTabs (Friends, Camera, Inbox, Sent, Profile)
 │   └── Stack Navigators per tab
 ├── Screens/
 │   ├── Auth/ (Login, Signup)
 │   ├── Camera/ (Capture, Preview, Filters)
-│   ├── Friends/ (List, Requests, Search)
+│   ├── Main/ (Friends: List, Requests, Search)
 │   ├── Snaps/ (Inbox, Sent, Viewer)
-│   └── Stories/ (Viewer, Creation)
+│   └── Profile/ (ProfileScreen, EditProfile)
 ├── Components/
-│   ├── UI/ (Reusable elements)
-│   └── Features/ (Complex components)
+│   ├── UI/ (ActionButton, FormInput, LoadingSpinner)
+│   ├── Common/ (ErrorBoundary, AuthErrorBoundary)
+│   └── Features/ (StoriesRow, StoryCircle, FilteredImage)
 ├── Services/
 │   ├── supabase.ts (Client setup)
 │   ├── friends.ts (Friend operations)
 │   ├── snaps.ts (Snap operations)
-│   └── stories.ts (Story operations)
+│   ├── stories.ts (Story operations)
+│   ├── profiles.ts (Profile management)
+│   └── media.ts (File upload/processing)
 ├── Hooks/
-│   ├── useAuth.ts
-│   ├── useFriends.ts
-│   ├── useSnaps.ts
-│   └── useStories.ts
+│   ├── useAuth.ts (Authentication state)
+│   ├── useFriends.ts (Friend data + context)
+│   ├── useStories.ts (Story data + context)
+│   ├── useProfile.ts (Profile management + sync)
+│   ├── useProfileUsername.ts (Lightweight profile data)
+│   └── useRealtimeSubscription.ts (Subscription lifecycle)
 └── Utils/
-    ├── cache.ts (Performance)
-    ├── navigation.ts (Helpers)
-    └── media.ts (Processing)
+    ├── cache.ts (Multi-level caching system)
+    ├── errorHandler.ts (Standardized error handling)
+    ├── navigation.ts (Type-safe navigation)
+    └── dateTime.ts (Time utilities)
 ```
 
 ### Database Schema Design
 
 ```sql
 -- Core tables with relationships
-profiles (id, username, email, avatar_url)
+profiles (id, username, email, avatar_url, bio)
 friendships (user_id, friend_id, status, created_at)
 snaps (id, sender_id, recipient_id, media_url, status, expires_at)
 stories (id, user_id, media_url, expires_at)
 story_views (story_id, viewer_id, viewed_at)
+
+-- Recent additions (Epic 1 Phase 1)
+-- Migration 008: ALTER TABLE profiles ADD COLUMN bio TEXT;
 
 -- Indexes for performance
 idx_friendships_user_id
@@ -220,11 +237,20 @@ idx_stories_expires_at
 
 ### Caching Strategy
 
-- **In-Memory Cache**: Friends, stories, user data
-- **Cache Duration**: 5 minutes default
-- **Invalidation**: Real-time updates trigger refresh
-- **Lazy Loading**: Initial render from cache
-- **Background Refresh**: Keep data fresh
+- **Multi-Level Architecture**: Memory cache → Context state → Database
+- **User-Specific Caching**: Separate cache instances per user to prevent data leakage
+- **Time-Based Invalidation**: Configurable TTL (5 minutes default) with automatic cleanup
+- **Mount State Tracking**: Prevents setState on unmounted components using isMountedRef pattern
+- **Cache Operations**:
+  - `get()` - Retrieve from cache with TTL validation
+  - `set()` - Store with automatic expiration
+  - `invalidate()` - Force refresh on realtime updates
+  - `clear()` - User logout cleanup
+- **Performance Optimizations**:
+  - Background refresh maintains cache while showing stale data
+  - Lazy loading for initial render
+  - Selective invalidation on specific data changes
+  - Automatic memory cleanup on app state changes
 
 ## Scalability Considerations
 
@@ -232,8 +258,11 @@ idx_stories_expires_at
 
 - Efficient database indexes
 - Lazy loading of images
-- Selective real-time subscriptions
-- Client-side caching
+- Centralized realtime subscription management
+- Multi-level client-side caching with user isolation
+- Standardized error handling with user notifications
+- Context-based state management with background refresh
+- Mount state tracking to prevent memory leaks
 - CDN for media delivery
 
 ### Future Scalability
@@ -249,8 +278,45 @@ idx_stories_expires_at
 ### Current Monitoring
 
 - Supabase dashboard metrics
-- Client-side error boundaries
+- Client-side error boundaries (AuthErrorBoundary, ErrorBoundary)
 - Network request logging
+- Standardized error handling with ErrorHandler utility
+
+## Error Handling Architecture
+
+### ErrorHandler Utility
+
+- **Centralized Error Processing**: Single point for all error handling logic
+- **User Notification Management**: Configurable alerts with contextual messages
+- **Error Categorization**: API errors, cache errors, subscription errors
+- **Silent Mode Support**: Background operations can fail silently
+- **Logging Integration**: Consistent error logging format across services
+
+### Error Handling Patterns
+
+```typescript
+// API Error Handling
+ErrorHandler.handleApiError(error, 'fetch friends', false);
+
+// Cache Error Handling (silent)
+ErrorHandler.handleCacheError(error, 'friends list cache');
+
+// Subscription Error Handling (silent)
+ErrorHandler.handleSubscriptionError(error, 'stories');
+
+// Custom Error Handling
+ErrorHandler.handle(error, {
+  context: 'profile update',
+  showAlert: true,
+  alertMessage: 'Failed to save profile changes'
+});
+```
+
+### Error Boundaries
+
+- **AuthErrorBoundary**: Handles authentication-related failures
+- **ErrorBoundary**: Catches unexpected React component errors
+- **Service Layer**: Standardized error propagation from services to UI
 
 ### Future Monitoring
 
