@@ -359,9 +359,11 @@ idx_stories_expires_at
 ## Feature: VibeChecks Integration
 
 ### Overview
+
 VibeChecks (formerly Snaps) are ephemeral media messages integrated directly into conversations. Unlike traditional ephemeral messaging apps where disappearing messages exist separately, VibeChecks appear inline with text messages in conversations.
 
 ### Key Features
+
 - **Unified Conversations**: Text and media messages in single conversation flow
 - **One-Time Viewing**: Recipients can view VibeChecks only once
 - **Timed Viewing**: 30-second timer for photos
@@ -370,16 +372,18 @@ VibeChecks (formerly Snaps) are ephemeral media messages integrated directly int
 - **Optimistic UI**: Immediate feedback while uploading
 
 ### Technical Implementation
+
 1. **Message Types**: Extended messages table with `message_type` enum ('text' | 'vibe_check')
 2. **Foreign Key Reference**: Messages link to vibe_checks table via `vibe_check_id`
 3. **Status Tracking**: VibeCheck status transitions: sent → delivered → opened → expired
 4. **Real-time Updates**: Leverages existing conversation subscriptions
-5. **Preview States**: 
+5. **Preview States**:
    - Recipients see placeholder with tap-to-view
    - Senders see thumbnail preview
    - Opened VibeChecks show "Already viewed" state
 
 ### Security & Privacy
+
 - Row Level Security ensures only participants can view
 - One-time viewing enforced at database level
 - Media files stored with signed URLs

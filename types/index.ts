@@ -312,3 +312,26 @@ export type ConversationsStackParamList = {
     };
   };
 };
+
+// Art and VibeReel Types
+export interface ArtPiece {
+  id: string;
+  user_id: string;
+  image_url: string;
+  embedding?: number[];
+  vibe_count: number;
+  created_at: string;
+  user?: Profile;
+  similarity?: number;
+}
+
+export interface VibeReel {
+  id: string;
+  creator_id: string;
+  primary_art_id: string;
+  selected_art_ids: string[];
+  created_at: string;
+  creator?: Profile;
+  primary_art?: ArtPiece;
+  selected_art?: ArtPiece[];
+}
