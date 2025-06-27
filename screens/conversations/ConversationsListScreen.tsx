@@ -48,7 +48,7 @@ const ConversationsListScreen = () => {
         if (user?.id) {
           cache.set(CACHE_KEYS.CONVERSATIONS, data, user.id);
         }
-        
+
         // Mark that we've completed at least one load
         setHasLoadedOnce(true);
       } catch (error) {
