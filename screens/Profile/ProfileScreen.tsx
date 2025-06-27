@@ -1,12 +1,5 @@
 import React from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  ActivityIndicator,
-} from 'react-native';
+import { View, Text, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { useAuth } from '../../contexts/AuthContext';
 import { useProfile } from '../../hooks/useProfile';
@@ -14,6 +7,7 @@ import { theme } from '../../constants/theme';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ProfileNavigation } from '../../utils/navigation';
 import { ProfileStackParamList } from '../../types';
+import ActionButton from '../../components/ui/ActionButton';
 
 type ProfileScreenRouteProp = RouteProp<ProfileStackParamList, 'ProfileScreen'>;
 
@@ -52,12 +46,12 @@ export default function ProfileScreen() {
         <View style={styles.header}>
           <Text style={styles.username}>{profile.username}</Text>
           {isOwnProfile && (
-            <TouchableOpacity
-              style={styles.editButton}
+            <ActionButton
+              title="Edit Profile"
               onPress={() => navigation.navigate('EditProfile')}
-            >
-              <Text style={styles.editButtonText}>Edit Profile</Text>
-            </TouchableOpacity>
+              variant="primary"
+              size="small"
+            />
           )}
         </View>
 
@@ -113,17 +107,6 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: 'bold',
     color: theme.colors.text,
-  },
-  editButton: {
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.sm,
-    backgroundColor: theme.colors.primary,
-    borderRadius: 20,
-  },
-  editButtonText: {
-    color: theme.colors.white,
-    fontSize: 14,
-    fontWeight: '500',
   },
   bioSection: {
     paddingHorizontal: theme.spacing.md,

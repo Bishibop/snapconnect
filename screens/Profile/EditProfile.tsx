@@ -4,7 +4,6 @@ import {
   Text,
   StyleSheet,
   TextInput,
-  TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
   Alert,
@@ -15,6 +14,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useProfile } from '../../hooks/useProfile';
 import { theme } from '../../constants/theme';
 import { VALIDATION_LIMITS, VALIDATION_MESSAGES } from '../../constants/validation';
+import ActionButton from '../../components/ui/ActionButton';
 
 export default function EditProfile() {
   const navigation = useNavigation();
@@ -54,15 +54,20 @@ export default function EditProfile() {
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => navigation.goBack()}>
-            <Text style={styles.cancelText}>Cancel</Text>
-          </TouchableOpacity>
+          <ActionButton
+            title="Cancel"
+            onPress={() => navigation.goBack()}
+            variant="ghost"
+            size="small"
+          />
           <Text style={styles.title}>Edit Profile</Text>
-          <TouchableOpacity onPress={handleSave} disabled={loading}>
-            <Text style={[styles.saveText, loading && styles.saveTextDisabled]}>
-              {loading ? 'Saving...' : 'Save'}
-            </Text>
-          </TouchableOpacity>
+          <ActionButton
+            title="Save"
+            onPress={handleSave}
+            loading={loading}
+            variant="primary"
+            size="small"
+          />
         </View>
 
         <View style={styles.form}>
@@ -79,7 +84,7 @@ export default function EditProfile() {
               </Text>
             </View>
             <TextInput
-              style={styles.bioInput}
+              style={[styles.bioInput, loading && styles.bioInputDisabled]}
               value={bio}
               onChangeText={setBio}
               placeholder="Tell others about yourself and your art..."
@@ -87,6 +92,7 @@ export default function EditProfile() {
               multiline
               maxLength={VALIDATION_LIMITS.BIO_MAX_LENGTH}
               textAlignVertical="top"
+              editable={!loading}
             />
           </View>
         </View>
@@ -116,18 +122,6 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     color: theme.colors.text,
-  },
-  cancelText: {
-    fontSize: 16,
-    color: theme.colors.primary,
-  },
-  saveText: {
-    fontSize: 16,
-    color: theme.colors.primary,
-    fontWeight: '500',
-  },
-  saveTextDisabled: {
-    color: theme.colors.textSecondary,
   },
   form: {
     paddingHorizontal: theme.spacing.md,
@@ -165,5 +159,9 @@ const styles = StyleSheet.create({
     minHeight: 100,
     borderWidth: 1,
     borderColor: theme.colors.border,
+  },
+  bioInputDisabled: {
+    opacity: 0.6,
+    backgroundColor: theme.colors.border,
   },
 });

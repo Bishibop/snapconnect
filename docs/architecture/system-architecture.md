@@ -5,6 +5,7 @@
 SnapConnect follows a client-server architecture with a React Native mobile client connecting to Supabase backend services. The system emphasizes real-time communication, ephemeral content, and secure media sharing.
 
 ### High-Level Components
+
 1. **Mobile Client** - React Native/Expo app with 4-tab navigation
 2. **Authentication Service** - Supabase Auth for user management
 3. **Database** - PostgreSQL with Row Level Security
@@ -15,6 +16,7 @@ SnapConnect follows a client-server architecture with a React Native mobile clie
 ## Service Boundaries
 
 ### Mobile Application
+
 - **Responsibilities**: UI rendering, camera control, media capture, local state management, real-time subscriptions
 - **Technologies**: React Native, Expo, TypeScript
 - **Key Modules**:
@@ -26,11 +28,13 @@ SnapConnect follows a client-server architecture with a React Native mobile clie
   - Filter application
 
 ### Authentication Service
+
 - **Responsibilities**: User registration, login, session management, password reset
 - **Technology**: Supabase Auth
 - **Integration**: JWT tokens for API access
 
 ### Database Service
+
 - **Responsibilities**: Data persistence, business logic (via RLS), data integrity
 - **Technology**: PostgreSQL 15
 - **Key Tables**:
@@ -41,6 +45,7 @@ SnapConnect follows a client-server architecture with a React Native mobile clie
   - `story_views` - View tracking
 
 ### Storage Service
+
 - **Responsibilities**: Media file storage, URL generation, access control
 - **Technology**: Supabase Storage (S3-compatible)
 - **Buckets**:
@@ -48,6 +53,7 @@ SnapConnect follows a client-server architecture with a React Native mobile clie
   - `stories` - Semi-public photos for stories
 
 ### Realtime Service
+
 - **Responsibilities**: WebSocket management, change notifications, presence
 - **Technology**: Supabase Realtime
 - **Channels**:
@@ -59,6 +65,7 @@ SnapConnect follows a client-server architecture with a React Native mobile clie
 ## Core Data Flow
 
 ### User Registration/Login Flow
+
 1. User enters credentials in mobile app
 2. App calls Supabase Auth API
 3. Auth service validates and returns JWT
@@ -66,6 +73,7 @@ SnapConnect follows a client-server architecture with a React Native mobile clie
 5. Profile created in database via trigger
 
 ### Snap Sharing Flow
+
 1. User captures photo via camera
 2. Photo uploaded to Supabase Storage
 3. Snap record created in database
@@ -75,6 +83,7 @@ SnapConnect follows a client-server architecture with a React Native mobile clie
 7. Snap marked as viewed in database
 
 ### Story Posting Flow
+
 1. User captures photo
 2. Photo uploaded to Stories bucket
 3. Story record created (replaces existing)
@@ -83,6 +92,7 @@ SnapConnect follows a client-server architecture with a React Native mobile clie
 6. Auto-expires after 24 hours via database
 
 ### Friend Connection Flow
+
 1. User searches by username
 2. Friend request created in database
 3. Realtime notification to recipient
@@ -93,50 +103,59 @@ SnapConnect follows a client-server architecture with a React Native mobile clie
 ## Technology Integration Points
 
 ### Mobile App ↔ Supabase Auth
+
 - **Protocol**: HTTPS REST API
 - **Authentication**: Email/password
 - **Token Management**: Secure storage, auto-refresh
 
 ### Mobile App ↔ Database
+
 - **Protocol**: PostgREST API (auto-generated)
 - **Authentication**: JWT bearer tokens
 - **Operations**: CRUD with RLS enforcement
 
 ### Mobile App ↔ Storage
+
 - **Protocol**: HTTPS REST API
 - **Authentication**: JWT tokens
 - **Operations**: Upload, download, signed URLs
 
 ### Mobile App ↔ Realtime
+
 - **Protocol**: WebSocket
 - **Authentication**: JWT tokens
 - **Subscriptions**: Table changes, presence
 
 ### Database ↔ Storage
+
 - **Integration**: Storage URLs saved in database
 - **Access Control**: RLS policies reference storage
 
 ## Security Overview
 
 ### Authentication & Authorization
+
 - **User Authentication**: Email/password via Supabase Auth
 - **API Authorization**: JWT tokens required for all requests
 - **Database Authorization**: Row Level Security policies
 - **Storage Authorization**: Bucket policies + signed URLs
 
 ### Data Protection
+
 - **In Transit**: HTTPS/WSS encryption
 - **At Rest**: Encrypted database and storage
 - **Token Security**: Secure storage on device
 - **Session Management**: Auto-refresh, logout on app background
 
 ### Access Control Patterns
+
 - **Friends Only**: Snaps visible only to sender/recipient
 - **Public Profiles**: Usernames searchable by all
 - **Friend Stories**: Stories visible to friends only
 - **Owner Only**: Profile edits, snap deletion
 
 ### Security Policies
+
 ```sql
 -- Example RLS policy for snaps
 CREATE POLICY "Users can view snaps sent to them"
@@ -151,6 +170,7 @@ Bucket 'stories' - Public read with signed URLs
 ## Component Details
 
 ### Mobile Client Architecture
+
 ```
 App.tsx
 ├── Navigation/
@@ -182,6 +202,7 @@ App.tsx
 ```
 
 ### Database Schema Design
+
 ```sql
 -- Core tables with relationships
 profiles (id, username, email, avatar_url)
@@ -198,6 +219,7 @@ idx_stories_expires_at
 ```
 
 ### Caching Strategy
+
 - **In-Memory Cache**: Friends, stories, user data
 - **Cache Duration**: 5 minutes default
 - **Invalidation**: Real-time updates trigger refresh
@@ -207,6 +229,7 @@ idx_stories_expires_at
 ## Scalability Considerations
 
 ### Current Optimizations
+
 - Efficient database indexes
 - Lazy loading of images
 - Selective real-time subscriptions
@@ -214,6 +237,7 @@ idx_stories_expires_at
 - CDN for media delivery
 
 ### Future Scalability
+
 - Database read replicas
 - Redis caching layer
 - Media processing pipeline
@@ -223,11 +247,13 @@ idx_stories_expires_at
 ## Monitoring & Observability
 
 ### Current Monitoring
+
 - Supabase dashboard metrics
 - Client-side error boundaries
 - Network request logging
 
 ### Future Monitoring
+
 - APM integration (Sentry)
 - Custom analytics events
 - Performance metrics

@@ -1,16 +1,19 @@
 # Implementation Plan: Epic 1 - VibeReel
 
 ## Epic Overview
+
 Transform SnapConnect from ephemeral messaging to an artist social network with collaborative visual storytelling through VibeReels, semantic art similarity, enhanced messaging, and artist profiles.
 
 ## Supporting Documents
+
 - **Epic Brief**: `/docs/epic-briefs/epic-1-vibe-reel.md`
-- **Technical Design**: `/docs/technical-design/epic-1-vibe-reel-tdd.md` 
+- **Technical Design**: `/docs/technical-design/epic-1-vibe-reel-tdd.md`
 - **System Architecture**: `/docs/architecture/system-architecture.md`
 
 ## Epic Implementation Guide
 
 **General Workflow for Epic Implementation:**
+
 - **Kickoff** - Read the supporting documents listed above, review epic requirements with user, confirm overall approach
 - **Implementation** - Work through features sequentially using the Feature Implementation Guide
 - **Completion** - Present completed epic to user, prompt user to verify against epic brief requirements, update system architecture document based on actual implementation, prompt user to do epic retrospective, get sign-off on the complete implementation
@@ -18,6 +21,7 @@ Transform SnapConnect from ephemeral messaging to an artist social network with 
 ## Feature Implementation Guide
 
 **General Workflow for Each Feature:**
+
 - **Kickoff** - Review feature requirements with user, ask clarifying questions about preferences and approach
 - **Implementation** - Build the entire feature independently, making reasonable technical decisions
 - **Completion** - Present completed feature to user, prompt user to verify against feature requirements, get sign-off before proceeding
@@ -25,21 +29,26 @@ Transform SnapConnect from ephemeral messaging to an artist social network with 
 ## Feature 1: Profile Bio Extension
 
 ### Overview
+
 Add bio text functionality to user profiles, enabling artists to describe themselves and their work.
 
 ### User Experience
+
 Users can edit their bio on their profile and view friends' bios when visiting their profiles.
 
 ### Technical Implementation
 
 #### Database Changes
+
 ```sql
 -- Migration: 008_add_profiles_bio.sql
 ALTER TABLE profiles ADD COLUMN bio TEXT;
 ```
 
 #### Frontend Development
+
 1. **Create Profile screens**
+
    ```typescript
    src/screens/Profile/
    ├── ProfileScreen.tsx     # Main profile view with bio display
@@ -47,25 +56,20 @@ ALTER TABLE profiles ADD COLUMN bio TEXT;
    ```
 
 2. **Extend profiles service**
+
    ```typescript
    // services/profiles.ts (new file)
    const updateUserBio = async (userId: string, bio: string) => {
-     return await supabase
-       .from('profiles')
-       .update({ bio })
-       .eq('id', userId);
+     return await supabase.from('profiles').update({ bio }).eq('id', userId);
    };
 
    const getUserProfile = async (userId: string) => {
-     return await supabase
-       .from('profiles')
-       .select('*')
-       .eq('id', userId)
-       .single();
+     return await supabase.from('profiles').select('*').eq('id', userId).single();
    };
    ```
 
 3. **Create useProfile hook**
+
    ```typescript
    // hooks/useProfile.ts
    - Profile data management with caching
@@ -83,11 +87,13 @@ ALTER TABLE profiles ADD COLUMN bio TEXT;
    - Navigate to friend's profile showing their bio
 
 ### Scope Limitations
+
 - No art grid yet (will be empty/placeholder)
 - Basic text-only bio editing
 - No profile photos/avatars
 
 ### Verification
+
 - [ ] Can navigate to Profile tab
 - [ ] Profile shows current user's username and bio
 - [ ] Can edit bio text and save successfully
@@ -98,14 +104,17 @@ ALTER TABLE profiles ADD COLUMN bio TEXT;
 ## Feature 2: Conversations Tab & Text Messaging
 
 ### Overview
+
 Replace Send/Inbox tabs with unified Conversations tab that supports persistent text messaging between friends.
 
 ### User Experience
+
 Users see all their conversations in one place, can send persistent text messages, and have conversation history that doesn't disappear.
 
 ### Technical Implementation
 
 #### Database Changes
+
 ```sql
 -- Migration: 009_add_conversations.sql
 CREATE TABLE conversations (
@@ -116,7 +125,7 @@ CREATE TABLE conversations (
 );
 -- Add indexes and RLS policies
 
--- Migration: 010_add_messages.sql  
+-- Migration: 010_add_messages.sql
 CREATE TABLE messages (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   conversation_id UUID REFERENCES conversations(id) ON DELETE CASCADE,
@@ -139,7 +148,9 @@ CREATE OR REPLACE FUNCTION update_conversation_activity(
 ```
 
 #### Frontend Development
+
 1. **Create Conversations screens**
+
    ```typescript
    src/screens/Conversations/
    ├── ConversationsList.tsx  # List of active conversations
@@ -147,15 +158,17 @@ CREATE OR REPLACE FUNCTION update_conversation_activity(
    ```
 
 2. **Create conversations service**
+
    ```typescript
    // services/conversations.ts
-   - createOrGetConversation()
-   - getUserConversations()
-   - sendTextMessage()
-   - getConversationMessages()
+   -createOrGetConversation() -
+     getUserConversations() -
+     sendTextMessage() -
+     getConversationMessages();
    ```
 
 3. **Create useConversations hook**
+
    ```typescript
    // hooks/useConversations.ts
    - Conversation list management with caching
@@ -168,6 +181,7 @@ CREATE OR REPLACE FUNCTION update_conversation_activity(
    - Final navigation: (Friends, Camera, Conversations, Profile)
 
 5. **Message Components**
+
    ```typescript
    components/
    └── TextMessage.tsx        # Text message display
@@ -179,11 +193,13 @@ CREATE OR REPLACE FUNCTION update_conversation_activity(
    - Integration with existing realtime patterns
 
 ### Scope Limitations
+
 - Text messages only (no VibeChecks yet)
 - Basic conversation UI
 - No message search or advanced features
 
 ### Verification
+
 - [ ] Navigation shows Conversations tab instead of Send/Inbox
 - [ ] Can see list of conversations ordered by recent activity
 - [ ] Can send text messages to friends
@@ -195,14 +211,17 @@ CREATE OR REPLACE FUNCTION update_conversation_activity(
 ## Feature 3: VibeCheck Integration in Conversations
 
 ### Overview
+
 Integrate existing ephemeral photo sharing (snaps) into conversation threads as "VibeChecks" with comprehensive renaming of all database tables, codebase references, and UI terminology.
 
 ### User Experience
+
 Users can send VibeChecks within conversation threads alongside text messages, view them for 30 seconds, and see view status indicators.
 
 ### Technical Implementation
 
 #### Database Renaming & Updates
+
 ```sql
 -- Migration: rename_snaps_to_vibe_checks.sql
 ALTER TABLE snaps RENAME TO vibe_checks;
@@ -240,32 +259,37 @@ ALTER PUBLICATION supabase_realtime ADD TABLE vibe_checks;
 ```
 
 #### Storage Bucket Renaming
+
 - Rename `snaps` bucket to `vibe-checks` or update all references
 - Update bucket policies with new naming
 
 #### Comprehensive Codebase Renaming
+
 1. **File & Directory Renaming**
+
    ```typescript
    // Rename files
    services/snaps.ts → services/vibeChecks.ts
    hooks/useSnaps.ts → hooks/useVibeChecks.ts
    screens/Snaps/ → screens/VibeChecks/
-   
+
    // Update all imports throughout codebase
    import { useSnaps } from './hooks/useSnaps'
    → import { useVibeChecks } from './hooks/useVibeChecks'
    ```
 
 2. **Type Definitions Update**
+
    ```typescript
    // types/index.ts
    interface Snap → interface VibeCheck
    type Message → type Message (keep, but update snap references)
-   
+
    // Update all type references throughout codebase
    ```
 
 3. **Service Layer Renaming**
+
    ```typescript
    // services/vibeChecks.ts (renamed from snaps.ts)
    sendSnap() → sendVibeCheck()
@@ -273,26 +297,28 @@ ALTER PUBLICATION supabase_realtime ADD TABLE vibe_checks;
    getSentSnaps() → getSentVibeChecks()
    markSnapAsViewed() → markVibeCheckAsViewed()
    subscribeToInboxChanges() → subscribeToInboxVibeCheckChanges()
-   
+
    // Update all function calls throughout codebase
    ```
 
 4. **Component Renaming**
+
    ```typescript
    // Rename component files and exports
    SnapViewer.tsx → VibeCheckViewer.tsx
    SnapPreview.tsx → VibeCheckPreview.tsx
-   
+
    // Update component names and props
    <SnapViewer snap={snap} /> → <VibeCheckViewer vibeCheck={vibeCheck} />
    ```
 
 5. **Hook Renaming**
+
    ```typescript
    // hooks/useVibeChecks.ts (renamed from useSnaps.ts)
    useSnaps() → useVibeChecks()
    useSnapSubscription() → useVibeCheckSubscription()
-   
+
    // Update all hook usage throughout codebase
    const [snaps, loadSnaps] = useSnaps()
    → const [vibeChecks, loadVibeChecks] = useVibeChecks()
@@ -309,12 +335,14 @@ ALTER PUBLICATION supabase_realtime ADD TABLE vibe_checks;
    ```
 
 #### Frontend Development
+
 7. **Update ChatScreen**
    - Add VibeCheck sending capability
    - Integrate VibeCheck display in conversation thread
    - Update to use renamed vibeChecks service
 
 8. **Create VibeCheck components**
+
    ```typescript
    components/
    ├── VibeCheckMessage.tsx   # VibeCheck display in conversations
@@ -322,6 +350,7 @@ ALTER PUBLICATION supabase_realtime ADD TABLE vibe_checks;
    ```
 
 9. **Update conversations service**
+
    ```typescript
    // Add to services/conversations.ts
    const sendVibeCheck = async (conversationId: string, vibeCheckId: string) => {
@@ -341,11 +370,13 @@ ALTER PUBLICATION supabase_realtime ADD TABLE vibe_checks;
     - Integrate with existing 30-second viewing timer
 
 ### Scope Limitations
+
 - Functionality remains the same (ephemeral photo sharing)
 - No advanced VibeCheck features beyond existing capabilities
 - Basic integration with conversations
 
 ### Verification
+
 - [ ] Database migration completes successfully (snaps → vibe_checks)
 - [ ] All indexes and RLS policies renamed and working
 - [ ] Storage bucket renamed or references updated
@@ -367,14 +398,17 @@ ALTER PUBLICATION supabase_realtime ADD TABLE vibe_checks;
 ## Feature 4: CLIP Embeddings & Similarity Infrastructure
 
 ### Overview
+
 Set up the backend infrastructure for art similarity using CLIP embeddings, including database schema, Edge Functions, and Replicate API integration.
 
 ### User Experience
+
 No user-facing changes yet - this is pure backend infrastructure to enable VibeReel creation in the next feature.
 
 ### Technical Implementation
 
 #### Database Changes
+
 ```sql
 -- Migration: 012_add_art_pieces.sql
 CREATE TABLE art_pieces (
@@ -410,29 +444,33 @@ CREATE OR REPLACE FUNCTION find_similar_art(
 ```
 
 #### Storage Setup
+
 - Create `art-pieces` bucket with public read access
 - Configure bucket policies for authenticated uploads
 
 #### Edge Functions Development
+
 1. **generate-art-embeddings**
+
    ```typescript
    // supabase/functions/generate-art-embeddings/index.ts
    export default async function handler(req: Request) {
      const { artImageUrl } = await req.json();
-     
+
      // Call Replicate CLIP API
      const response = await fetch('https://api.replicate.com/v1/predictions', {
        method: 'POST',
        headers: {
-         'Authorization': `Token ${Deno.env.get('REPLICATE_API_TOKEN')}`,
+         Authorization: `Token ${Deno.env.get('REPLICATE_API_TOKEN')}`,
          'Content-Type': 'application/json',
        },
        body: JSON.stringify({
-         version: "andreasjansson/clip-features:75b33f253f7714a281ad3e9b28f63e3232d583716ef6718f2e46641077ea040a",
-         input: { image: artImageUrl }
-       })
+         version:
+           'andreasjansson/clip-features:75b33f253f7714a281ad3e9b28f63e3232d583716ef6718f2e46641077ea040a',
+         input: { image: artImageUrl },
+       }),
      });
-     
+
      const result = await response.json();
      return new Response(JSON.stringify({ embedding: result.output }));
    }
@@ -444,20 +482,22 @@ CREATE OR REPLACE FUNCTION find_similar_art(
    - Verify Replicate API connectivity
 
 #### Backend Services Implementation
+
 3. **Create complete art similarity service**
+
    ```typescript
    // services/artSimilarity.ts
    export const generateEmbedding = async (imageUrl: string) => {
      const { data, error } = await supabase.functions.invoke('generate-art-embeddings', {
-       body: { artImageUrl: imageUrl }
+       body: { artImageUrl: imageUrl },
      });
-     
+
      if (error) throw error;
      return data.embedding;
    };
 
    export const findSimilarArt = async (
-     embedding: number[], 
+     embedding: number[],
      excludeUserId?: string,
      matchThreshold = 0.8,
      matchCount = 50
@@ -465,20 +505,22 @@ CREATE OR REPLACE FUNCTION find_similar_art(
      const { data, error } = await supabase.rpc('find_similar_art', {
        query_embedding: embedding,
        match_threshold: matchThreshold,
-       match_count: matchCount
+       match_count: matchCount,
      });
-     
+
      if (error) throw error;
      return data;
    };
    ```
 
 ### Scope Limitations
+
 - No user interface yet
 - Backend infrastructure only
 - Testing via direct API calls
 
 ### Verification
+
 - [ ] All database migrations run successfully
 - [ ] art_pieces and vibe_reels tables created with proper constraints
 - [ ] pgvector extension enabled and working
@@ -495,14 +537,17 @@ CREATE OR REPLACE FUNCTION find_similar_art(
 ## Feature 5: VibeReel Creation & Playback
 
 ### Overview
+
 Implement the core VibeReel functionality: capturing art photos, browsing similar art via CLIP embeddings, selecting up to 7 pieces, creating collaborative stories, and viewing playback with username attribution.
 
 ### User Experience
+
 Users can take photos of their art, see similar art from the global pool, select pieces to create a VibeReel story, view rapid-fire playback with usernames, and see their art appear in their profile. Their art automatically enters the global pool for others to discover.
 
 ### Technical Implementation
 
 #### Database Migration for Vibe Counting
+
 ```sql
 -- Migration: 016_add_vibe_count_function.sql
 CREATE OR REPLACE FUNCTION increment_vibe_count(
@@ -514,10 +559,10 @@ CREATE OR REPLACE FUNCTION increment_vibe_count(
 LANGUAGE plpgsql
 AS $$
 BEGIN
-  UPDATE art_pieces 
+  UPDATE art_pieces
   SET vibe_count = vibe_count + 1
   WHERE art_pieces.id = art_piece_id;
-  
+
   RETURN QUERY
   SELECT art_pieces.id, art_pieces.vibe_count
   FROM art_pieces
@@ -527,7 +572,9 @@ $$;
 ```
 
 #### Frontend Development
+
 1. **Create VibeReel screens**
+
    ```typescript
    src/screens/VibeReel/
    ├── CreateVibeReel.tsx    # Art capture + similarity browser
@@ -535,63 +582,66 @@ $$;
    ```
 
 2. **VibeReel service layer**
+
    ```typescript
    // services/vibeReels.ts
    import { generateEmbedding, findSimilarArt } from './artSimilarity';
-   
+
    const createVibeReel = async (imageFile: File, selectedArtIds: string[]) => {
      // 1. Upload image to art-pieces storage
      const { data: uploadData, error: uploadError } = await supabase.storage
        .from('art-pieces')
        .upload(`${userId}/${Date.now()}.jpg`, imageFile);
-     
+
      if (uploadError) throw uploadError;
-     
+
      // 2. Generate CLIP embedding using existing service
      const embedding = await generateEmbedding(uploadData.path);
-     
+
      // 3. Create art_piece record
      const { data: artPiece, error: artError } = await supabase
        .from('art_pieces')
        .insert({
          user_id: userId,
          image_url: uploadData.path,
-         embedding: embedding
+         embedding: embedding,
        })
        .select()
        .single();
-     
+
      if (artError) throw artError;
-     
+
      // 4. Create vibe_reel record
      const { data: vibeReel, error: vibeReelError } = await supabase
        .from('vibe_reels')
        .insert({
          creator_id: userId,
          primary_art_id: artPiece.id,
-         selected_art_ids: selectedArtIds
+         selected_art_ids: selectedArtIds,
        })
        .select()
        .single();
-     
+
      if (vibeReelError) throw vibeReelError;
-     
+
      // 5. Increment vibe counts for selected art
      for (const artId of selectedArtIds) {
        await supabase.rpc('increment_vibe_count', { art_piece_id: artId });
      }
-     
+
      return vibeReel;
    };
 
    const getUserVibeReels = async (userId: string) => {
      return await supabase
        .from('vibe_reels')
-       .select(`
+       .select(
+         `
          *,
          creator:profiles(username),
          primary_art:art_pieces(image_url, vibe_count)
-       `)
+       `
+       )
        .eq('creator_id', userId)
        .order('created_at', { ascending: false });
    };
@@ -611,6 +661,7 @@ $$;
    - Focus on VibeReel-specific logic
 
 4. **VibeReel components**
+
    ```typescript
    components/
    ├── SimilarArtBrowser.tsx # Grid of similar art for selection
@@ -641,6 +692,7 @@ $$;
    - Show basic info (no Vibes counter yet)
 
 #### Data Flow
+
 1. User captures art photo → Upload to storage
 2. Generate CLIP embedding → Store in art_pieces table
 3. Find similar art → Display for selection
@@ -649,11 +701,13 @@ $$;
 6. Art appears in user's profile grid
 
 ### Scope Limitations
+
 - No Vibes counter display yet
 - Basic playback animation
 - No sharing or advanced features
 
 ### Verification
+
 - [ ] Can capture art photos through camera
 - [ ] Art photos generate CLIP embeddings successfully
 - [ ] Similar art displays based on vector similarity
@@ -668,19 +722,24 @@ $$;
 ## Feature 6: Vibes Counter & Viral Mechanics
 
 ### Overview
+
 Implement the popularity tracking system where art pieces gain "Vibes" when used in other users' VibeReels, completing the viral sharing mechanics.
 
 ### User Experience
+
 Users can see how many times their art has been "Vibed" (used in other VibeReels) through counters displayed on their profile art grid, creating a popularity and engagement system.
 
 ### Technical Implementation
 
 #### Database Integration
+
 - Leverage existing vibe_count field in art_pieces table
 - Use existing increment_vibe_count RPC function
 
 #### Frontend Development
+
 1. **Vibes counter display**
+
    ```typescript
    components/
    └── VibesCounter.tsx      # "Vibes: 43" display on art pieces
@@ -692,17 +751,22 @@ Users can see how many times their art has been "Vibed" (used in other VibeReels
    - Style counters to be visible but not overwhelming
 
 3. **Real-time updates**
+
    ```typescript
    // Add to useProfile hook
-   const subscribeToVibeUpdates = (userId) => {
+   const subscribeToVibeUpdates = userId => {
      return supabase
        .channel(`user-art:${userId}`)
-       .on('postgres_changes', {
-         event: 'UPDATE',
-         schema: 'public',
-         table: 'art_pieces',
-         filter: `user_id=eq.${userId}`
-       }, handleVibeCountUpdate)
+       .on(
+         'postgres_changes',
+         {
+           event: 'UPDATE',
+           schema: 'public',
+           table: 'art_pieces',
+           filter: `user_id=eq.${userId}`,
+         },
+         handleVibeCountUpdate
+       )
        .subscribe();
    };
    ```
@@ -716,17 +780,20 @@ Users can see how many times their art has been "Vibed" (used in other VibeReels
    - Allow sorting by popularity in addition to similarity
 
 #### Viral Mechanics Completion
+
 - Art creation → Global pool entry
-- Selection in VibeReels → Vibe count increment  
+- Selection in VibeReels → Vibe count increment
 - Profile display → Popularity visibility
 - Real-time updates → Immediate feedback
 
 ### Scope Limitations
+
 - Basic counter display only
 - No advanced analytics or trends
 - No notification system for Vibes
 
 ### Verification
+
 - [ ] Vibes counters display on profile art grid
 - [ ] Counters increment when art is used in VibeReels
 - [ ] Real-time updates work when art gets "Vibed"
@@ -739,6 +806,7 @@ Users can see how many times their art has been "Vibed" (used in other VibeReels
 ## Success Criteria
 
 ### Epic Completion Requirements
+
 - [ ] All 6 features implemented and verified
 - [ ] Navigation updated to (Friends, Camera, Conversations, Profile)
 - [ ] Enhanced messaging with text + VibeChecks functional
@@ -750,8 +818,9 @@ Users can see how many times their art has been "Vibed" (used in other VibeReels
 - [ ] System architecture documentation updated
 
 ### Technical Debt & Future Considerations
+
 - Automated testing framework (future epic)
-- Advanced similarity algorithms (future enhancement)  
+- Advanced similarity algorithms (future enhancement)
 - Performance optimizations for scale (future epic)
 - Desktop/web version support (nice to have)
 - Advanced privacy controls (future feature)

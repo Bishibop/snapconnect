@@ -1,26 +1,31 @@
 # Technical Design Document: Epic 1 - VibeReel
 
 ## Epic Overview
+
 VibeReel extends the existing SnapConnect ephemeral messaging platform by adding AI-powered art discovery and collaborative visual storytelling. The system leverages existing user authentication, friendship management, and media storage infrastructure while adding semantic art similarity matching, persistent messaging, and profile-based social features.
 
 ## Migration from Existing Features
 
 ### UI Consolidation
+
 - **Remove Send/Inbox Tabs**: Replace separate Send and Inbox navigation tabs with unified Conversations tab
 - **Merge Messaging Interfaces**: Consolidate snap-only messaging UI into new conversation interface supporting both text and VibeChecks
 - **Navigation Updates**: Update main tab navigation from 4 tabs (Friends, Camera, Inbox, Send) to 4 tabs (Friends, Camera, Conversations, Profile)
 
 ### Terminology Migration
+
 - **Rebrand "Snaps" to "VibeChecks"**: Update all UI strings, variable names, and user-facing text
 - **Preserve Data Structure**: Keep existing `snaps` table and functionality, just rebrand the user experience
 - **Component Renaming**: Rename snap-related components to use VibeCheck terminology
 
 ### Code Cleanup Opportunities
+
 - **Remove Separate Messaging Components**: Clean up old Send/Inbox specific components after conversation interface is complete
 - **Consolidate Service Methods**: Merge snap sending/receiving logic into unified conversation service
 - **Update Type Definitions**: Rename types from `Message`/`Snap` to `VibeCheck` for clarity
 
 ### Database Migration Strategy
+
 - **No Schema Changes**: Existing `snaps` table remains unchanged, only UI references updated
 - **Preserve User Data**: All existing snaps become VibeChecks with no data loss
 - **Gradual Migration**: Old and new interfaces can coexist during transition period
@@ -28,6 +33,7 @@ VibeReel extends the existing SnapConnect ephemeral messaging platform by adding
 ## Integration Points
 
 ### Existing Infrastructure to Leverage
+
 - **`profiles` table**: Extend with bio field for artist profiles
 - **`friendships` table**: Use existing bidirectional friend system for profile discovery
 - **Supabase Storage**: Extend existing media storage with new buckets for art pieces
@@ -36,6 +42,7 @@ VibeReel extends the existing SnapConnect ephemeral messaging platform by adding
 - **`snaps` table**: Adapt existing ephemeral messaging system for VibeChecks
 
 ### New External Dependencies
+
 - **Replicate API**: Generate CLIP-based vector embeddings for art similarity matching (via Edge Functions)
 - **pgvector Extension**: Store and query high-dimensional art embeddings in PostgreSQL
 - **React Native Reanimated**: Handle smooth VibeReel video playback transitions
@@ -43,6 +50,7 @@ VibeReel extends the existing SnapConnect ephemeral messaging platform by adding
 ## New Components
 
 ### Frontend Components
+
 ```
 src/
 ├── screens/
@@ -68,6 +76,7 @@ src/
 ```
 
 ### Backend Extensions
+
 ```
 supabase/
 ├── migrations/
@@ -90,6 +99,7 @@ supabase/
 ### Table Extensions
 
 #### Extend `profiles` table
+
 ```sql
 -- Add bio field to existing profiles table
 ALTER TABLE profiles ADD COLUMN bio TEXT;
@@ -98,6 +108,7 @@ ALTER TABLE profiles ADD COLUMN bio TEXT;
 ### New Database Tables
 
 #### `art_pieces` - Global Art Pool
+
 ```sql
 CREATE TABLE art_pieces (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -109,7 +120,7 @@ CREATE TABLE art_pieces (
 );
 
 -- Vector similarity index
-CREATE INDEX art_pieces_embedding_idx ON art_pieces 
+CREATE INDEX art_pieces_embedding_idx ON art_pieces
 USING ivfflat (embedding vector_cosine_ops) WITH (lists = 100);
 
 -- Performance indexes
@@ -118,6 +129,7 @@ CREATE INDEX idx_art_pieces_popular ON art_pieces(vibe_count DESC, created_at DE
 ```
 
 #### `vibe_reels` - Collaborative Art Stories
+
 ```sql
 CREATE TABLE vibe_reels (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -133,6 +145,7 @@ CREATE INDEX idx_vibe_reels_art ON vibe_reels USING GIN(selected_art_ids);
 ```
 
 #### `conversations` - Persistent Messaging
+
 ```sql
 CREATE TABLE conversations (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -147,6 +160,7 @@ CREATE INDEX idx_conversations_activity ON conversations(last_activity DESC);
 ```
 
 #### `messages` - Text Messages
+
 ```sql
 CREATE TABLE messages (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -165,6 +179,7 @@ CREATE INDEX idx_messages_sender ON messages(sender_id, created_at DESC);
 ### Database RPC Functions (via Migrations)
 
 #### Find Similar Art Function
+
 ```sql
 -- Migration: 014_add_rpc_functions.sql
 CREATE OR REPLACE FUNCTION find_similar_art(
@@ -184,7 +199,7 @@ LANGUAGE plpgsql
 AS $$
 BEGIN
   RETURN QUERY
-  SELECT 
+  SELECT
     art_pieces.id,
     art_pieces.user_id,
     art_pieces.image_url,
@@ -200,6 +215,7 @@ $$;
 ```
 
 #### Increment Vibe Count Function
+
 ```sql
 CREATE OR REPLACE FUNCTION increment_vibe_count(art_piece_id uuid)
 RETURNS TABLE (
@@ -209,10 +225,10 @@ RETURNS TABLE (
 LANGUAGE plpgsql
 AS $$
 BEGIN
-  UPDATE art_pieces 
+  UPDATE art_pieces
   SET vibe_count = vibe_count + 1
   WHERE art_pieces.id = art_piece_id;
-  
+
   RETURN QUERY
   SELECT art_pieces.id, art_pieces.vibe_count
   FROM art_pieces
@@ -222,6 +238,7 @@ $$;
 ```
 
 #### Update Conversation Activity Function
+
 ```sql
 CREATE OR REPLACE FUNCTION update_conversation_activity(conversation_id uuid)
 RETURNS void
@@ -236,6 +253,7 @@ $$;
 ```
 
 #### Create or Get Conversation Function
+
 ```sql
 CREATE OR REPLACE FUNCTION create_or_get_conversation(
   user1_id uuid,
@@ -257,7 +275,7 @@ BEGIN
   FROM conversations
   WHERE participant_ids @> ARRAY[user1_id, user2_id]
     AND participant_ids <@ ARRAY[user1_id, user2_id];
-  
+
   -- If exists, return it
   IF conversation_exists IS NOT NULL THEN
     RETURN QUERY
@@ -276,6 +294,7 @@ $$;
 ### Row Level Security Policies
 
 #### Art Pieces (Public Read, Owner Write)
+
 ```sql
 ALTER TABLE art_pieces ENABLE ROW LEVEL SECURITY;
 
@@ -287,6 +306,7 @@ CREATE POLICY "Users can create art via VibeReels" ON art_pieces
 ```
 
 #### VibeReels (Public Read, Owner Write)
+
 ```sql
 ALTER TABLE vibe_reels ENABLE ROW LEVEL SECURITY;
 
@@ -298,6 +318,7 @@ CREATE POLICY "Users can create VibeReels" ON vibe_reels
 ```
 
 #### Conversations & Messages (Participants Only)
+
 ```sql
 ALTER TABLE conversations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE messages ENABLE ROW LEVEL SECURITY;
@@ -308,7 +329,7 @@ CREATE POLICY "Conversation participants only" ON conversations
 CREATE POLICY "Message participants only" ON messages
   FOR SELECT USING (
     EXISTS(
-      SELECT 1 FROM conversations 
+      SELECT 1 FROM conversations
       WHERE id = conversation_id AND auth.uid() = ANY(participant_ids)
     )
   );
@@ -317,7 +338,7 @@ CREATE POLICY "Users can send messages" ON messages
   FOR INSERT WITH CHECK (
     auth.uid() = sender_id AND
     EXISTS(
-      SELECT 1 FROM conversations 
+      SELECT 1 FROM conversations
       WHERE id = conversation_id AND auth.uid() = ANY(participant_ids)
     )
   );
@@ -326,25 +347,26 @@ CREATE POLICY "Users can send messages" ON messages
 ## Database Operations
 
 ### Profile Management
+
 ```typescript
 // Update user bio
-await supabase
-  .from('profiles')
-  .update({ bio: newBio })
-  .eq('id', userId);
+await supabase.from('profiles').update({ bio: newBio }).eq('id', userId);
 
 // Get user profile with art pieces
 await supabase
   .from('profiles')
-  .select(`
+  .select(
+    `
     *,
     art_pieces:art_pieces(id, image_url, vibe_count, created_at)
-  `)
+  `
+  )
   .eq('id', userId)
   .single();
 ```
 
 ### VibeReel Creation
+
 ```typescript
 // Create new VibeReel (automatically creates art piece)
 const { data: vibeReel, error } = await supabase
@@ -352,7 +374,7 @@ const { data: vibeReel, error } = await supabase
   .insert({
     creator_id: userId,
     primary_art_id: artPieceId,
-    selected_art_ids: selectedArtIds
+    selected_art_ids: selectedArtIds,
   })
   .select()
   .single();
@@ -365,41 +387,47 @@ for (const artId of selectedArtIds) {
 // Browse VibeReels with creator info
 await supabase
   .from('vibe_reels')
-  .select(`
+  .select(
+    `
     *,
     creator:profiles(username),
     primary_art:art_pieces(image_url, vibe_count)
-  `)
+  `
+  )
   .order('created_at', { ascending: false });
 ```
 
 ### Art Similarity Search
+
 ```typescript
 // Find similar art using pgvector RPC function
 const { data: similarArt, error } = await supabase.rpc('find_similar_art', {
   query_embedding: artEmbedding,
   match_threshold: 0.8,
-  match_count: 50
+  match_count: 50,
 });
 ```
 
 ### Conversation Management
+
 ```typescript
 // Create or get existing conversation
 const { data: conversation, error } = await supabase.rpc('create_or_get_conversation', {
   user1_id: currentUserId,
-  user2_id: friendId
+  user2_id: friendId,
 });
 
 // Get user's conversations with latest message
 await supabase
   .from('conversations')
-  .select(`
+  .select(
+    `
     *,
     messages:messages(
       id, sender_id, message_type, content, created_at
     )
-  `)
+  `
+  )
   .contains('participant_ids', [userId])
   .order('last_activity', { ascending: false });
 
@@ -412,73 +440,74 @@ await supabase
   .range(offset, offset + limit);
 
 // Send text message and update conversation activity
-await supabase
-  .from('messages')
-  .insert({
-    conversation_id: conversationId,
-    sender_id: userId,
-    message_type: 'text',
-    content: messageText
-  });
+await supabase.from('messages').insert({
+  conversation_id: conversationId,
+  sender_id: userId,
+  message_type: 'text',
+  content: messageText,
+});
 
 await supabase.rpc('update_conversation_activity', {
-  conversation_id: conversationId
+  conversation_id: conversationId,
 });
 ```
 
 ## Edge Functions
 
 ### Generate Art Embeddings
+
 ```typescript
 // supabase/functions/generate-art-embeddings/index.ts
 export default async function handler(req: Request) {
   const { artImageUrl } = await req.json();
-  
+
   // Call Replicate CLIP API to generate embedding
   const response = await fetch('https://api.replicate.com/v1/predictions', {
     method: 'POST',
     headers: {
-      'Authorization': `Token ${Deno.env.get('REPLICATE_API_TOKEN')}`,
+      Authorization: `Token ${Deno.env.get('REPLICATE_API_TOKEN')}`,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      version: "andreasjansson/clip-features:75b33f253f7714a281ad3e9b28f63e3232d583716ef6718f2e46641077ea040a",
-      input: { image: artImageUrl }
-    })
+      version:
+        'andreasjansson/clip-features:75b33f253f7714a281ad3e9b28f63e3232d583716ef6718f2e46641077ea040a',
+      input: { image: artImageUrl },
+    }),
   });
-  
+
   const result = await response.json();
   const embedding = result.output; // 512-dimensional CLIP vector
-  
+
   return new Response(JSON.stringify({ embedding }));
 }
 ```
 
 ### Upload Art Piece
+
 ```typescript
 // supabase/functions/upload-art-piece/index.ts
 export default async function handler(req: Request) {
   const { userId, imageFile } = await req.json();
-  
+
   // Upload image to storage
   const { data: uploadData, error: uploadError } = await supabase.storage
     .from('art-pieces')
     .upload(`${userId}/${Date.now()}.jpg`, imageFile);
-  
+
   // Generate embedding
   const { embedding } = await generateEmbedding(uploadData.path);
-  
+
   // Create art piece with embedding
   const { data, error } = await supabase
     .from('art_pieces')
     .insert({
       user_id: userId,
       image_url: uploadData.path,
-      embedding: embedding
+      embedding: embedding,
     })
     .select()
     .single();
-    
+
   return new Response(JSON.stringify(data));
 }
 ```
@@ -486,60 +515,78 @@ export default async function handler(req: Request) {
 ## Enhanced Realtime Subscriptions
 
 ### Conversation Updates
+
 ```typescript
 // Subscribe to new messages in conversation
 supabase
   .channel(`conversation:${conversationId}`)
-  .on('postgres_changes', {
-    event: 'INSERT',
-    schema: 'public',
-    table: 'messages',
-    filter: `conversation_id=eq.${conversationId}`
-  }, handleNewMessage)
+  .on(
+    'postgres_changes',
+    {
+      event: 'INSERT',
+      schema: 'public',
+      table: 'messages',
+      filter: `conversation_id=eq.${conversationId}`,
+    },
+    handleNewMessage
+  )
   .subscribe();
 ```
 
 ### Vibe Count Updates
+
 ```typescript
 // Subscribe to vibe count changes for user's art
 supabase
   .channel(`user-art:${userId}`)
-  .on('postgres_changes', {
-    event: 'UPDATE',
-    schema: 'public',
-    table: 'art_pieces',
-    filter: `user_id=eq.${userId}`
-  }, handleVibeCountUpdate)
+  .on(
+    'postgres_changes',
+    {
+      event: 'UPDATE',
+      schema: 'public',
+      table: 'art_pieces',
+      filter: `user_id=eq.${userId}`,
+    },
+    handleVibeCountUpdate
+  )
   .subscribe();
 ```
 
 ### New VibeReels
+
 ```typescript
 // Subscribe to new VibeReels in global feed
 supabase
   .channel('vibe-reels')
-  .on('postgres_changes', {
-    event: 'INSERT',
-    schema: 'public',
-    table: 'vibe_reels'
-  }, handleNewVibeReel)
+  .on(
+    'postgres_changes',
+    {
+      event: 'INSERT',
+      schema: 'public',
+      table: 'vibe_reels',
+    },
+    handleNewVibeReel
+  )
   .subscribe();
 ```
 
 ## Security Considerations
 
 ### Leverage Existing Security Model
+
 - **JWT Authentication**: Continue using existing Supabase Auth tokens
 - **RLS Policies**: Extend existing pattern for new tables
 - **Storage Buckets**: Create new `art-pieces` bucket with public read access
 
 ### New Security Requirements
+
 - **Vector Embeddings**: Store CLIP embeddings server-side only via Edge Functions
 - **Replicate API Security**: Secure API token storage in Edge Function environment
 - **Art Attribution**: Immutable creator tracking on all art pieces
 - **VibeCheck Integration**: Reuse existing `snaps` table policies for ephemeral sharing
 
 ### Enhanced Access Control
+
 ```sql
 -- Art pieces bucket policy
 CREATE POLICY "Art pieces public read" ON storage.objects
@@ -547,7 +594,7 @@ FOR SELECT USING (bucket_id = 'art-pieces');
 
 CREATE POLICY "Users can create art via VibeReels" ON storage.objects
 FOR INSERT WITH CHECK (
-  bucket_id = 'art-pieces' AND 
+  bucket_id = 'art-pieces' AND
   auth.uid()::text = (storage.foldername(name))[1]
 );
 ```
@@ -555,17 +602,20 @@ FOR INSERT WITH CHECK (
 ## Performance Impact
 
 ### Leverage Existing Optimizations
+
 - **Database Indexes**: Build on existing friendship and snap indexes
 - **Caching Strategy**: Extend existing 5-minute cache for art pieces
 - **Realtime Subscriptions**: Use existing selective subscription pattern
 
 ### New Performance Requirements
+
 - **Vector Search**: ivfflat indexes for sub-2-second similarity search with 10k art pieces
 - **Art Grid Loading**: Pagination for profile art grids
 - **Conversation Ordering**: Efficient last_activity sorting for conversation list
 - **Message Pagination**: Paginated message loading within conversations for performance
 
 ### MVP Performance Targets
+
 - Art similarity search: <2 seconds for 10k pieces (via RPC function)
 - VibeReel playback: Smooth transitions using Reanimated
 - Message delivery: Leverage existing realtime performance
@@ -574,9 +624,11 @@ FOR INSERT WITH CHECK (
 ## Testing Strategy
 
 ### Manual Testing Approach
+
 For MVP, focus on manual testing to validate core functionality and user experience.
 
 ### Critical User Flows to Test
+
 1. **Complete VibeReel Flow**: Capture art → browse similar → create VibeReel → view result
 2. **Enhanced Messaging**: Send text → send VibeCheck → conversation ordering
 3. **Profile Discovery**: View friend profile → see art grid → check Vibes counters

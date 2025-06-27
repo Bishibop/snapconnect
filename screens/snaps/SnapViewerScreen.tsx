@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -124,7 +124,6 @@ export default function SnapViewerScreen({ route, navigation }: SnapViewerProps)
 
   return (
     <SafeAreaView style={styles.container}>
-      
       {/* Close button */}
       <TouchableOpacity style={styles.closeButton} onPress={handleClose}>
         <Text style={styles.closeButtonText}>✕</Text>

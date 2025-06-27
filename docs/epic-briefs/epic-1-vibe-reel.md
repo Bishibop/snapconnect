@@ -1,9 +1,11 @@
 # Epic Brief: Epic 1 - VibeReel
 
 ## Overview
+
 VibeReel transforms SnapConnect into a social networking platform for artists, enabling them to create collaborative visual stories by combining their art with semantically similar works from a global community pool, while maintaining intimate conversations through enhanced messaging with persistent text and ephemeral VibeChecks.
 
 ## User Stories
+
 - As an artist, I want to create a VibeReel by selecting up to 7 semantically similar artworks from a global pool to accompany my photo, so that I can showcase my work in an inspiring artistic context
 - As an artist, I want to see "Vibes" counters on my art showing how many times others have included it in their VibeReels, so that I can track my art's popularity and influence
 - As a user, I want to have a profile with a bio and grid of my original art photos, so that others can discover my artistic identity
@@ -16,6 +18,7 @@ VibeReel transforms SnapConnect into a social networking platform for artists, e
 ## Functional Requirements
 
 ### Must Have
+
 - **VibeReel Creation**: Upload art photo, browse global pool sorted by semantic similarity, select up to 7 pieces, auto-generate rapid-fire story with attribution
 - **Global Art Pool**: Every uploaded art piece automatically enters shared pool for others to discover and use
 - **Vibes Counter**: Track and display how many VibeReels include each art piece
@@ -33,9 +36,11 @@ VibeReel transforms SnapConnect into a social networking platform for artists, e
 - **VibeCheck UI**: Clear visual indicators for VibeChecks in conversation threads
 
 ### Should Have
-*No items - all requirements moved to Must Have for MVP*
+
+_No items - all requirements moved to Must Have for MVP_
 
 ### Nice to Have
+
 - **Profile Avatars**: User profile pictures beyond bio text
 - **Friend Discovery**: Browse friends-of-friends for network expansion
 - **Public Profile Discovery**: Browse/search all profiles beyond friend network
@@ -47,6 +52,7 @@ VibeReel transforms SnapConnect into a social networking platform for artists, e
 - **Advanced Profile Features**: Extended bio options, art categorization
 
 ## Non-Functional Requirements
+
 - **Performance**: VibeReel playback smooth with reasonable transitions; art similarity search functional for MVP scale
 - **Scalability**: Handle modest user base (1k-10k users) with basic performance
 - **Real-time**: Message delivery functional for small user base
@@ -57,6 +63,7 @@ VibeReel transforms SnapConnect into a social networking platform for artists, e
 ## Scope
 
 ### In Scope
+
 - Core VibeReel creation with semantic similarity matching
 - Global art pool with viral sharing mechanics
 - Artist profiles with Vibes counter popularity system
@@ -65,6 +72,7 @@ VibeReel transforms SnapConnect into a social networking platform for artists, e
 - Unified conversation management interface
 
 ### Out of Scope
+
 - Monetization features or art sales
 - Advanced AI art generation capabilities
 - Video VibeReels (photo-only for MVP)
