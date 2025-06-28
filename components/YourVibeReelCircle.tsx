@@ -1,32 +1,36 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Image } from 'react-native';
 import { theme } from '../constants/theme';
-import { Story } from '../services/stories';
+import { VibeReel, VibeReelWithViewStatus } from '../services/vibeReels';
+import { getArtPieceUrl } from '../services/artSimilarity';
 
-interface YourStoryCircleProps {
-  userStory: Story | null;
+interface YourVibeReelCircleProps {
+  userVibeReel: VibeReel | null;
   username: string;
   onPress: () => void;
-  onStoryPress?: (story: Story) => void;
+  onVibeReelPress?: (vibeReel: VibeReel | VibeReelWithViewStatus) => void;
 }
 
-export default function YourStoryCircle({
-  userStory,
+export default function YourVibeReelCircle({
+  userVibeReel,
   username,
   onPress,
-  onStoryPress,
-}: YourStoryCircleProps) {
+  onVibeReelPress,
+}: YourVibeReelCircleProps) {
   // Get first 2 letters of username, uppercase
   const getInitials = (username: string): string => {
     return username.substring(0, 2).toUpperCase();
   };
 
   const initials = getInitials(username);
-  const hasStory = userStory !== null;
+  const hasVibeReel = userVibeReel !== null;
+  const thumbnailUrl = userVibeReel?.primary_art?.image_url
+    ? getArtPieceUrl(userVibeReel.primary_art.image_url)
+    : null;
 
   const handlePress = () => {
-    if (hasStory && userStory && onStoryPress) {
-      onStoryPress(userStory);
+    if (hasVibeReel && userVibeReel && onVibeReelPress) {
+      onVibeReelPress(userVibeReel);
     } else {
       onPress();
     }
@@ -35,16 +39,22 @@ export default function YourStoryCircle({
   return (
     <TouchableOpacity style={styles.container} onPress={handlePress} activeOpacity={0.7}>
       <View style={styles.circleContainer}>
-        <View style={[styles.circle, hasStory ? styles.storyCircle : styles.addCircle]}>
-          {hasStory ? (
-            <Text style={styles.initials}>{initials}</Text>
+        {hasVibeReel ? (
+          thumbnailUrl ? (
+            <Image source={{ uri: thumbnailUrl }} style={styles.thumbnail} />
           ) : (
+            <View style={[styles.circle, styles.vibeReelCircle]}>
+              <Text style={styles.initials}>{initials}</Text>
+            </View>
+          )
+        ) : (
+          <View style={[styles.circle, styles.addCircle]}>
             <Text style={styles.plusIcon}>+</Text>
-          )}
-        </View>
+          </View>
+        )}
       </View>
       <Text style={styles.label} numberOfLines={1}>
-        {hasStory ? 'Your Story' : 'Add Story'}
+        {hasVibeReel ? 'Your VibeReel' : 'Add VibeReel'}
       </Text>
     </TouchableOpacity>
   );
@@ -79,8 +89,8 @@ const styles = StyleSheet.create({
     shadowRadius: 3.84,
     elevation: 5,
   },
-  storyCircle: {
-    backgroundColor: theme.colors.primary, // Your story gets the primary color
+  vibeReelCircle: {
+    backgroundColor: theme.colors.primary, // Your VibeReel gets the primary color
   },
   addCircle: {
     backgroundColor: theme.colors.lightGray,
@@ -105,5 +115,11 @@ const styles = StyleSheet.create({
     color: theme.colors.text,
     textAlign: 'center',
     maxWidth: 70,
+  },
+  thumbnail: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: theme.colors.lightGray,
   },
 });

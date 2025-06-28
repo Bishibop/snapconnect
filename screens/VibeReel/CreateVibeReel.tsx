@@ -69,29 +69,22 @@ export default function CreateVibeReel() {
       let publicUrl: string;
 
       try {
-        console.log('Processing image URI:', imageUri);
-
         // Read the file as base64 (following the media service pattern)
         const fileInfo = await FileSystem.getInfoAsync(imageUri);
         if (!fileInfo.exists) {
           throw new Error('File does not exist');
         }
 
-        console.log('File exists, reading as base64...');
-
         // Read file as base64
         const base64 = await FileSystem.readAsStringAsync(imageUri, {
           encoding: FileSystem.EncodingType.Base64,
         });
-
-        console.log('Base64 string length:', base64.length);
 
         // Convert base64 to Uint8Array for upload
         const arrayBuffer = Uint8Array.from(atob(base64), c => c.charCodeAt(0));
 
         // Generate unique filename
         const fileName = `${user.id}/${Date.now()}.jpg`;
-        console.log('Uploading to path:', fileName);
 
         // Upload to Supabase Storage (art-pieces bucket)
         const { data: uploadData, error: uploadError } = await supabase.storage
@@ -108,7 +101,7 @@ export default function CreateVibeReel() {
 
         imageUrl = uploadData.path;
         publicUrl = getArtPieceUrl(imageUrl);
-        console.log('Image uploaded successfully, public URL:', publicUrl);
+        // Image uploaded successfully
       } catch (uploadError) {
         console.error('Error during image upload:', uploadError);
         throw new Error(
@@ -122,16 +115,14 @@ export default function CreateVibeReel() {
       // Find similar art - lower threshold since we might not have many art pieces yet
       let similar: SimilarArt[] = [];
       try {
-        // Don't exclude user's own art for now, since we want to find ANY similar art
-        const foundArt = await findSimilarArt(embedding, undefined, 0.3, 50);
+        // Exclude the current user's own art from results
+        const foundArt = await findSimilarArt(embedding, user.id, 0.3, 50);
         similar = foundArt as SimilarArt[];
       } catch (error) {
         console.warn('No similar art found, this might be the first art piece');
         // Continue with empty similar art array
       }
 
-      console.log(`Found ${similar.length} similar art pieces`);
-      
       // Get user info for each art piece
       const artWithUsers = await Promise.all(
         similar.map(async art => {
@@ -148,12 +139,6 @@ export default function CreateVibeReel() {
         })
       );
 
-      console.log('Art with users:', artWithUsers.map(a => ({
-        id: a.id,
-        similarity: a.similarity,
-        user: a.user?.username
-      })));
-      
       setSimilarArt(artWithUsers);
     } catch (error) {
       ErrorHandler.handle(error, { context: 'Error finding similar art' });
@@ -187,8 +172,8 @@ export default function CreateVibeReel() {
 
       const vibeReel = await createVibeReel(imageUri, selectedArt);
 
-      // Navigate to the VibeReel player
-      navigation.replace('VibeReelPlayer', { vibeReelId: vibeReel.id });
+      // Navigate to the VibeReel preview
+      navigation.replace('VibeReelPreview', { vibeReelId: vibeReel.id });
     } catch (error) {
       ErrorHandler.handle(error, { context: 'Error creating VibeReel' });
     } finally {

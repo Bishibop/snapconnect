@@ -2,15 +2,15 @@ import React from 'react';
 import { View, Text, StyleSheet, Alert, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { FriendWithProfile } from '../../services/friends';
-import { Story } from '../../services/stories';
+import { VibeReelWithViewStatus } from '../../services/vibeReels';
 import { theme } from '../../constants/theme';
-import StoriesRow from '../../components/StoriesRow';
+import VibeReelsRow from '../../components/VibeReelsRow';
 import TabHeader from '../../components/TabHeader';
 import EmptyState from '../../components/ui/EmptyState';
 import RefreshableList from '../../components/ui/RefreshableList';
 import ActionButton from '../../components/ui/ActionButton';
 import { useFriends } from '../../hooks/useFriends';
-import { useStories } from '../../hooks/useStories';
+import { useVibeReels } from '../../hooks/useVibeReels';
 import { useNavigationHelpers, FriendsNavigation } from '../../utils/navigation';
 import { formatFriendsSinceDate } from '../../utils/dateTime';
 
@@ -20,15 +20,18 @@ interface FriendsListProps {
 
 export default function FriendsListScreen({ navigation }: FriendsListProps) {
   const { friends, refreshing: friendsRefreshing, refresh: refreshFriends, remove } = useFriends();
-  const { refreshing: storiesRefreshing } = useStories();
+  const { refreshing: vibeReelsRefreshing, markViewed } = useVibeReels();
   const navHelpers = useNavigationHelpers(navigation);
 
-  const handleCreateStory = () => {
+  const handleCreateVibeReel = () => {
     navHelpers.navigateToCamera();
   };
 
-  const handleViewStory = (story: Story) => {
-    navHelpers.navigateToStoryViewer(story);
+  const handleViewVibeReel = async (vibeReel: VibeReelWithViewStatus) => {
+    // Navigate to VibeReelPlayer
+    navigation.navigate('VibeReelPlayer', { vibeReelId: vibeReel.id });
+    // Mark as viewed
+    await markViewed(vibeReel.id);
   };
 
   const handleRemoveFriend = (friend: FriendWithProfile) => {
@@ -86,7 +89,7 @@ export default function FriendsListScreen({ navigation }: FriendsListProps) {
     <SafeAreaView style={styles.container}>
       <TabHeader
         title="Friends"
-        showLoading={storiesRefreshing}
+        showLoading={vibeReelsRefreshing}
         rightElement={
           <ActionButton
             title="Add Friends"
@@ -97,7 +100,7 @@ export default function FriendsListScreen({ navigation }: FriendsListProps) {
         }
       />
 
-      <StoriesRow onCreateStory={handleCreateStory} onViewStory={handleViewStory} />
+      <VibeReelsRow onCreateVibeReel={handleCreateVibeReel} onViewVibeReel={handleViewVibeReel} />
 
       <View style={styles.requestsContainer}>
         <ActionButton

@@ -4,7 +4,7 @@ import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AuthProvider } from './contexts/AuthContext';
 import { RealtimeProvider } from './contexts/RealtimeContext';
-import { StoriesProvider } from './contexts/StoriesContext';
+import { VibeReelsProvider } from './contexts/VibeReelsContext';
 import { FriendsProvider } from './contexts/FriendsContext';
 import { RootNavigator } from './navigation/RootNavigator';
 import { ErrorBoundary } from './components/common/ErrorBoundary';
@@ -30,11 +30,11 @@ export default function App() {
         <AuthErrorBoundary>
           <AuthProvider>
             <RealtimeProvider>
-              <StoriesProvider>
+              <VibeReelsProvider>
                 <FriendsProvider>
                   <AppContent />
                 </FriendsProvider>
-              </StoriesProvider>
+              </VibeReelsProvider>
             </RealtimeProvider>
           </AuthProvider>
         </AuthErrorBoundary>

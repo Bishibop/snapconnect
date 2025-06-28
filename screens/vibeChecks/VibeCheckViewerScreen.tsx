@@ -6,7 +6,6 @@ import { RouteProp } from '@react-navigation/native';
 import { CompositeNavigationProp } from '@react-navigation/native';
 import { theme } from '../../constants/theme';
 import { markVibeCheckOpened, VibeCheck } from '../../services/vibeChecks';
-import { Story, markStoryViewed } from '../../services/stories';
 import { supabase } from '../../lib/supabase';
 import { FILTERS } from '../../types/filters';
 import FilteredImage from '../../components/FilteredImage';
@@ -34,38 +33,26 @@ interface VibeCheckViewerProps {
 }
 
 export default function VibeCheckViewerScreen({ route, navigation }: VibeCheckViewerProps) {
-  const { vibeCheck, story } = route.params;
-  const content = vibeCheck || story; // Use vibeCheck if available, otherwise story
-  const isStory = !!story;
+  const { vibeCheck } = route.params;
+  const content = vibeCheck as VibeCheck;
   const { user } = useAuth();
 
   const [timeLeft, setTimeLeft] = useState(30); // 30 seconds for photos
   const [mediaUrl, setMediaUrl] = useState<string>('');
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Helper function to get the content type (handles both VibeCheck and Story)
+  // Helper function to get the content type
   const getContentType = (): 'photo' | 'video' | undefined => {
     if (!content) return undefined;
-    if (isStory) {
-      return (content as Story).snap_type;
-    } else {
-      return (content as VibeCheck).vibe_check_type;
-    }
+    return content.vibe_check_type;
   };
 
   useEffect(() => {
     if (!content || !user) return;
 
     // Mark VibeCheck as opened when viewer opens (only if recipient is viewing)
-    if (vibeCheck && vibeCheck.recipient_id === user.id) {
-      markVibeCheckOpened(vibeCheck.id).catch(console.error);
-    }
-
-    // Mark story as viewed when viewer opens (only for stories, not VibeChecks)
-    if (story && !story.is_viewed) {
-      markStoryViewed(story.id).catch(_error => {
-        // Silently fail if already viewed or other non-critical error
-      });
+    if (content && content.recipient_id === user.id) {
+      markVibeCheckOpened(content.id).catch(console.error);
     }
 
     // Get the public URL for the media
@@ -151,12 +138,10 @@ export default function VibeCheckViewerScreen({ route, navigation }: VibeCheckVi
       {/* Sender info */}
       <View style={styles.senderInfo}>
         <Text style={styles.senderName}>
-          {isStory
-            ? (story as Story)?.user_profile?.username
-            : (vibeCheck as VibeCheck)?.sender_profile?.username}
+          {content?.sender_profile?.username}
         </Text>
         <Text style={styles.vibeCheckType}>
-          {isStory ? `posted a ${getContentType()} story` : `sent a VibeCheck`}
+          sent a VibeCheck
         </Text>
       </View>
 

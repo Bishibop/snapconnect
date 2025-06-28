@@ -3,13 +3,10 @@ import { View, Text, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { theme } from '../../constants/theme';
 import { VibeCheck } from '../../services/vibeChecks';
-import { Story } from '../../services/stories';
-import StoriesRow from '../../components/StoriesRow';
 import TabHeader from '../../components/TabHeader';
 import EmptyState from '../../components/ui/EmptyState';
 import RefreshableList from '../../components/ui/RefreshableList';
 import { useVibeChecks } from '../../hooks/useVibeChecks';
-import { useStories } from '../../hooks/useStories';
 import { useNavigationHelpers, SentNavigation } from '../../utils/navigation';
 import { formatTimeAgo } from '../../utils/dateTime';
 import {
@@ -29,16 +26,7 @@ export default function SentVibeChecksScreen({ navigation }: SentVibeChecksProps
     refreshing: vibeChecksRefreshing,
     refresh: refreshVibeChecks,
   } = useVibeChecks({ type: 'sent' });
-  const { refreshing: storiesRefreshing } = useStories();
   const navHelpers = useNavigationHelpers(navigation);
-
-  const handleCreateStory = () => {
-    navHelpers.navigateToCamera();
-  };
-
-  const handleViewStory = (story: Story) => {
-    navHelpers.navigateToStoryViewer(story);
-  };
 
   const renderVibeCheckItem = ({ item }: { item: VibeCheck }) => (
     <View style={styles.vibeCheckItem}>
@@ -70,9 +58,7 @@ export default function SentVibeChecksScreen({ navigation }: SentVibeChecksProps
 
   return (
     <SafeAreaView style={styles.container}>
-      <TabHeader title="Sent" showLoading={storiesRefreshing} />
-
-      <StoriesRow onCreateStory={handleCreateStory} onViewStory={handleViewStory} />
+      <TabHeader title="Sent" showLoading={vibeChecksRefreshing} />
 
       <RefreshableList
         data={vibeChecks}

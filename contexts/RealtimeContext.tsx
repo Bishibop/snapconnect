@@ -149,6 +149,32 @@ export function RealtimeProvider({ children }: RealtimeProviderProps) {
         },
         (payload: any) => handleRealtimeEvent('profiles', payload)
       );
+
+      // Listen to vibe_reels table
+      channel.on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'vibe_reels',
+        },
+        (payload: any) => {
+          console.log('[REALTIME CONTEXT] VibeReel event received:', payload);
+          handleRealtimeEvent('vibe_reels', payload);
+        }
+      );
+
+      // Listen to vibe_reel_views table
+      channel.on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'vibe_reel_views',
+          filter: `viewer_id=eq.${user.id}`,
+        },
+        (payload: any) => handleRealtimeEvent('vibe_reel_views', payload)
+      );
     },
     [user?.id]
   );

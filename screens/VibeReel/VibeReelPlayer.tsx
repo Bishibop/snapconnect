@@ -40,12 +40,15 @@ export default function VibeReelPlayer() {
   const fadeAnim = useRef(new Animated.Value(1)).current;
   const scaleAnim = useRef(new Animated.Value(1)).current;
   const playbackTimer = useRef<NodeJS.Timeout | null>(null);
+  const isMounted = useRef(true);
 
   useEffect(() => {
+    isMounted.current = true;
     loadVibeReel();
     return () => {
+      isMounted.current = false;
       if (playbackTimer.current) {
-        clearInterval(playbackTimer.current);
+        clearTimeout(playbackTimer.current);
       }
     };
   }, []);
@@ -75,6 +78,14 @@ export default function VibeReelPlayer() {
       ];
 
       setAllArt(artSequence);
+      
+      // Auto-start playback after loading
+      setIsPlaying(true);
+      setCurrentIndex(0);
+      // Start with the first image after a brief delay
+      setTimeout(() => {
+        scheduleNextTransition(0);
+      }, 500);
     } catch (error) {
       ErrorHandler.handle(error, { context: 'Error loading VibeReel' });
       navigation.goBack();
@@ -89,10 +100,20 @@ export default function VibeReelPlayer() {
     setIsPlaying(true);
     setCurrentIndex(0);
 
-    // Start the animation cycle
-    playbackTimer.current = setInterval(() => {
-      animateTransition();
-    }, 800); // 800ms per image
+    // Start with the first image
+    scheduleNextTransition(0);
+  };
+
+  const scheduleNextTransition = (index: number) => {
+    // Determine duration based on whether it's the main photo (last in sequence)
+    const isMainPhoto = index === allArt.length - 1;
+    const duration = isMainPhoto ? 10000 : 1000; // 10s for main, 1s for others
+
+    playbackTimer.current = setTimeout(() => {
+      if (isMounted.current) {
+        animateTransition();
+      }
+    }, duration);
   };
 
   const animateTransition = () => {
@@ -116,8 +137,12 @@ export default function VibeReelPlayer() {
         // Check if we've reached the end
         if (nextIndex >= allArt.length) {
           stopPlayback();
+          // Allow restarting by tapping
           return prev;
         }
+
+        // Schedule the next transition with appropriate timing
+        scheduleNextTransition(nextIndex);
 
         return nextIndex;
       });
@@ -140,7 +165,7 @@ export default function VibeReelPlayer() {
 
   const stopPlayback = () => {
     if (playbackTimer.current) {
-      clearInterval(playbackTimer.current);
+      clearTimeout(playbackTimer.current);
       playbackTimer.current = null;
     }
     setIsPlaying(false);
@@ -149,6 +174,14 @@ export default function VibeReelPlayer() {
   const handleClose = () => {
     stopPlayback();
     navigation.goBack();
+  };
+
+  const handleScreenTap = () => {
+    // Restart playback if it has ended
+    if (!isPlaying && currentIndex === allArt.length - 1) {
+      setCurrentIndex(0);
+      startPlayback();
+    }
   };
 
   if (loading) {
@@ -163,7 +196,11 @@ export default function VibeReelPlayer() {
   const imageUrl = currentArt ? getArtPieceUrl(currentArt.image_url) : null;
 
   return (
-    <View style={styles.container}>
+    <TouchableOpacity 
+      style={styles.container} 
+      activeOpacity={1}
+      onPress={handleScreenTap}
+    >
       <TouchableOpacity style={styles.closeButton} onPress={handleClose}>
         <Text style={styles.closeText}>✕</Text>
       </TouchableOpacity>
@@ -187,17 +224,6 @@ export default function VibeReelPlayer() {
         </Animated.View>
       )}
 
-      {!isPlaying && (
-        <View style={styles.controls}>
-          <TouchableOpacity style={styles.playButton} onPress={startPlayback}>
-            <Text style={styles.playButtonText}>Play VibeReel</Text>
-          </TouchableOpacity>
-
-          <Text style={styles.artCount}>
-            {currentIndex + 1} / {allArt.length} pieces
-          </Text>
-        </View>
-      )}
 
       {isPlaying && (
         <View style={styles.progressContainer}>
@@ -213,7 +239,13 @@ export default function VibeReelPlayer() {
           </View>
         </View>
       )}
-    </View>
+
+      {!isPlaying && currentIndex === allArt.length - 1 && (
+        <View style={styles.replayHint}>
+          <Text style={styles.replayText}>Tap to replay</Text>
+        </View>
+      )}
+    </TouchableOpacity>
   );
 }
 
@@ -300,7 +332,7 @@ const styles = StyleSheet.create({
   },
   progressContainer: {
     position: 'absolute',
-    bottom: 40,
+    top: 50,
     left: 20,
     right: 20,
   },
@@ -314,5 +346,18 @@ const styles = StyleSheet.create({
     height: '100%',
     backgroundColor: theme.colors.primary,
     borderRadius: 2,
+  },
+  replayHint: {
+    position: 'absolute',
+    bottom: 100,
+    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 20,
+  },
+  replayText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '500',
   },
 });

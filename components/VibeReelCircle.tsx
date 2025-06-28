@@ -1,14 +1,15 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Image } from 'react-native';
 import { theme } from '../constants/theme';
-import { Story } from '../services/stories';
+import { VibeReelWithViewStatus } from '../services/vibeReels';
+import { getArtPieceUrl } from '../services/artSimilarity';
 
-interface StoryCircleProps {
-  story: Story;
-  onPress: (story: Story) => void;
+interface VibeReelCircleProps {
+  vibeReel: VibeReelWithViewStatus;
+  onPress: (vibeReel: VibeReelWithViewStatus) => void;
 }
 
-export default function StoryCircle({ story, onPress }: StoryCircleProps) {
+export default function VibeReelCircle({ vibeReel, onPress }: VibeReelCircleProps) {
   // Get first 2 letters of username, uppercase
   const getInitials = (username: string): string => {
     return username.substring(0, 2).toUpperCase();
@@ -40,18 +41,29 @@ export default function StoryCircle({ story, onPress }: StoryCircleProps) {
     return colors[index];
   };
 
-  const username = story.user_profile?.username || 'Unknown';
+  const username = vibeReel.creator?.username || 'Unknown';
   const initials = getInitials(username);
   const circleColor = getCircleColor(username);
+  const thumbnailUrl = vibeReel.primary_art?.image_url
+    ? getArtPieceUrl(vibeReel.primary_art.image_url)
+    : null;
 
-  const hasUnviewedStory = !story.is_viewed;
+  const hasUnviewedVibeReel = !vibeReel.is_viewed;
 
   return (
-    <TouchableOpacity style={styles.container} onPress={() => onPress(story)} activeOpacity={0.7}>
-      <View style={[styles.circleContainer, hasUnviewedStory && styles.unviewedBorder]}>
-        <View style={[styles.circle, { backgroundColor: circleColor }]}>
-          <Text style={styles.initials}>{initials}</Text>
-        </View>
+    <TouchableOpacity
+      style={styles.container}
+      onPress={() => onPress(vibeReel)}
+      activeOpacity={0.7}
+    >
+      <View style={[styles.circleContainer, hasUnviewedVibeReel && styles.unviewedBorder]}>
+        {thumbnailUrl ? (
+          <Image source={{ uri: thumbnailUrl }} style={styles.thumbnail} />
+        ) : (
+          <View style={[styles.circle, { backgroundColor: circleColor }]}>
+            <Text style={styles.initials}>{initials}</Text>
+          </View>
+        )}
       </View>
       <Text style={styles.username} numberOfLines={1}>
         {username}
@@ -75,9 +87,8 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.xs,
   },
   unviewedBorder: {
-    borderWidth: 4,
-    borderColor: '#000000',
-    borderStyle: 'dotted',
+    borderWidth: 3,
+    borderColor: theme.colors.primary,
   },
   circle: {
     width: 60,
@@ -106,5 +117,11 @@ const styles = StyleSheet.create({
     color: theme.colors.text,
     textAlign: 'center',
     maxWidth: 70,
+  },
+  thumbnail: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: theme.colors.lightGray,
   },
 });

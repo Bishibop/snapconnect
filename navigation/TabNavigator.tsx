@@ -24,6 +24,7 @@ import FriendSelectorScreen from '../screens/vibeChecks/FriendSelectorScreen';
 
 // VibeReel screens
 import CreateVibeReel from '../screens/VibeReel/CreateVibeReel';
+import VibeReelPreview from '../screens/VibeReel/VibeReelPreview';
 import VibeReelPlayer from '../screens/VibeReel/VibeReelPlayer';
 
 // VibeCheck screens
@@ -49,6 +50,7 @@ const FriendsStackNavigator = () => (
     <FriendsStack.Screen name="FriendsList" component={FriendsListScreen} />
     <FriendsStack.Screen name="AddFriends" component={AddFriendsScreen} />
     <FriendsStack.Screen name="FriendRequests" component={FriendRequestsScreen} />
+    <FriendsStack.Screen name="VibeReelPlayer" component={VibeReelPlayer} />
     <FriendsStack.Screen name="VibeCheckViewer" component={VibeCheckViewerScreen} />
   </FriendsStack.Navigator>
 );
@@ -60,6 +62,7 @@ const CameraStackNavigator = () => (
     <CameraStack.Screen name="MediaPreview" component={MediaPreview} />
     <CameraStack.Screen name="FriendSelector" component={FriendSelectorScreen} />
     <CameraStack.Screen name="CreateVibeReel" component={CreateVibeReel} />
+    <CameraStack.Screen name="VibeReelPreview" component={VibeReelPreview} />
     <CameraStack.Screen name="VibeReelPlayer" component={VibeReelPlayer} />
   </CameraStack.Navigator>
 );

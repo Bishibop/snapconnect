@@ -42,7 +42,7 @@ serve(async req => {
         version:
           'andreasjansson/clip-features:75b33f253f7714a281ad3e9b28f63e3232d583716ef6718f2e46641077ea040a',
         input: {
-          image: artImageUrl,
+          inputs: artImageUrl,
         },
       }),
     });

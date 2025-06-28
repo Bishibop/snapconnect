@@ -3,13 +3,10 @@ import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { theme } from '../../constants/theme';
 import { VibeCheck } from '../../services/vibeChecks';
-import { Story } from '../../services/stories';
-import StoriesRow from '../../components/StoriesRow';
 import TabHeader from '../../components/TabHeader';
 import EmptyState from '../../components/ui/EmptyState';
 import RefreshableList from '../../components/ui/RefreshableList';
 import { useVibeChecks } from '../../hooks/useVibeChecks';
-import { useStories } from '../../hooks/useStories';
 import { useNavigationHelpers, InboxNavigation } from '../../utils/navigation';
 import { formatTimeAgo } from '../../utils/dateTime';
 import { getSnapTypeIcon, getEmptyStateIcon } from '../../utils/status';
@@ -24,19 +21,10 @@ export default function VibeCheckInboxScreen({ navigation }: VibeCheckInboxProps
     refreshing: vibeChecksRefreshing,
     refresh: refreshVibeChecks,
   } = useVibeChecks({ type: 'inbox' });
-  const { refreshing: storiesRefreshing } = useStories();
   const navHelpers = useNavigationHelpers(navigation);
 
   const handleVibeCheckPress = (vibeCheck: VibeCheck) => {
     navHelpers.navigateToVibeCheckViewer(vibeCheck);
-  };
-
-  const handleCreateStory = () => {
-    navHelpers.navigateToCamera();
-  };
-
-  const handleViewStory = (story: Story) => {
-    navHelpers.navigateToStoryViewer(story);
   };
 
   const renderVibeCheckItem = ({ item }: { item: VibeCheck }) => (
@@ -67,9 +55,7 @@ export default function VibeCheckInboxScreen({ navigation }: VibeCheckInboxProps
 
   return (
     <SafeAreaView style={styles.container}>
-      <TabHeader title="Inbox" showLoading={storiesRefreshing} />
-
-      <StoriesRow onCreateStory={handleCreateStory} onViewStory={handleViewStory} />
+      <TabHeader title="Inbox" showLoading={vibeChecksRefreshing} />
 
       <RefreshableList
         data={vibeChecks}

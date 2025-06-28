@@ -139,23 +139,6 @@ export type InboxStackParamList = {
         avatar_url?: string;
       };
     };
-    story?: {
-      id: string;
-      user_id: string;
-      media_url: string;
-      snap_type: 'photo' | 'video';
-      filter_type?: string;
-      duration?: number;
-      is_active: boolean;
-      created_at: string;
-      expires_at: string;
-      user_profile?: {
-        id: string;
-        username: string;
-        avatar_url?: string;
-      };
-      is_viewed?: boolean;
-    };
   };
 };
 
@@ -180,23 +163,6 @@ export type SentStackParamList = {
         avatar_url?: string;
       };
     };
-    story?: {
-      id: string;
-      user_id: string;
-      media_url: string;
-      snap_type: 'photo' | 'video';
-      filter_type?: string;
-      duration?: number;
-      is_active: boolean;
-      created_at: string;
-      expires_at: string;
-      user_profile?: {
-        id: string;
-        username: string;
-        avatar_url?: string;
-      };
-      is_viewed?: boolean;
-    };
   };
 };
 
@@ -204,6 +170,9 @@ export type FriendsStackParamList = {
   FriendsList: undefined;
   AddFriends: undefined;
   FriendRequests: undefined;
+  VibeReelPlayer: {
+    vibeReelId: string;
+  };
   VibeCheckViewer: {
     vibeCheck?: {
       id: string;
@@ -222,23 +191,6 @@ export type FriendsStackParamList = {
         username: string;
         avatar_url?: string;
       };
-    };
-    story?: {
-      id: string;
-      user_id: string;
-      media_url: string;
-      snap_type: 'photo' | 'video';
-      filter_type?: string;
-      duration?: number;
-      is_active: boolean;
-      created_at: string;
-      expires_at: string;
-      user_profile?: {
-        id: string;
-        username: string;
-        avatar_url?: string;
-      };
-      is_viewed?: boolean;
     };
   };
 };
@@ -266,6 +218,9 @@ export type CameraStackParamList = {
   CreateVibeReel: {
     imageUri: string;
     imageFile?: File | string;
+  };
+  VibeReelPreview: {
+    vibeReelId: string;
   };
   VibeReelPlayer: {
     vibeReelId: string;

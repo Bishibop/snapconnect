@@ -103,7 +103,7 @@ export default function CameraScreen({ navigation }: CameraScreenProps) {
 
         {/* Top Controls Overlay */}
         <View style={styles.topControls}>
-          <TouchableOpacity style={styles.closeButton} onPress={navHelpers.navigateToFriendsTab}>
+          <TouchableOpacity style={styles.closeButton} onPress={() => navigation.navigate('Friends' as any)}>
             <Text style={styles.closeButtonText}>✕</Text>
           </TouchableOpacity>
 

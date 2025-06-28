@@ -55,12 +55,6 @@ export class NavigationUtils {
     (navigation as any).navigate('Camera');
   }
 
-  /**
-   * Navigate to camera screen for creating a story
-   */
-  static navigateToCameraForStory(navigation: CameraNavigation) {
-    navigation.navigate('CameraScreen');
-  }
 
   /**
    * Navigate to VibeCheck viewer with VibeCheck data
@@ -72,15 +66,6 @@ export class NavigationUtils {
     (navigation as any).navigate('VibeCheckViewer', { vibeCheck });
   }
 
-  /**
-   * Navigate to story viewer with story data
-   */
-  static navigateToStoryViewer(
-    navigation: InboxNavigation | SentNavigation | FriendsNavigation,
-    story: InboxStackParamList['VibeCheckViewer']['story']
-  ) {
-    (navigation as any).navigate('VibeCheckViewer', { story });
-  }
 
   /**
    * Navigate through camera workflow: Camera -> MediaPreview
@@ -187,11 +172,8 @@ export function useNavigationHelpers(navigation: any) {
   return useMemo(
     () => ({
       navigateToCamera: () => NavigationUtils.navigateToCamera(navigation),
-      navigateToCameraForStory: () => NavigationUtils.navigateToCameraForStory(navigation),
       navigateToVibeCheckViewer: (vibeCheck: InboxStackParamList['VibeCheckViewer']['vibeCheck']) =>
         NavigationUtils.navigateToVibeCheckViewer(navigation, vibeCheck),
-      navigateToStoryViewer: (story: InboxStackParamList['VibeCheckViewer']['story']) =>
-        NavigationUtils.navigateToStoryViewer(navigation, story),
       navigateToMediaPreview: (mediaUri: string, mediaType: 'photo' | 'video') =>
         NavigationUtils.navigateToMediaPreview(navigation, mediaUri, mediaType),
       navigateToFriendSelector: (params: CameraStackParamList['FriendSelector']) =>

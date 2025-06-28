@@ -27,13 +27,7 @@ export const generateEmbedding = async (imageUrl: string): Promise<number[]> => 
     // Handle different response formats from Replicate
     let embedding = data.embedding;
 
-    console.log('Raw embedding from edge function:', {
-      type: typeof embedding,
-      isArray: Array.isArray(embedding),
-      length: Array.isArray(embedding) ? embedding.length : 'N/A',
-      firstElement: Array.isArray(embedding) && embedding[0] ? typeof embedding[0] : 'N/A',
-      sample: JSON.stringify(embedding).substring(0, 200),
-    });
+    // Remove debug logging
 
     // If it's a string that looks like JSON, parse it
     if (typeof embedding === 'string') {
@@ -47,7 +41,7 @@ export const generateEmbedding = async (imageUrl: string): Promise<number[]> => 
     // Check if the response has a nested structure
     // Based on the error, it looks like: [{"embedding":[...]}, ...] with length 2
     if (Array.isArray(embedding) && embedding.length > 0 && embedding[0]?.embedding) {
-      console.log('Detected nested array structure, extracting first element embedding');
+      // Detected nested array structure, extracting first element embedding
       embedding = embedding[0].embedding;
     }
 
