@@ -49,6 +49,14 @@ export default function MediaPreview({ route, navigation }: MediaPreviewProps) {
     });
   };
 
+  const handleCreateVibeReel = () => {
+    // Navigate to VibeReel creation with the captured image
+    navigation.navigate('CreateVibeReel', {
+      imageUri: mediaUri,
+      imageFile: mediaUri, // We'll need to convert this to a File object in the component
+    });
+  };
+
   const handleToggleFilters = () => {
     setShowFilters(!showFilters);
   };
@@ -151,6 +159,14 @@ export default function MediaPreview({ route, navigation }: MediaPreviewProps) {
           >
             <Text style={styles.sendButtonText}>VibeCheck</Text>
           </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.button, styles.vibeReelButton]}
+            onPress={handleCreateVibeReel}
+            disabled={uploading}
+          >
+            <Text style={styles.vibeReelButtonText}>VibeReel</Text>
+          </TouchableOpacity>
         </View>
       </View>
 
@@ -248,6 +264,17 @@ const styles = StyleSheet.create({
   },
   sendButtonText: {
     color: theme.colors.secondary,
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  vibeReelButton: {
+    backgroundColor: '#FF6B35', // Orange accent color for VibeReel
+    flex: 0,
+    paddingHorizontal: theme.spacing.xl,
+    minWidth: 120,
+  },
+  vibeReelButtonText: {
+    color: theme.colors.white,
     fontSize: 16,
     fontWeight: 'bold',
   },

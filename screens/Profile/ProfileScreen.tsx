@@ -1,13 +1,19 @@
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, ScrollView, ActivityIndicator, Dimensions } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { useAuth } from '../../contexts/AuthContext';
 import { useProfile } from '../../hooks/useProfile';
 import { theme } from '../../constants/theme';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ProfileNavigation } from '../../utils/navigation';
-import { ProfileStackParamList } from '../../types';
+import { ProfileStackParamList, ArtPiece } from '../../types';
 import ActionButton from '../../components/ui/ActionButton';
+import ArtPieceComponent from '../../components/ArtPiece';
+import { getUserArtPieces, getUserVibeReels } from '../../services/vibeReels';
+import { ErrorHandler } from '../../utils/errorHandler';
+
+const { width: screenWidth } = Dimensions.get('window');
+const itemSize = (screenWidth - 48) / 3;
 
 type ProfileScreenRouteProp = RouteProp<ProfileStackParamList, 'ProfileScreen'>;
 
@@ -19,6 +25,32 @@ export default function ProfileScreen() {
   const profileId = userId || user?.id;
   const { profile, loading } = useProfile(profileId || '');
   const isOwnProfile = !userId || userId === user?.id;
+
+  const [artPieces, setArtPieces] = useState<ArtPiece[]>([]);
+  const [loadingArt, setLoadingArt] = useState(true);
+  const [_vibeReels, setVibeReels] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (profileId) {
+      loadUserArt();
+    }
+  }, [profileId]);
+
+  const loadUserArt = async () => {
+    try {
+      setLoadingArt(true);
+      const [art, reels] = await Promise.all([
+        getUserArtPieces(profileId!),
+        getUserVibeReels(profileId!),
+      ]);
+      setArtPieces(art);
+      setVibeReels(reels);
+    } catch (error) {
+      ErrorHandler.handle(error, { context: 'Error loading user art' });
+    } finally {
+      setLoadingArt(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -68,9 +100,32 @@ export default function ProfileScreen() {
 
         <View style={styles.artSection}>
           <Text style={styles.sectionTitle}>Art Collection</Text>
-          <View style={styles.artGridPlaceholder}>
-            <Text style={styles.placeholderText}>Art grid coming soon</Text>
-          </View>
+          {loadingArt ? (
+            <View style={styles.artGridPlaceholder}>
+              <ActivityIndicator size="small" color={theme.colors.primary} />
+            </View>
+          ) : artPieces.length === 0 ? (
+            <View style={styles.artGridPlaceholder}>
+              <Text style={styles.placeholderText}>
+                {isOwnProfile
+                  ? 'Create your first VibeReel to start your art collection'
+                  : 'No art pieces yet'}
+              </Text>
+            </View>
+          ) : (
+            <View style={styles.artGrid}>
+              {artPieces.map(artPiece => (
+                <View key={artPiece.id} style={styles.artPieceWrapper}>
+                  <ArtPieceComponent
+                    artPiece={artPiece}
+                    size={itemSize}
+                    showVibeCount={true}
+                    showUsername={false}
+                  />
+                </View>
+              ))}
+            </View>
+          )}
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -145,5 +200,13 @@ const styles = StyleSheet.create({
   placeholderText: {
     fontSize: 16,
     color: theme.colors.textSecondary,
+  },
+  artGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginHorizontal: -4,
+  },
+  artPieceWrapper: {
+    paddingHorizontal: 4,
   },
 });

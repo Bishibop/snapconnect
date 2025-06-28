@@ -80,10 +80,31 @@ serve(async req => {
       });
     }
 
+    // Extract the embedding from the result
+    // Based on the error, it seems result.output might be nested
+    let embedding = result.output;
+    
+    // Handle different possible response formats from Replicate
+    if (Array.isArray(embedding) && embedding.length === 1 && embedding[0]?.embedding) {
+      // Format: [{embedding: [...]}]
+      embedding = embedding[0].embedding;
+    } else if (embedding?.embedding && Array.isArray(embedding.embedding)) {
+      // Format: {embedding: [...]}
+      embedding = embedding.embedding;
+    }
+    
+    // Ensure we have a valid array
+    if (!Array.isArray(embedding)) {
+      console.error('Unexpected embedding format from Replicate:', result.output);
+      throw new Error('Invalid embedding format from Replicate API');
+    }
+    
+    console.log(`Extracted embedding with ${embedding.length} dimensions`);
+    
     // Return the embedding
     return new Response(
       JSON.stringify({
-        embedding: result.output,
+        embedding: embedding,
         predictionId: result.id,
       }),
       {

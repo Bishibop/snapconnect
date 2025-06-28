@@ -7,6 +7,8 @@ import { supabase } from '../lib/supabase';
  */
 export const generateEmbedding = async (imageUrl: string): Promise<number[]> => {
   try {
+    // console.log('Generating embedding for URL:', imageUrl);
+
     const { data, error } = await supabase.functions.invoke('generate-art-embeddings', {
       body: { artImageUrl: imageUrl },
     });
@@ -16,11 +18,56 @@ export const generateEmbedding = async (imageUrl: string): Promise<number[]> => 
       throw new Error('Failed to generate embedding');
     }
 
-    if (!data?.embedding || !Array.isArray(data.embedding)) {
-      throw new Error('Invalid embedding response');
+    // console.log('Edge function response:', JSON.stringify(data).substring(0, 200));
+
+    if (!data?.embedding) {
+      throw new Error('Invalid embedding response - no embedding found');
     }
 
-    return data.embedding;
+    // Handle different response formats from Replicate
+    let embedding = data.embedding;
+
+    console.log('Raw embedding from edge function:', {
+      type: typeof embedding,
+      isArray: Array.isArray(embedding),
+      length: Array.isArray(embedding) ? embedding.length : 'N/A',
+      firstElement: Array.isArray(embedding) && embedding[0] ? typeof embedding[0] : 'N/A',
+      sample: JSON.stringify(embedding).substring(0, 200),
+    });
+
+    // If it's a string that looks like JSON, parse it
+    if (typeof embedding === 'string') {
+      try {
+        embedding = JSON.parse(embedding);
+      } catch {
+        // console.error('Failed to parse embedding string:', embedding.substring(0, 100));
+      }
+    }
+
+    // Check if the response has a nested structure
+    // Based on the error, it looks like: [{"embedding":[...]}, ...] with length 2
+    if (Array.isArray(embedding) && embedding.length > 0 && embedding[0]?.embedding) {
+      console.log('Detected nested array structure, extracting first element embedding');
+      embedding = embedding[0].embedding;
+    }
+
+    // Ensure we have a valid array of numbers
+    // Note: CLIP models can have different dimensions (512, 768, etc.)
+    if (!Array.isArray(embedding) || embedding.length === 0) {
+      console.error('Unexpected embedding format:', {
+        type: typeof embedding,
+        isArray: Array.isArray(embedding),
+        length: Array.isArray(embedding) ? embedding.length : 'N/A',
+        sample: Array.isArray(embedding) ? embedding.slice(0, 3) : embedding,
+      });
+      throw new Error(
+        `Invalid embedding format - expected array of numbers, got ${Array.isArray(embedding) ? `empty array` : typeof embedding}`
+      );
+    }
+
+    // console.log(`Embedding generated successfully with ${embedding.length} dimensions`);
+
+    return embedding;
   } catch (error) {
     console.error('Error in generateEmbedding:', error);
     throw error;
@@ -29,7 +76,7 @@ export const generateEmbedding = async (imageUrl: string): Promise<number[]> => 
 
 /**
  * Find similar art pieces using vector similarity search
- * @param embedding - The query embedding vector
+ * @param embedding - The query embedding vector (can be 512, 768, or other dimensions)
  * @param excludeUserId - Optional user ID to exclude from results
  * @param matchThreshold - Minimum similarity threshold (0-1)
  * @param matchCount - Maximum number of results to return
@@ -59,7 +106,11 @@ export const findSimilarArt = async (
 
     if (error) {
       console.error('Error finding similar art:', error);
-      throw new Error('Failed to find similar art');
+      console.error('Error details:', {
+        message: error.message,
+        error: error,
+      });
+      throw new Error(`Failed to find similar art: ${error.message || 'Unknown error'}`);
     }
 
     // Filter out art from excluded user if specified
@@ -126,17 +177,23 @@ export const getArtPieceUrl = (imagePath: string): string => {
 export const uploadArtImage = async (userId: string, file: File | Blob): Promise<string> => {
   try {
     const fileName = `${userId}/${Date.now()}.jpg`;
+    // console.log(`Uploading image: ${fileName}, size: ${file.size}, type: ${file.type}`);
 
     const { data, error } = await supabase.storage.from('art-pieces').upload(fileName, file, {
-      contentType: 'image/jpeg',
+      contentType: file.type || 'image/jpeg',
       upsert: false,
     });
 
     if (error) {
       console.error('Error uploading art image:', error);
-      throw new Error('Failed to upload art image');
+      console.error('Error details:', {
+        message: error.message,
+        error: error,
+      });
+      throw new Error(`Failed to upload art image: ${error.message || 'Unknown error'}`);
     }
 
+    // console.log('Upload successful:', data.path);
     return data.path;
   } catch (error) {
     console.error('Error in uploadArtImage:', error);

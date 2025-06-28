@@ -263,6 +263,13 @@ export type CameraStackParamList = {
       blendMode?: 'multiply' | 'overlay' | 'saturation';
     };
   };
+  CreateVibeReel: {
+    imageUri: string;
+    imageFile?: File | string;
+  };
+  VibeReelPlayer: {
+    vibeReelId: string;
+  };
 };
 
 export type ProfileStackParamList = {
