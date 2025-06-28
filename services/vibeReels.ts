@@ -311,10 +311,27 @@ export const getPostedVibeReelsFromFriends = async (): Promise<VibeReelWithViewS
     throw new Error('Failed to fetch friend VibeReels');
   }
 
+  // Deduplicate to get only the latest vibe reel per creator
+  type VibeReelData = (typeof vibeReels)[0];
+  const latestByCreator = new Map<string, VibeReelData>();
+  for (const vibeReel of vibeReels || []) {
+    const existing = latestByCreator.get(vibeReel.creator_id);
+    if (
+      !existing ||
+      (vibeReel.posted_at &&
+        existing.posted_at &&
+        new Date(vibeReel.posted_at) > new Date(existing.posted_at))
+    ) {
+      latestByCreator.set(vibeReel.creator_id, vibeReel);
+    }
+  }
+
   // Add view status to each VibeReel
-  const vibeReelsWithViewStatus = (vibeReels || []).map(vibeReel => ({
+  const vibeReelsWithViewStatus = Array.from(latestByCreator.values()).map(vibeReel => ({
     ...vibeReel,
-    is_viewed: vibeReel.vibe_reel_views?.some((view: any) => view.viewer_id === user.id) || false,
+    is_viewed:
+      vibeReel.vibe_reel_views?.some((view: { viewer_id: string }) => view.viewer_id === user.id) ||
+      false,
   }));
 
   return vibeReelsWithViewStatus;

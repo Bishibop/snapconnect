@@ -196,12 +196,18 @@ export function VibeReelsProvider({ children }: VibeReelsProviderProps) {
                   'VIBE_REELS',
                   current => {
                     const vibeReels = current || [];
-                    const exists = vibeReels.some(vr => vr.id === vibeReelWithViewStatus.id);
-                    return exists
-                      ? vibeReels.map(vr =>
-                          vr.id === vibeReelWithViewStatus.id ? vibeReelWithViewStatus : vr
-                        )
-                      : [vibeReelWithViewStatus, ...vibeReels].filter(vr => vr.posted_at); // Only keep posted VibeReels
+
+                    // Remove any existing vibe reels from the same creator
+                    const filteredVibeReels = vibeReels.filter(
+                      vr => vr.creator_id !== vibeReelWithViewStatus.creator_id
+                    );
+
+                    // Add the new vibe reel if it's posted
+                    if (vibeReelWithViewStatus.posted_at) {
+                      return [vibeReelWithViewStatus, ...filteredVibeReels];
+                    }
+
+                    return filteredVibeReels;
                   },
                   user.id
                 );
@@ -345,6 +351,7 @@ export function VibeReelsProvider({ children }: VibeReelsProviderProps) {
             myVibeReelPostedAt: myVibeReelData?.posted_at,
           });
 
+          // The service already deduplicates, but double-check here for safety
           safeSetFriendVibeReels(friendVibeReelsData);
           safeSetMyVibeReel(myVibeReelData);
 
