@@ -64,38 +64,86 @@ export function RealtimeProvider({ children }: RealtimeProviderProps) {
   const updateTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const pendingUpdatesRef = useRef<Set<string>>(new Set());
 
+  // Track connection attempts
+  const connectionAttemptsRef = useRef(0);
+
   // Initialize single channel
   const initializeChannel = useCallback(() => {
-    if (channelRef.current || !user?.id) return;
+    if (channelRef.current) {
+      console.log('[REALTIME] Channel already exists, skipping initialization');
+      return;
+    }
+
+    if (!user?.id) {
+      console.log('[REALTIME] No user ID, skipping initialization');
+      return;
+    }
+
+    connectionAttemptsRef.current++;
+    console.log(
+      '[REALTIME] Connection attempt #',
+      connectionAttemptsRef.current,
+      'at',
+      new Date().toISOString()
+    );
 
     try {
+      console.log('[REALTIME] Creating channel for user:', user.id, {
+        timestamp: new Date().toISOString(),
+      });
+
       const channel = supabase.channel('app-realtime-unified', {
         config: {
           presence: { key: user.id },
         },
       });
 
-      channel.subscribe((status: string) => {
+      channel.subscribe((status: string, error?: any) => {
         if (!isMountedRef.current) return;
+
+        console.log('[REALTIME] Channel subscription status:', status, {
+          timestamp: new Date().toISOString(),
+          userId: user.id,
+          connectionAttempt: connectionAttemptsRef.current,
+        });
 
         if (status === 'SUBSCRIBED') {
           setIsConnected(true);
-          // Unified realtime channel connected
+          console.log('[REALTIME] Unified realtime channel connected successfully');
         } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
           setIsConnected(false);
-          // Unified realtime channel error
+          console.error('[REALTIME] Channel error details:', {
+            status: status,
+            errorMessage: error?.message || 'No error message',
+            errorCode: error?.code || 'No error code',
+            errorDetails: error?.details || 'No error details',
+            errorType: error?.type || 'Unknown',
+            errorName: error?.name || 'Unknown',
+            fullError: JSON.stringify(error, null, 2),
+            connectionAttempt: connectionAttemptsRef.current,
+            timestamp: new Date().toISOString(),
+          });
         } else if (status === 'CLOSED') {
           setIsConnected(false);
-          // Unified realtime channel closed
+          console.log('[REALTIME] Channel closed:', {
+            error: error,
+            reason: error?.reason || 'No reason provided',
+            message: error?.message || 'No message',
+            connectionAttempt: connectionAttemptsRef.current,
+            timestamp: new Date().toISOString(),
+          });
         }
       });
 
       channelRef.current = channel;
 
       // Set up consolidated listeners for all tables we care about
+      console.log('[REALTIME] Setting up consolidated listeners');
       setupConsolidatedListeners(channel);
-    } catch {
-      // Error initializing realtime channel
+
+      console.log('[REALTIME] Channel initialization complete');
+    } catch (error) {
+      console.error('[REALTIME] Error initializing realtime channel:', error);
       setIsConnected(false);
     }
   }, [user?.id]);
@@ -105,7 +153,10 @@ export function RealtimeProvider({ children }: RealtimeProviderProps) {
     (channel: any) => {
       if (!user?.id) return;
 
+      let listenerCount = 0;
+
       // Listen to stories table
+      console.log('[REALTIME] Adding listener for stories table');
       channel.on(
         'postgres_changes',
         {
@@ -115,8 +166,10 @@ export function RealtimeProvider({ children }: RealtimeProviderProps) {
         },
         (payload: any) => handleRealtimeEvent('stories', payload)
       );
+      listenerCount++;
 
       // Listen to story_views table
+      console.log('[REALTIME] Adding listener for story_views table');
       channel.on(
         'postgres_changes',
         {
@@ -174,6 +227,11 @@ export function RealtimeProvider({ children }: RealtimeProviderProps) {
           filter: `viewer_id=eq.${user.id}`,
         },
         (payload: any) => handleRealtimeEvent('vibe_reel_views', payload)
+      );
+
+      console.log('[REALTIME] Total listeners added:', 6);
+      console.log(
+        '[REALTIME] Listeners: stories, story_views, friendships, profiles, vibe_reels, vibe_reel_views'
       );
     },
     [user?.id]
@@ -233,6 +291,12 @@ export function RealtimeProvider({ children }: RealtimeProviderProps) {
     ) => {
       if (!isMountedRef.current) return;
 
+      console.log('[REALTIME] Registering subscription:', {
+        id,
+        tables: configs.map(c => c.table),
+        enabled,
+      });
+
       subscriptionsRef.current.set(id, {
         id,
         configs,
@@ -240,8 +304,11 @@ export function RealtimeProvider({ children }: RealtimeProviderProps) {
         enabled,
       });
 
+      console.log('[REALTIME] Active subscriptions:', subscriptionsRef.current.size);
+
       // Initialize channel if not already done
       if (!channelRef.current && user?.id) {
+        console.log('[REALTIME] Channel not initialized, initializing now');
         initializeChannel();
       }
     },
@@ -280,7 +347,14 @@ export function RealtimeProvider({ children }: RealtimeProviderProps) {
 
   // Initialize channel when user is available
   useEffect(() => {
+    console.log('[REALTIME] User effect triggered:', {
+      hasUser: !!user?.id,
+      hasChannel: !!channelRef.current,
+      userId: user?.id,
+    });
+
     if (user?.id && !channelRef.current) {
+      console.log('[REALTIME] User authenticated, initializing channel');
       initializeChannel();
     } else if (!user?.id && channelRef.current) {
       // Clean up when user logs out

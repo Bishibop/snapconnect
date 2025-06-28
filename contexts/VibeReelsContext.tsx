@@ -102,6 +102,9 @@ export function VibeReelsProvider({ children }: VibeReelsProviderProps) {
   const throttleTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const pendingUpdatesRef = useRef<Set<string>>(new Set());
 
+  // Ref to hold the latest version of the throttled update function
+  const handleThrottledVibeReelUpdateRef = useRef<(vibeReelId: string) => void>(() => {});
+
   // Throttled function to handle VibeReel updates - prevents database spam
   const handleThrottledVibeReelUpdate = useCallback(
     (vibeReelId: string) => {
@@ -131,11 +134,13 @@ export function VibeReelsProvider({ children }: VibeReelsProviderProps) {
             .eq('status', 'accepted');
 
           if (friendError) {
-            console.error('Error fetching friends:', friendError);
-            return;
+            console.error('[THROTTLED UPDATE] Error fetching friends:', friendError);
+            // Continue anyway - we'll just process our own vibe reels
           }
 
           const friendIds = friendships?.map(f => f.friend_id) || [];
+
+          console.log('[THROTTLED UPDATE] Friend IDs:', friendIds);
 
           // Batch fetch all pending VibeReel updates in a single query
           const { data: vibeReelsWithData, error } = await supabase
@@ -155,6 +160,12 @@ export function VibeReelsProvider({ children }: VibeReelsProviderProps) {
             error,
             count: vibeReelsWithData?.length,
           });
+
+          if (error) {
+            // RLS might prevent access to some vibe reels
+            console.log('[THROTTLED UPDATE] Error fetching vibe reels (possibly RLS):', error);
+            return;
+          }
 
           if (!vibeReelsWithData || !user?.id) return;
 
@@ -178,6 +189,7 @@ export function VibeReelsProvider({ children }: VibeReelsProviderProps) {
                 is_friend: friendIds.includes(vibeReelWithData.creator_id),
                 has_posted_at: !!vibeReelWithData.posted_at,
                 posted_at: vibeReelWithData.posted_at,
+                friendIds_length: friendIds.length,
               });
 
               if (vibeReelWithData.creator_id === user.id && vibeReelWithData.posted_at) {
@@ -192,9 +204,10 @@ export function VibeReelsProvider({ children }: VibeReelsProviderProps) {
               ) {
                 console.log('[THROTTLED UPDATE] Updating FRIEND VibeReel');
                 // Update friend VibeReels - only if they are actually a friend
-                const updatedVibeReels = cache.update<VibeReelWithViewStatus[]>(
-                  'VIBE_REELS',
-                  current => {
+
+                // Use functional update to ensure we have the latest state
+                if (isMountedRef.current) {
+                  setFriendVibeReels(current => {
                     const vibeReels = current || [];
 
                     // Remove any existing vibe reels from the same creator
@@ -204,14 +217,23 @@ export function VibeReelsProvider({ children }: VibeReelsProviderProps) {
 
                     // Add the new vibe reel if it's posted
                     if (vibeReelWithViewStatus.posted_at) {
-                      return [vibeReelWithViewStatus, ...filteredVibeReels];
+                      const updatedVibeReels = [vibeReelWithViewStatus, ...filteredVibeReels];
+
+                      // Update cache with the new state
+                      if (user?.id) {
+                        cache.set('VIBE_REELS', updatedVibeReels, user.id);
+                      }
+
+                      return updatedVibeReels;
                     }
 
+                    // Update cache even if we're just removing
+                    if (user?.id) {
+                      cache.set('VIBE_REELS', filteredVibeReels, user.id);
+                    }
                     return filteredVibeReels;
-                  },
-                  user.id
-                );
-                safeSetFriendVibeReels(updatedVibeReels);
+                  });
+                }
               }
             } catch (error) {
               console.error('Error processing VibeReel update:', error);
@@ -222,8 +244,13 @@ export function VibeReelsProvider({ children }: VibeReelsProviderProps) {
         }
       }, 500); // 500ms throttle - batches rapid updates
     },
-    [user?.id, safeSetMyVibeReel, safeSetFriendVibeReels]
+    [user?.id] // Only depend on user.id
   );
+
+  // Update the ref whenever the function changes
+  useEffect(() => {
+    handleThrottledVibeReelUpdateRef.current = handleThrottledVibeReelUpdate;
+  }, [handleThrottledVibeReelUpdate]);
 
   const loadVibeReels = useCallback(
     async (silent = false) => {
@@ -370,6 +397,8 @@ export function VibeReelsProvider({ children }: VibeReelsProviderProps) {
   }, [user?.id, clearError, safeSetFriendVibeReels, safeSetMyVibeReel]); // Minimal stable dependencies
 
   // SINGLE realtime subscription for the entire app - no more multiple subscriptions!
+  console.log('[VIBEREEL CONTEXT] Setting up realtime subscription with user:', user?.id);
+  
   useRealtimeSubscription(
     [
       {
@@ -399,8 +428,25 @@ export function VibeReelsProvider({ children }: VibeReelsProviderProps) {
         });
 
         if (eventType === 'INSERT' || eventType === 'UPDATE') {
+          // Early exit for vibe reels that aren't posted yet
+          if (!newVibeReel.posted_at) {
+            console.log('[REALTIME] Ignoring unpublished vibe reel');
+            return;
+          }
+
+          // Early exit for our own vibe reels if it's just being created (not posted)
+          if (
+            eventType === 'INSERT' &&
+            newVibeReel.creator_id === user?.id &&
+            !newVibeReel.posted_at
+          ) {
+            console.log('[REALTIME] Ignoring own unpublished vibe reel');
+            return;
+          }
+
           // Handle all VibeReel updates, including when posted_at is set
-          handleThrottledVibeReelUpdate(newVibeReel.id);
+          console.log('[REALTIME] Calling handleThrottledVibeReelUpdate for ID:', newVibeReel.id);
+          handleThrottledVibeReelUpdateRef.current?.(newVibeReel.id);
         } else if (eventType === 'DELETE') {
           // Handle deletes immediately (no database call needed)
           try {
@@ -451,12 +497,7 @@ export function VibeReelsProvider({ children }: VibeReelsProviderProps) {
     },
     {
       enabled: !!user?.id,
-      dependencies: [
-        user?.id,
-        handleThrottledVibeReelUpdate,
-        safeSetMyVibeReel,
-        safeSetFriendVibeReels,
-      ],
+      dependencies: [user?.id], // Only depend on user.id, not the functions
     }
   );
 

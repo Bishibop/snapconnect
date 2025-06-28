@@ -31,11 +31,10 @@ export default function VibeReelPreview() {
       setPosting(true);
       await postVibeReel(vibeReelId);
 
-      // Manually reload to ensure the UI updates
-      // This is a temporary fix until we debug why realtime isn't working
-      setTimeout(() => {
-        reload(true); // Silent reload
-      }, 500);
+      // Removed manual reload - realtime should handle this now
+      // setTimeout(() => {
+      //   reload(true); // Silent reload
+      // }, 500);
 
       // Navigate back to camera after successful post
       navigation.navigate('Camera', { screen: 'CameraScreen' });

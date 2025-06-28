@@ -36,7 +36,15 @@ export function useRealtimeSubscription(
 
   // Set up subscription
   useEffect(() => {
+    console.log('[useRealtimeSubscription] Effect running:', {
+      subscriptionId: subscriptionIdRef.current,
+      enabled,
+      configs: Array.isArray(configs) ? configs : [configs],
+      isConnected,
+    });
+
     if (!enabled) {
+      console.log('[useRealtimeSubscription] Subscription disabled, unsubscribing');
       unsubscribe(subscriptionIdRef.current);
       return;
     }
@@ -46,12 +54,18 @@ export function useRealtimeSubscription(
     // Use stable callback that forwards to current callback
     const stableCallback = (payload: any) => {
       try {
+        console.log('[useRealtimeSubscription] Event received:', {
+          subscriptionId: subscriptionIdRef.current,
+          table: payload.table,
+          eventType: payload.eventType,
+        });
         callbackRef.current(payload);
-      } catch {
-        // Error in realtime callback
+      } catch (error) {
+        console.error('[useRealtimeSubscription] Error in callback:', error);
       }
     };
 
+    console.log('[useRealtimeSubscription] Calling updateSubscription');
     updateSubscription(subscriptionIdRef.current, configArray, stableCallback, enabled);
 
     return () => {

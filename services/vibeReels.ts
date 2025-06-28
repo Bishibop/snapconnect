@@ -252,17 +252,25 @@ export const postVibeReel = async (vibeReelId: string): Promise<void> => {
 
   const postedAt = new Date().toISOString();
 
+  console.log('[postVibeReel] Updating vibe reel:', {
+    vibeReelId,
+    userId: user.id,
+    postedAt,
+    timestamp: new Date().toISOString(),
+  });
+
   const { error } = await supabase
     .from('vibe_reels')
     .update({ posted_at: postedAt })
     .eq('id', vibeReelId)
-    .eq('creator_id', user.id) // Ensure user can only post their own VibeReels
-    .select();
+    .eq('creator_id', user.id); // Ensure user can only post their own VibeReels
 
   if (error) {
-    console.error('Error posting VibeReel:', error);
+    console.error('[postVibeReel] Error posting VibeReel:', error);
     throw new Error('Failed to post VibeReel');
   }
+
+  console.log('[postVibeReel] Successfully posted vibe reel:', vibeReelId);
 };
 
 // Get posted VibeReels from friends with view status
