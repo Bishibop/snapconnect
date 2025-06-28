@@ -38,11 +38,11 @@ export default function VibeReelsRow({ onCreateVibeReel, onViewVibeReel }: VibeR
             userVibeReel={userVibeReel}
             username={username}
             onPress={onCreateVibeReel}
-            onVibeReelPress={(vibeReel) => {
+            onVibeReelPress={vibeReel => {
               // Convert VibeReel to VibeReelWithViewStatus for user's own reel
               const vibeReelWithStatus = {
                 ...vibeReel,
-                is_viewed: true // User's own VibeReel is always considered viewed
+                is_viewed: true, // User's own VibeReel is always considered viewed
               } as VibeReelWithViewStatus;
               onViewVibeReel(vibeReelWithStatus);
             }}
@@ -64,11 +64,11 @@ export default function VibeReelsRow({ onCreateVibeReel, onViewVibeReel }: VibeR
           userVibeReel={userVibeReel}
           username={username}
           onPress={onCreateVibeReel}
-          onVibeReelPress={(vibeReel) => {
+          onVibeReelPress={vibeReel => {
             // Convert VibeReel to VibeReelWithViewStatus for user's own reel
             const vibeReelWithStatus = {
               ...vibeReel,
-              is_viewed: true // User's own VibeReel is always considered viewed
+              is_viewed: true, // User's own VibeReel is always considered viewed
             } as VibeReelWithViewStatus;
             onViewVibeReel(vibeReelWithStatus);
           }}

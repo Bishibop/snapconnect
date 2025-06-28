@@ -456,12 +456,13 @@ The art similarity feature enables semantic discovery of artwork using CLIP (Con
    - Returns up to 50 similar art pieces
 
 3. **Data Model**:
+
    ```sql
    art_pieces:
    - embedding: VECTOR(512) - CLIP feature vector
    - vibe_count: INTEGER - Popularity metric
    - image_url: TEXT - Public storage reference
-   
+
    vibe_reels:
    - primary_art_id: UUID - User's original art
    - selected_art_ids: UUID[] - Up to 7 similar pieces

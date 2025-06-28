@@ -137,12 +137,8 @@ export default function VibeCheckViewerScreen({ route, navigation }: VibeCheckVi
 
       {/* Sender info */}
       <View style={styles.senderInfo}>
-        <Text style={styles.senderName}>
-          {content?.sender_profile?.username}
-        </Text>
-        <Text style={styles.vibeCheckType}>
-          sent a VibeCheck
-        </Text>
+        <Text style={styles.senderName}>{content?.sender_profile?.username}</Text>
+        <Text style={styles.vibeCheckType}>sent a VibeCheck</Text>
       </View>
 
       {/* Media content */}

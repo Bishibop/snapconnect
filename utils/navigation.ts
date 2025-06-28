@@ -55,7 +55,6 @@ export class NavigationUtils {
     (navigation as any).navigate('Camera');
   }
 
-
   /**
    * Navigate to VibeCheck viewer with VibeCheck data
    */
@@ -65,7 +64,6 @@ export class NavigationUtils {
   ) {
     (navigation as any).navigate('VibeCheckViewer', { vibeCheck });
   }
-
 
   /**
    * Navigate through camera workflow: Camera -> MediaPreview

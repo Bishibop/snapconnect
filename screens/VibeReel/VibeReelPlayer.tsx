@@ -41,18 +41,18 @@ export default function VibeReelPlayer() {
   // Double buffer animation values - start with 0 for initial fade-in
   const fadeAnimA = useRef(new Animated.Value(0)).current;
   const fadeAnimB = useRef(new Animated.Value(0)).current;
-  
+
   // Scale animations for zoom effect
   const scaleAnimA = useRef(new Animated.Value(1.0)).current;
   const scaleAnimB = useRef(new Animated.Value(1.0)).current;
-  
+
   // Refs for managing playback
   const playbackTimer = useRef<NodeJS.Timeout | null>(null);
   const isMounted = useRef(true);
   const currentIndexRef = useRef(0);
   const allArtRef = useRef<ArtPiece[]>([]);
   const activeBuffer = useRef<'A' | 'B'>('A'); // Track which buffer is currently visible
-  
+
   // State for both buffers
   const [imageA, setImageA] = useState<ArtPiece | null>(null);
   const [imageB, setImageB] = useState<ArtPiece | null>(null);
@@ -92,10 +92,9 @@ export default function VibeReelPlayer() {
         },
       ];
 
-
       setAllArt(artSequence);
       allArtRef.current = artSequence; // Store in ref for immediate access
-      
+
       // Auto-start playback after loading
       if (artSequence.length > 0) {
         // Initialize first image in buffer A
@@ -104,12 +103,12 @@ export default function VibeReelPlayer() {
         if (artSequence.length > 1) {
           setImageB(artSequence[1]);
         }
-        
+
         setIsPlaying(true);
         currentIndexRef.current = 0;
         setCurrentDisplayIndex(0);
         activeBuffer.current = 'A';
-        
+
         // Start playback after a brief delay
         setTimeout(() => {
           startPlayback();
@@ -127,7 +126,7 @@ export default function VibeReelPlayer() {
     if (allArtRef.current.length === 0) return;
 
     setIsPlaying(true);
-    
+
     // Simple fade in for first image
     Animated.timing(fadeAnimA, {
       toValue: 1,
@@ -145,12 +144,11 @@ export default function VibeReelPlayer() {
     const currentIdx = currentIndexRef.current;
     const isMainPhoto = currentIdx === allArtRef.current.length - 1;
     const displayDuration = isMainPhoto ? 10000 : 750; // 10s for main, 0.75s for others
-    
-    
+
     // Smooth zoom in during display
     const currentScale = activeBuffer.current === 'A' ? scaleAnimA : scaleAnimB;
     currentScale.setValue(1.0); // Start at normal size
-    
+
     Animated.timing(currentScale, {
       toValue: 1.1, // Zoom in to 110%
       duration: displayDuration,
@@ -167,7 +165,7 @@ export default function VibeReelPlayer() {
 
   const transitionToNext = () => {
     const nextIdx = currentIndexRef.current + 1;
-    
+
     if (nextIdx >= allArtRef.current.length) {
       // End of sequence
       stopPlayback();
@@ -183,7 +181,7 @@ export default function VibeReelPlayer() {
     const nextArt = allArtRef.current[nextIdx];
     const currentActive = activeBuffer.current;
     const nextActive = currentActive === 'A' ? 'B' : 'A';
-    
+
     // Preload next image in the inactive buffer
     if (nextActive === 'A') {
       setImageA(nextArt);
@@ -195,7 +193,6 @@ export default function VibeReelPlayer() {
     const fadeOut = currentActive === 'A' ? fadeAnimA : fadeAnimB;
     const fadeIn = currentActive === 'A' ? fadeAnimB : fadeAnimA;
     const scaleIn = currentActive === 'A' ? scaleAnimB : scaleAnimA;
-
 
     // Reset scale for incoming buffer before transition
     scaleIn.setValue(1.0);
@@ -219,7 +216,7 @@ export default function VibeReelPlayer() {
       currentIndexRef.current = nextIdx;
       setCurrentDisplayIndex(nextIdx); // Update display index for progress bar
       activeBuffer.current = nextActive;
-      
+
       // Preload the next image if available
       const nextNextIdx = nextIdx + 1;
       if (nextNextIdx < allArtRef.current.length) {
@@ -230,7 +227,7 @@ export default function VibeReelPlayer() {
           setImageB(nextNextArt);
         }
       }
-      
+
       // Continue playback
       scheduleNextTransition();
     });
@@ -256,13 +253,13 @@ export default function VibeReelPlayer() {
       currentIndexRef.current = 0;
       setCurrentDisplayIndex(0);
       activeBuffer.current = 'A';
-      
+
       // Reset animations - start with 0 for fade-in
       fadeAnimA.setValue(0);
       fadeAnimB.setValue(0);
       scaleAnimA.setValue(1.0);
       scaleAnimB.setValue(1.0);
-      
+
       // Reset images
       if (allArtRef.current.length > 0) {
         setImageA(allArtRef.current[0]);
@@ -270,7 +267,7 @@ export default function VibeReelPlayer() {
           setImageB(allArtRef.current[1]);
         }
       }
-      
+
       startPlayback();
     }
   };
@@ -285,15 +282,15 @@ export default function VibeReelPlayer() {
 
   // Helper to render an image buffer
   const renderImageBuffer = (
-    art: ArtPiece | null, 
+    art: ArtPiece | null,
     fadeAnim: Animated.Value,
     scaleAnim: Animated.Value,
     bufferName: string
   ) => {
     if (!art) return null;
-    
+
     const imageUrl = getArtPieceUrl(art.image_url);
-    
+
     return (
       <Animated.View
         style={[
@@ -316,11 +313,7 @@ export default function VibeReelPlayer() {
   };
 
   return (
-    <TouchableOpacity 
-      style={styles.container} 
-      activeOpacity={1}
-      onPress={handleScreenTap}
-    >
+    <TouchableOpacity style={styles.container} activeOpacity={1} onPress={handleScreenTap}>
       <TouchableOpacity style={styles.closeButton} onPress={handleClose}>
         <Text style={styles.closeText}>✕</Text>
       </TouchableOpacity>
@@ -329,7 +322,6 @@ export default function VibeReelPlayer() {
         {renderImageBuffer(imageA, fadeAnimA, scaleAnimA, 'A')}
         {renderImageBuffer(imageB, fadeAnimB, scaleAnimB, 'B')}
       </View>
-
 
       {isPlaying && (
         <View style={styles.progressContainer}>
