@@ -8,6 +8,7 @@ export interface VibeReel {
   primary_art_id: string;
   selected_art_ids: string[];
   created_at: string;
+  posted_at?: string | null;
   creator?: {
     username: string;
   };
@@ -250,24 +251,13 @@ export const postVibeReel = async (vibeReelId: string): Promise<void> => {
   if (!user) throw new Error('User not authenticated');
 
   const postedAt = new Date().toISOString();
-  console.log('[POST VIBEREEL] Starting post:', {
-    vibeReelId,
-    userId: user.id,
-    postedAt
-  });
 
-  const { data, error } = await supabase
+  const { error } = await supabase
     .from('vibe_reels')
     .update({ posted_at: postedAt })
     .eq('id', vibeReelId)
     .eq('creator_id', user.id) // Ensure user can only post their own VibeReels
     .select();
-
-  console.log('[POST VIBEREEL] Update result:', {
-    data,
-    error,
-    success: !error
-  });
 
   if (error) {
     console.error('Error posting VibeReel:', error);
@@ -337,8 +327,6 @@ export const getCurrentUserPostedVibeReel = async (): Promise<VibeReel | null> =
   } = await supabase.auth.getUser();
   if (!user) throw new Error('User not authenticated');
 
-  console.log('[GET USER VIBEREEL] Fetching for user:', user.id);
-
   const { data, error } = await supabase
     .from('vibe_reels')
     .select(
@@ -354,13 +342,6 @@ export const getCurrentUserPostedVibeReel = async (): Promise<VibeReel | null> =
     .order('posted_at', { ascending: false })
     .limit(1)
     .single();
-
-  console.log('[GET USER VIBEREEL] Result:', {
-    data,
-    error,
-    hasData: !!data,
-    postedAt: data?.posted_at
-  });
 
   if (error && error.code !== 'PGRST116') {
     // PGRST116 is "no rows returned"
