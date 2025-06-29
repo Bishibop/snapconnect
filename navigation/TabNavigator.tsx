@@ -120,10 +120,10 @@ export const TabNavigator = () => {
       }}
     >
       <Tab.Screen
-        name="Friends"
-        component={FriendsStackNavigator}
+        name="Profile"
+        component={ProfileStackNavigator}
         options={{
-          tabBarIcon: ({ color, size }) => <Icon name="FRIENDS" color={color} size={size} />,
+          tabBarIcon: ({ color }) => <Icon name="USER" color={color} size={28} />,
         }}
         listeners={({ navigation }) => ({
           tabPress: e => {
@@ -131,7 +131,7 @@ export const TabNavigator = () => {
             navigation.dispatch(
               CommonActions.reset({
                 index: 0,
-                routes: [{ name: 'Friends' }],
+                routes: [{ name: 'Profile' }],
               })
             );
           },
@@ -187,10 +187,10 @@ export const TabNavigator = () => {
         }}
       />
       <Tab.Screen
-        name="Profile"
-        component={ProfileStackNavigator}
+        name="Friends"
+        component={FriendsStackNavigator}
         options={{
-          tabBarIcon: ({ color }) => <Icon name="USER" color={color} size={28} />,
+          tabBarIcon: ({ color, size }) => <Icon name="FRIENDS" color={color} size={size} />,
         }}
         listeners={({ navigation }) => ({
           tabPress: e => {
@@ -198,7 +198,7 @@ export const TabNavigator = () => {
             navigation.dispatch(
               CommonActions.reset({
                 index: 0,
-                routes: [{ name: 'Profile' }],
+                routes: [{ name: 'Friends' }],
               })
             );
           },
