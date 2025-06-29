@@ -1,6 +1,30 @@
-# SnapConnect
+# VibeReel
 
-An ephemeral messaging app similar to Snapchat, built with React Native, Expo, and Supabase. Features photo/video sharing with disappearing messages, image filters, friend management, and stories.
+![VibeReelSignIn](./assets/images/VibeReelSignIn.jpeg)
+
+## Share Your Art. Find Your Vibe. Get Vibed.
+
+A creative community for artists to share and discover art that resonates with their unique aesthetic. Built for creators who believe art is more than just images - it's about finding your tribe through shared creative energy.
+
+### Who It's For
+
+- **Visual Artists** looking to connect with like-minded creators
+- **Digital Creators** wanting to showcase their work in meaningful collections
+- **Art Enthusiasts** eager to discover fresh perspectives and support emerging talent
+- **Creative Communities** building connections through shared aesthetic sensibilities
+
+### How VibeReels Work
+
+The core feature of this app is the **VibeReel** mechanic - a way to create and share artistic narratives:
+
+1. **Create Your Art** - Share your original artwork with the community
+2. **Curate Your Vibe** - Select complementary pieces from other artists that match your aesthetic
+3. **Build Your Story** - Combine your art with others' to create short, visual story collections called VibeReels
+4. **Share the Energy** - Post your VibeReels to friends and watch your creative network grow
+
+### Getting "Vibed"
+
+When another artist includes your work in their VibeReel, you've been **"Vibed"** - a sign that your art resonates with others in the community. You can track your Vibes to see who's connecting with your work and discover artists with similar aesthetics.
 
 ## Prerequisites
 
@@ -25,8 +49,8 @@ npm install
 3. Set up environment variables:
 
 ```bash
-cp .env.example .env.local
-# Edit .env.local and add your Supabase credentials
+cp .env.example .env
+# Edit .env and add your Supabase credentials
 ```
 
 ## Running the App
