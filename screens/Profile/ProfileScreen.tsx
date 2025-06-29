@@ -1,5 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, ActivityIndicator, Dimensions, Alert } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  ActivityIndicator,
+  Dimensions,
+  Alert,
+} from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { useAuth } from '../../contexts/AuthContext';
 import { useProfile } from '../../hooks/useProfile';
@@ -121,7 +129,7 @@ export default function ProfileScreen() {
             <Text style={styles.bioText}>{profile.bio}</Text>
           ) : (
             <Text style={styles.bioPlaceholder}>
-              {isOwnProfile ? 'Add a bio to tell others about yourself and your art' : 'No bio yet'}
+              {isOwnProfile ? 'Add a bio to tell others about yourself and your art!' : 'No bio yet'}
             </Text>
           )}
         </View>
@@ -136,7 +144,7 @@ export default function ProfileScreen() {
             <View style={styles.artGridPlaceholder}>
               <Text style={styles.placeholderText}>
                 {isOwnProfile
-                  ? 'Create your first VibeReel to start your art collection'
+                  ? 'Create your first VibeReel to start your art collection!'
                   : 'No art pieces yet'}
               </Text>
             </View>
@@ -210,6 +218,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: theme.colors.textSecondary,
     fontStyle: 'italic',
+    textAlign: 'center',
   },
   artSection: {
     paddingHorizontal: theme.spacing.md,
@@ -228,6 +237,7 @@ const styles = StyleSheet.create({
   placeholderText: {
     fontSize: 16,
     color: theme.colors.textSecondary,
+    textAlign: 'center',
   },
   artGrid: {
     flexDirection: 'row',

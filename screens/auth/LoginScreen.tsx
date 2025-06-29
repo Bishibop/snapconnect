@@ -49,8 +49,8 @@ export const LoginScreen = () => {
         style={styles.button}
       />
 
-      <TouchableOpacity 
-        onPress={() => navigation.navigate('Signup')} 
+      <TouchableOpacity
+        onPress={() => navigation.navigate('Signup')}
         disabled={loading}
         style={styles.signupLink}
       >

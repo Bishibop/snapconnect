@@ -95,6 +95,7 @@ export type RootStackParamList = {
   Login: undefined;
   Signup: undefined;
   MainTabs: undefined;
+  Welcome: undefined;
 };
 
 export type AuthStackParamList = {

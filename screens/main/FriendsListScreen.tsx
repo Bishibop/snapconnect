@@ -235,7 +235,9 @@ export default function FriendsListScreen({ navigation }: FriendsListProps) {
           />
         );
       case 'sent':
-        return <EmptyState title="No pending requests" subtitle="Send friend requests to connect" />;
+        return (
+          <EmptyState title="No pending requests" subtitle="Send friend requests to connect" />
+        );
       case 'received':
         return <EmptyState title="No friend requests" subtitle="No pending friend requests" />;
       default:

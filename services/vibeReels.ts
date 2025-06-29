@@ -127,7 +127,9 @@ export const createVibeReel = async (
 
     // 5. Increment vibe counts for selected art
     for (const artId of selectedArtIds) {
-      const { error: rpcError } = await supabase.rpc('increment_vibe_count', { art_piece_id: artId });
+      const { error: rpcError } = await supabase.rpc('increment_vibe_count', {
+        art_piece_id: artId,
+      });
       if (rpcError) {
         console.error('Error incrementing vibe count for art piece:', artId, rpcError);
         // Continue with other art pieces even if one fails

@@ -93,7 +93,6 @@ export class NavigationUtils {
     navigation.navigate('AddFriends');
   }
 
-
   /**
    * Navigate to Profile tab
    */

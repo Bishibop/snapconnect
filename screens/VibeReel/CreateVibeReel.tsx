@@ -18,6 +18,7 @@ import { supabase } from '../../lib/supabase';
 import { theme } from '../../constants/theme';
 import { ErrorHandler } from '../../utils/errorHandler';
 import ActionButton from '../../components/ui/ActionButton';
+import { CreateVibeReelButtonWithHint } from '../../components/onboarding/CreateVibeReelButtonWithHint';
 
 const { width: screenWidth } = Dimensions.get('window');
 const itemSize = (screenWidth - 48) / 3; // 3 columns with padding
@@ -253,15 +254,16 @@ export default function CreateVibeReel() {
       )}
 
       <View style={styles.footer}>
-        <ActionButton
+        <CreateVibeReelButtonWithHint
           title={
             similarArt.length === 0
-              ? 'Create Solo VibeReel'
-              : `Create VibeReel (${selectedArt.length} selected)`
+              ? 'Preview Solo VibeReel'
+              : `Preview VibeReel (${selectedArt.length} selected)`
           }
           onPress={handleCreateVibeReel}
           disabled={selectedArt.length === 0 && similarArt.length > 0}
           loading={creating}
+          hasSimilarArt={similarArt.length > 0}
         />
       </View>
     </View>

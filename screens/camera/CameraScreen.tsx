@@ -6,6 +6,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { theme } from '../../constants/theme';
 import ActionButton from '../../components/ui/ActionButton';
 import { useNavigationHelpers, CameraNavigation } from '../../utils/navigation';
+import { CaptureButtonWithHint } from '../../components/onboarding/CaptureButtonWithHint';
 
 interface CameraScreenProps {
   navigation: CameraNavigation;
@@ -103,18 +104,11 @@ export default function CameraScreen({ navigation }: CameraScreenProps) {
 
         {/* Bottom Controls Overlay */}
         <View style={styles.bottomControls}>
-          <TouchableOpacity
-            style={[styles.captureButton, !isCameraReady && styles.captureButtonDisabled]}
+          <CaptureButtonWithHint
             onPress={takePicture}
             disabled={!isCameraReady}
-          >
-            <View
-              style={[
-                styles.captureButtonInner,
-                !isCameraReady && styles.captureButtonInnerDisabled,
-              ]}
-            />
-          </TouchableOpacity>
+            isCameraReady={isCameraReady}
+          />
         </View>
       </View>
     </SafeAreaView>
@@ -182,27 +176,5 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 1,
-  },
-  captureButton: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: theme.colors.white,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 4,
-    borderColor: theme.colors.primary,
-  },
-  captureButtonInner: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: theme.colors.white,
-  },
-  captureButtonDisabled: {
-    opacity: 0.5,
-  },
-  captureButtonInnerDisabled: {
-    backgroundColor: theme.colors.gray,
   },
 });

@@ -6,6 +6,7 @@ import { AuthProvider } from './contexts/AuthContext';
 import { RealtimeProvider } from './contexts/RealtimeContext';
 import { VibeReelsProvider } from './contexts/VibeReelsContext';
 import { FriendsProvider } from './contexts/FriendsContext';
+import { OnboardingProvider } from './contexts/OnboardingContext';
 import { RootNavigator } from './navigation/RootNavigator';
 import { ErrorBoundary } from './components/common/ErrorBoundary';
 import { AuthErrorBoundary } from './components/common/AuthErrorBoundary';
@@ -33,13 +34,15 @@ export default function App() {
       <SafeAreaProvider>
         <AuthErrorBoundary>
           <AuthProvider>
-            <RealtimeProvider>
-              <VibeReelsProvider>
-                <FriendsProvider>
-                  <AppContent />
-                </FriendsProvider>
-              </VibeReelsProvider>
-            </RealtimeProvider>
+            <OnboardingProvider>
+              <RealtimeProvider>
+                <VibeReelsProvider>
+                  <FriendsProvider>
+                    <AppContent />
+                  </FriendsProvider>
+                </VibeReelsProvider>
+              </RealtimeProvider>
+            </OnboardingProvider>
           </AuthProvider>
         </AuthErrorBoundary>
       </SafeAreaProvider>

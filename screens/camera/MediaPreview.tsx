@@ -18,6 +18,7 @@ import FilteredImage from '../../components/FilteredImage';
 import FilterSelector from '../../components/FilterSelector';
 import Icon from '../../components/ui/Icon';
 import { CameraStackParamList } from '../../types';
+import { VibeReelButtonWithHint } from '../../components/onboarding/VibeReelButtonWithHint';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
@@ -69,23 +70,11 @@ export default function MediaPreview({ route, navigation }: MediaPreviewProps) {
 
       {/* Controls */}
       <View style={styles.controls}>
-        <TouchableOpacity
-          style={[styles.iconButton, styles.sendButton]}
-          onPress={handleSend}
-        >
+        <TouchableOpacity style={[styles.iconButton, styles.sendButton]} onPress={handleSend}>
           <Icon name="COMMENT" size={48} color={theme.colors.primary} />
         </TouchableOpacity>
 
-        <TouchableOpacity
-          style={[styles.iconButton, styles.vibeReelButton]}
-          onPress={handleCreateVibeReel}
-        >
-          <Image
-            source={require('../../assets/images/VibeReel.jpeg')}
-            style={styles.vibeReelIcon}
-            resizeMode="contain"
-          />
-        </TouchableOpacity>
+        <VibeReelButtonWithHint onPress={handleCreateVibeReel} />
       </View>
 
       {/* Filter Selector */}
@@ -133,14 +122,5 @@ const styles = StyleSheet.create({
   },
   sendButton: {
     backgroundColor: theme.colors.white,
-  },
-  vibeReelButton: {
-    backgroundColor: theme.colors.white,
-    borderWidth: 2,
-    borderColor: theme.colors.border,
-  },
-  vibeReelIcon: {
-    width: 60,
-    height: 60,
   },
 });

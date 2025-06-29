@@ -52,9 +52,7 @@ export function VibeReelsProvider({ children }: VibeReelsProviderProps) {
 
   const [myVibeReels, setMyVibeReels] = useState<VibeReel[]>(() => {
     if (!user?.id) return [];
-    return (
-      cache.get<VibeReel[]>('USER_VIBE_REELS', user.id, CACHE_DURATIONS.VIBE_REELS) || []
-    );
+    return cache.get<VibeReel[]>('USER_VIBE_REELS', user.id, CACHE_DURATIONS.VIBE_REELS) || [];
   });
 
   const [refreshing, setRefreshing] = useState(false);

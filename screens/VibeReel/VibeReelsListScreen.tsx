@@ -74,22 +74,16 @@ export default function VibeReelsListScreen({ navigation }: VibeReelsListProps) 
     </View>
   );
 
-
   const renderVibeReelItem = ({ item, index }: { item: VibeReelWithViewStatus; index: number }) => {
-    const imageUrl = item.primary_art?.image_url 
-      ? getArtPieceUrl(item.primary_art.image_url) 
-      : '';
-    
+    const imageUrl = item.primary_art?.image_url ? getArtPieceUrl(item.primary_art.image_url) : '';
+
     // Add margin right to left column items (even indices)
-    const itemStyle = index % 2 === 0 
-      ? [styles.vibeReelItem, styles.vibeReelItemLeft]
-      : styles.vibeReelItem;
-    
+    const itemStyle =
+      index % 2 === 0 ? [styles.vibeReelItem, styles.vibeReelItemLeft] : styles.vibeReelItem;
+
     // Add unviewed border style
-    const containerStyle = !item.is_viewed 
-      ? [itemStyle, styles.unviewedReel]
-      : itemStyle;
-    
+    const containerStyle = !item.is_viewed ? [itemStyle, styles.unviewedReel] : itemStyle;
+
     return (
       <TouchableOpacity style={containerStyle} onPress={() => handleViewVibeReel(item)}>
         <Image source={{ uri: imageUrl }} style={styles.vibeReelThumbnail} />
@@ -107,7 +101,7 @@ export default function VibeReelsListScreen({ navigation }: VibeReelsListProps) 
   return (
     <SafeAreaView style={styles.container}>
       <TabHeader title="VibeReels" showLoading={refreshing} />
-      
+
       {renderFilterTabs()}
 
       {filteredVibeReels.length === 0 ? (

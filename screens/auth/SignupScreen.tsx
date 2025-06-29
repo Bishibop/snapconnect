@@ -59,7 +59,7 @@ export const SignupScreen = () => {
           style={styles.button}
         />
       </AuthForm>
-      
+
       <View style={[styles.backButtonContainer, { top: insets.top + 10 }]}>
         <ActionButton
           title="← Login"
