@@ -142,7 +142,7 @@ const ConversationsListScreen = () => {
               {item.last_message.sender_id === user?.id ? 'You: ' : ''}
               {item.last_message.message_type === 'vibe_check'
                 ? 'Sent a VibeCheck'
-                : item.last_message.content || 'Message'}
+                : item.last_message.content || ''}
             </Text>
           )}
         </View>
@@ -210,7 +210,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: -4,
     right: -4,
-    backgroundColor: theme.colors.secondary,
+    backgroundColor: theme.colors.primaryLight,
     borderRadius: 10,
     minWidth: 20,
     height: 20,
@@ -232,6 +232,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 4,
+    marginTop: 16,
   },
   username: {
     fontSize: 16,
