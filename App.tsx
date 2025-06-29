@@ -10,10 +10,14 @@ import { RootNavigator } from './navigation/RootNavigator';
 import { ErrorBoundary } from './components/common/ErrorBoundary';
 import { AuthErrorBoundary } from './components/common/AuthErrorBoundary';
 import { useAppStateCleanup } from './hooks/useAppStateCleanup';
+import { useFriendSync } from './hooks/useFriendSync';
 
 function AppContent() {
   // Initialize app-level cache cleanup
   useAppStateCleanup();
+
+  // Sync friend IDs to vibe reels context for client-side filtering
+  useFriendSync();
 
   return (
     <>

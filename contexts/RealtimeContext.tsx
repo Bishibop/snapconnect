@@ -98,6 +98,10 @@ export function RealtimeProvider({ children }: RealtimeProviderProps) {
         },
       });
 
+      // Set up consolidated listeners BEFORE subscribing
+      console.log('[REALTIME] Setting up consolidated listeners');
+      setupConsolidatedListeners(channel);
+
       channel.subscribe((status: string, error?: any) => {
         if (!isMountedRef.current) return;
 
@@ -137,10 +141,6 @@ export function RealtimeProvider({ children }: RealtimeProviderProps) {
 
       channelRef.current = channel;
 
-      // Set up consolidated listeners for all tables we care about
-      console.log('[REALTIME] Setting up consolidated listeners');
-      setupConsolidatedListeners(channel);
-
       console.log('[REALTIME] Channel initialization complete');
     } catch (error) {
       console.error('[REALTIME] Error initializing realtime channel:', error);
@@ -153,8 +153,6 @@ export function RealtimeProvider({ children }: RealtimeProviderProps) {
     (channel: any) => {
       if (!user?.id) return;
 
-      let listenerCount = 0;
-
       // Listen to stories table
       console.log('[REALTIME] Adding listener for stories table');
       channel.on(
@@ -166,7 +164,6 @@ export function RealtimeProvider({ children }: RealtimeProviderProps) {
         },
         (payload: any) => handleRealtimeEvent('stories', payload)
       );
-      listenerCount++;
 
       // Listen to story_views table
       console.log('[REALTIME] Adding listener for story_views table');
@@ -176,7 +173,7 @@ export function RealtimeProvider({ children }: RealtimeProviderProps) {
           event: 'INSERT',
           schema: 'public',
           table: 'story_views',
-          filter: `viewer_id=eq.${user.id}`,
+          // Filter removed - will be done client-side to avoid channel mismatch
         },
         (payload: any) => handleRealtimeEvent('story_views', payload)
       );
@@ -203,35 +200,9 @@ export function RealtimeProvider({ children }: RealtimeProviderProps) {
         (payload: any) => handleRealtimeEvent('profiles', payload)
       );
 
-      // Listen to vibe_reels table
-      channel.on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'vibe_reels',
-        },
-        (payload: any) => {
-          console.log('[REALTIME CONTEXT] VibeReel event received:', payload);
-          handleRealtimeEvent('vibe_reels', payload);
-        }
-      );
-
-      // Listen to vibe_reel_views table
-      channel.on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'vibe_reel_views',
-          filter: `viewer_id=eq.${user.id}`,
-        },
-        (payload: any) => handleRealtimeEvent('vibe_reel_views', payload)
-      );
-
-      console.log('[REALTIME] Total listeners added:', 6);
+      console.log('[REALTIME] Total listeners added:', 4);
       console.log(
-        '[REALTIME] Listeners: stories, story_views, friendships, profiles, vibe_reels, vibe_reel_views'
+        '[REALTIME] Listeners: stories, story_views, friendships, profiles'
       );
     },
     [user?.id]
@@ -240,6 +211,13 @@ export function RealtimeProvider({ children }: RealtimeProviderProps) {
   // Handle realtime events and route to appropriate subscriptions
   const handleRealtimeEvent = useCallback((table: string, payload: any) => {
     if (!isMountedRef.current) return;
+
+    console.log('[REALTIME] Event received:', {
+      table: table,
+      eventType: payload.eventType,
+      id: payload.new?.id || payload.old?.id,
+      timestamp: new Date().toISOString()
+    });
 
     // Add to pending updates for throttling
     pendingUpdatesRef.current.add(

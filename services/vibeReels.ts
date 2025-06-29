@@ -259,18 +259,19 @@ export const postVibeReel = async (vibeReelId: string): Promise<void> => {
     timestamp: new Date().toISOString(),
   });
 
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from('vibe_reels')
     .update({ posted_at: postedAt })
     .eq('id', vibeReelId)
-    .eq('creator_id', user.id); // Ensure user can only post their own VibeReels
+    .eq('creator_id', user.id) // Ensure user can only post their own VibeReels
+    .select();
 
   if (error) {
     console.error('[postVibeReel] Error posting VibeReel:', error);
     throw new Error('Failed to post VibeReel');
   }
 
-  console.log('[postVibeReel] Successfully posted vibe reel:', vibeReelId);
+  console.log('[postVibeReel] Successfully posted vibe reel:', vibeReelId, data);
 };
 
 // Get posted VibeReels from friends with view status
@@ -406,21 +407,6 @@ export const markVibeReelViewed = async (vibeReelId: string): Promise<void> => {
   }
 };
 
-// Subscribe to VibeReel changes
-export const subscribeToVibeReelChanges = (callback: (payload: any) => void) => {
-  return supabase
-    .channel('vibe-reels-changes')
-    .on(
-      'postgres_changes',
-      {
-        event: '*',
-        schema: 'public',
-        table: 'vibe_reels',
-      },
-      callback
-    )
-    .subscribe();
-};
 
 // Types for VibeReels with view status
 export interface VibeReelWithViewStatus extends VibeReel {
