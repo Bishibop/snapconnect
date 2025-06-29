@@ -182,7 +182,7 @@ export default function FriendSelectorScreen({ route, navigation }: FriendSelect
         <ActionButton
           title="Cancel"
           onPress={() => navigation.goBack()}
-          variant="secondary"
+          variant="ghost"
           size="small"
         />
         <Text style={styles.headerTitle}>Send to...</Text>

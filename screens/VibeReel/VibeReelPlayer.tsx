@@ -274,9 +274,7 @@ export default function VibeReelPlayer() {
 
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={theme.colors.primary} />
-      </View>
+      <View style={styles.loadingContainer} />
     );
   }
 

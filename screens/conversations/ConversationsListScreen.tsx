@@ -139,7 +139,6 @@ const ConversationsListScreen = () => {
               style={[styles.lastMessage, item.unread_count ? styles.unreadMessage : null]}
               numberOfLines={1}
             >
-              {item.last_message.sender_id === user?.id ? 'You: ' : ''}
               {item.last_message.message_type === 'vibe_check'
                 ? 'Sent a VibeCheck'
                 : item.last_message.content || ''}
