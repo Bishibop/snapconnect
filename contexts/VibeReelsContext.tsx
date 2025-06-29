@@ -58,7 +58,7 @@ export function VibeReelsProvider({ children }: VibeReelsProviderProps) {
 
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<StandardError | null>(null);
-  
+
   // Cache friend IDs for client-side filtering
   const [friendIds, setFriendIds] = useState<string[]>([]);
 
@@ -106,9 +106,7 @@ export function VibeReelsProvider({ children }: VibeReelsProviderProps) {
     if (isMountedRef.current) {
       setFriendIds(newFriendIds);
       // Also update any existing vibe reels to filter out non-friends
-      setFriendVibeReels(current => 
-        current.filter(vr => newFriendIds.includes(vr.creator_id))
-      );
+      setFriendVibeReels(current => current.filter(vr => newFriendIds.includes(vr.creator_id)));
     }
   }, []);
 
@@ -214,7 +212,7 @@ export function VibeReelsProvider({ children }: VibeReelsProviderProps) {
     if (!hasValidVibeReelsCache || !hasValidUserVibeReelCache) {
       // Prevent concurrent loads
       loadingRef.current = true;
-      
+
       // Use the existing loadVibeReels function with silent=true
       loadVibeReels(true).finally(() => {
         loadingRef.current = false;
@@ -225,11 +223,11 @@ export function VibeReelsProvider({ children }: VibeReelsProviderProps) {
   // Add 1-second polling
   useEffect(() => {
     if (!user?.id) return;
-    
+
     const interval = setInterval(() => {
       loadVibeReels(true); // silent refresh
     }, 1000); // Poll every 1 second
-    
+
     return () => clearInterval(interval);
   }, [user?.id, loadVibeReels]);
 

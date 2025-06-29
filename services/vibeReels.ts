@@ -252,7 +252,7 @@ export const postVibeReel = async (vibeReelId: string): Promise<void> => {
 
   const postedAt = new Date().toISOString();
 
-  const { data, error } = await supabase
+  const { error } = await supabase
     .from('vibe_reels')
     .update({ posted_at: postedAt })
     .eq('id', vibeReelId)
@@ -397,7 +397,6 @@ export const markVibeReelViewed = async (vibeReelId: string): Promise<void> => {
     }
   }
 };
-
 
 // Types for VibeReels with view status
 export interface VibeReelWithViewStatus extends VibeReel {

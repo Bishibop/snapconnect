@@ -135,12 +135,6 @@ export default function VibeCheckViewerScreen({ route, navigation }: VibeCheckVi
         </View>
       )}
 
-      {/* Sender info */}
-      <View style={styles.senderInfo}>
-        <Text style={styles.senderName}>{content?.sender_profile?.username}</Text>
-        <Text style={styles.vibeCheckType}>sent a VibeCheck</Text>
-      </View>
-
       {/* Media content */}
       <TouchableOpacity style={styles.mediaContainer} activeOpacity={1} onPress={handleTap}>
         {mediaUrl ? (
@@ -198,29 +192,6 @@ const styles = StyleSheet.create({
     color: theme.colors.white,
     fontSize: 18,
     fontWeight: 'bold',
-  },
-  senderInfo: {
-    position: 'absolute',
-    top: 100,
-    left: 20,
-    right: 20,
-    zIndex: 10,
-  },
-  senderName: {
-    color: theme.colors.white,
-    fontSize: 16,
-    fontWeight: 'bold',
-    textShadowColor: 'rgba(0, 0, 0, 0.75)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 3,
-  },
-  vibeCheckType: {
-    color: theme.colors.white,
-    fontSize: 14,
-    marginTop: 2,
-    textShadowColor: 'rgba(0, 0, 0, 0.75)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 3,
   },
   mediaContainer: {
     flex: 1,

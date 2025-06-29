@@ -7,7 +7,7 @@ import TabHeader from '../../components/TabHeader';
 import EmptyState from '../../components/ui/EmptyState';
 import RefreshableList from '../../components/ui/RefreshableList';
 import { useVibeChecks } from '../../hooks/useVibeChecks';
-import { useNavigationHelpers, SentNavigation } from '../../utils/navigation';
+import { SentNavigation } from '../../utils/navigation';
 import { formatTimeAgo } from '../../utils/dateTime';
 import {
   getStatusIcon,
@@ -20,13 +20,12 @@ interface SentVibeChecksProps {
   navigation: SentNavigation;
 }
 
-export default function SentVibeChecksScreen({ navigation }: SentVibeChecksProps) {
+export default function SentVibeChecksScreen({ navigation: _navigation }: SentVibeChecksProps) {
   const {
     vibeChecks,
     refreshing: vibeChecksRefreshing,
     refresh: refreshVibeChecks,
   } = useVibeChecks({ type: 'sent' });
-  const navHelpers = useNavigationHelpers(navigation);
 
   const renderVibeCheckItem = ({ item }: { item: VibeCheck }) => (
     <View style={styles.vibeCheckItem}>

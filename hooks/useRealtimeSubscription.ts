@@ -78,22 +78,6 @@ export function useStoriesSubscription(
   );
 }
 
-export function useFriendshipsSubscription(
-  userId: string | undefined,
-  callback: (payload: any) => void,
-  options: UseRealtimeSubscriptionOptions = {}
-) {
-  const configs = userId
-    ? [{ table: 'friendships' }] // Simplified - filter in callback if needed
-    : [];
-
-  return useRealtimeSubscription(configs, callback, {
-    ...options,
-    enabled: !!userId && options.enabled !== false,
-    dependencies: [userId, ...(options.dependencies || [])],
-  });
-}
-
 export function useTableSubscription(
   table: string,
   callback: (payload: any) => void,

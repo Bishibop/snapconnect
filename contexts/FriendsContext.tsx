@@ -11,7 +11,6 @@ import {
   FriendWithProfile,
 } from '../services/friends';
 import { useAuth } from './AuthContext';
-import { useRealtimeSubscription } from '../hooks/useRealtimeSubscription';
 import { cache, CACHE_KEYS, CACHE_DURATIONS } from '../utils/cache';
 import { ErrorHandler, StandardError, createErrorState } from '../utils/errorHandler';
 
@@ -108,38 +107,6 @@ export function FriendsProvider({ children }: FriendsProviderProps) {
     }
   }, []);
 
-  // Throttling for realtime updates
-  const throttleTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const pendingUpdatesRef = useRef<Set<string>>(new Set());
-
-  const handleThrottledFriendshipUpdate = useCallback(
-    (friendshipId: string) => {
-      pendingUpdatesRef.current.add(friendshipId);
-
-      if (throttleTimeoutRef.current) {
-        clearTimeout(throttleTimeoutRef.current);
-      }
-
-      throttleTimeoutRef.current = setTimeout(async () => {
-        const updateIds = Array.from(pendingUpdatesRef.current);
-        pendingUpdatesRef.current.clear();
-
-        if (updateIds.length === 0 || !user?.id) return;
-
-        try {
-          // Batch refresh all data
-          await Promise.all([
-            refreshFriends(true), // silent
-            refreshRequests(true), // silent
-          ]);
-        } catch (error) {
-          console.error('Error in throttled friendship update:', error);
-        }
-      }, 500); // 500ms throttle
-    },
-    [user?.id]
-  );
-
   const refreshFriends = useCallback(
     async (silent = false) => {
       if (!user?.id || !isMountedRef.current) return;
@@ -207,7 +174,6 @@ export function FriendsProvider({ children }: FriendsProviderProps) {
       safeSetLoading,
       safeSetReceivedRequests,
       safeSetSentRequests,
-      receivedRequests,
     ]
   );
 
@@ -330,37 +296,36 @@ export function FriendsProvider({ children }: FriendsProviderProps) {
     }
   }, [user?.id, refreshFriends, refreshRequests]);
 
-  // SINGLE realtime subscription for the entire app
-  useRealtimeSubscription(
-    [
-      {
-        table: 'friendships',
-        event: '*',
-        // Listen to all friendship changes, filter in the callback
-      },
-    ],
-    payload => {
-      if (!user?.id) return;
+  // Polling for friend updates every 1 second
+  useEffect(() => {
+    if (!user?.id) return;
 
-      const { eventType, new: newRecord, old: oldRecord } = payload;
+    // Initial poll after a short delay to let initial cache load complete
+    const initialTimer = setTimeout(() => {
+      refreshFriends(true); // silent refresh
+      refreshRequests(true); // silent refresh
+    }, 500);
+
+    // Set up recurring poll every 1 second
+    const pollInterval = setInterval(async () => {
+      if (!isMountedRef.current) return;
 
       try {
-        if (eventType === 'INSERT' || eventType === 'UPDATE' || eventType === 'DELETE') {
-          // Use throttled update to prevent spam
-          const recordId = newRecord?.id || oldRecord?.id;
-          if (recordId) {
-            handleThrottledFriendshipUpdate(recordId);
-          }
-        }
-      } catch (error) {
-        console.error('Error handling friendship update:', error);
+        await Promise.all([
+          refreshFriends(true), // silent refresh
+          refreshRequests(true), // silent refresh
+        ]);
+      } catch {
+        // Polling error
       }
-    },
-    {
-      enabled: !!user?.id,
-      dependencies: [user?.id, handleThrottledFriendshipUpdate],
-    }
-  );
+    }, 1000);
+
+    // Cleanup
+    return () => {
+      clearTimeout(initialTimer);
+      clearInterval(pollInterval);
+    };
+  }, [user?.id, refreshFriends, refreshRequests]);
 
   // Reset state when user changes
   useEffect(() => {
@@ -377,9 +342,6 @@ export function FriendsProvider({ children }: FriendsProviderProps) {
   useEffect(() => {
     return () => {
       isMountedRef.current = false;
-      if (throttleTimeoutRef.current) {
-        clearTimeout(throttleTimeoutRef.current);
-      }
     };
   }, []);
 

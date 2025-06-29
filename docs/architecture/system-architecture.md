@@ -75,7 +75,7 @@ SnapConnect follows a client-server architecture with a React Native mobile clie
   - Real-time messaging (per conversation)
   - VibeCheck updates
   - Status updates
-  
+
 **Note**: VibeReels and art pieces no longer use realtime subscriptions to prevent O(N²) database load issues. Instead, a 1-second client-side polling mechanism is used.
 
 ### Edge Functions Service
@@ -483,7 +483,7 @@ The art similarity feature enables semantic discovery of artwork using CLIP (Con
    - primary_art_id: UUID - User's original art
    - selected_art_ids: UUID[] - Up to 7 similar pieces
    - posted_at: TIMESTAMPTZ - When shared with friends
-   
+
    vibe_reel_views:
    - vibe_reel_id: UUID - VibeReel reference
    - viewer_id: UUID - Who viewed it

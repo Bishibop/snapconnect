@@ -14,14 +14,14 @@ export function useFriendSync() {
   useEffect(() => {
     // Extract friend IDs
     const friendIds = friends.map(f => f.friend_id);
-    
+
     // Only update if friend IDs actually changed
-    const friendIdsChanged = 
+    const friendIdsChanged =
       friendIds.length !== previousFriendIdsRef.current.length ||
       friendIds.some((id, index) => id !== previousFriendIdsRef.current[index]);
-    
+
     if (friendIdsChanged) {
-      console.log('[FRIEND SYNC] Updating vibe reels context with friend IDs:', friendIds.length);
+      // Updating vibe reels context with friend IDs
       updateFriendIds(friendIds);
       previousFriendIdsRef.current = friendIds;
     }
