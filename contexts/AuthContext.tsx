@@ -73,8 +73,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
 
       if (error) throw error;
-
-      Alert.alert('Success', 'Check your email for verification!');
     } catch (error: unknown) {
       Alert.alert('Error', error instanceof Error ? error.message : String(error));
     } finally {

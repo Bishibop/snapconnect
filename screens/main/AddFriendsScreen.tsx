@@ -44,7 +44,6 @@ export default function AddFriendsScreen({ navigation }: any) {
     try {
       const success = await sendRequest(userProfile.id);
       if (success) {
-        Alert.alert('Success', `Friend request sent to ${userProfile.username}`);
         // Remove user from search results to prevent duplicate requests
         setSearchResults(prev => prev.filter(u => u.id !== userProfile.id));
       } else {

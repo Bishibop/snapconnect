@@ -131,15 +131,8 @@ export default function FriendSelectorScreen({ route, navigation }: FriendSelect
 
         await Promise.all(conversationPromises);
 
-        Alert.alert('VibeCheck Sent!', `Successfully sent to ${selectedCount} conversations`, [
-          {
-            text: 'OK',
-            onPress: () => {
-              navigation.popToTop();
-              navigation.getParent()?.navigate('Conversations');
-            },
-          },
-        ]);
+        navigation.popToTop();
+        navigation.getParent()?.navigate('Conversations');
       }
     } catch (error: unknown) {
       console.error('Error sending VibeCheck:', error);

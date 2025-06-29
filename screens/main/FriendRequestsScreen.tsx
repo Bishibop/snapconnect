@@ -28,9 +28,7 @@ export default function FriendRequestsScreen({ navigation }: any) {
 
     try {
       const success = await acceptRequest(request.id);
-      if (success) {
-        Alert.alert('Success', `You are now friends with ${request.requester_profile.username}`);
-      } else {
+      if (!success) {
         Alert.alert('Error', 'Failed to accept friend request');
       }
     } catch (error) {

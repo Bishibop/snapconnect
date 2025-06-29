@@ -38,10 +38,6 @@ export default function VibeReelPreview() {
 
       // Navigate back to camera after successful post
       navigation.navigate('Camera', { screen: 'CameraScreen' });
-
-      Alert.alert('Posted!', 'Your VibeReel is now visible to your friends for 24 hours.', [
-        { text: 'OK' },
-      ]);
     } catch (error) {
       ErrorHandler.handle(error, { context: 'Error posting VibeReel' });
     } finally {
