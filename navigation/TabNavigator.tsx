@@ -163,7 +163,7 @@ export const TabNavigator = () => {
           name="VibeReels"
           component={VibeReelsStackNavigator}
           options={{
-            tabBarIcon: ({ color, size }) => <Icon name="MENU" color={color} size={size} />,
+            tabBarIcon: ({ color, size }) => <Icon name="GRID" color={color} size={size} />,
           }}
           listeners={({ navigation }) => ({
             tabPress: e => {
