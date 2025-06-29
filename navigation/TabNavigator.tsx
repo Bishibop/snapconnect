@@ -183,6 +183,17 @@ export const TabNavigator = () => {
             />
           ),
         }}
+        listeners={({ navigation }) => ({
+          tabPress: e => {
+            e.preventDefault();
+            navigation.dispatch(
+              CommonActions.reset({
+                index: 0,
+                routes: [{ name: 'Camera' }],
+              })
+            );
+          },
+        })}
       />
       <Tab.Screen
         name="Friends"

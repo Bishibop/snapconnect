@@ -36,8 +36,8 @@ export default function VibeReelPreview() {
       //   reload(true); // Silent reload
       // }, 500);
 
-      // Navigate back to camera after successful post
-      navigation.navigate('Camera', { screen: 'CameraScreen' });
+      // Navigate to VibeReels feed after successful post
+      navigation.navigate('VibeReels', { screen: 'VibeReelsList' });
     } catch (error) {
       ErrorHandler.handle(error, { context: 'Error posting VibeReel' });
     } finally {
