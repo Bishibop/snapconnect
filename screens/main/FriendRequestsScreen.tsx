@@ -164,11 +164,6 @@ export default function FriendRequestsScreen({ navigation }: any) {
           <EmptyState
             icon={activeTab === 'received' ? 'FRIENDS_EMPTY' : 'SENT_EMPTY'}
             title={activeTab === 'received' ? 'No friend requests' : 'No pending requests'}
-            subtitle={
-              activeTab === 'received'
-                ? 'Friend requests will appear here'
-                : 'Requests you send will appear here'
-            }
           />
         )}
       />

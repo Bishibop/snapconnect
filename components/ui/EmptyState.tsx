@@ -14,7 +14,7 @@ interface EmptyStateProps {
 export default function EmptyState({ icon, title, subtitle, style }: EmptyStateProps) {
   return (
     <View style={[styles.container, style]}>
-      {icon && <Icon name={icon} size={48} color={theme.colors.gray} style={styles.icon} />}
+      {icon && <Icon name={icon} size={48} color={theme.colors.primary} style={styles.icon} />}
       <Text style={styles.title}>{title}</Text>
       {subtitle && <Text style={styles.subtitle}>{subtitle}</Text>}
     </View>

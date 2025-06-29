@@ -130,7 +130,6 @@ export default function AddFriendsScreen({ navigation }: any) {
         <EmptyState
           icon="USER_ADD"
           title="Search for friends"
-          subtitle="Enter a username to find and add friends"
         />
       )}
 
