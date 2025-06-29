@@ -1,7 +1,7 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, Image } from 'react-native';
 import { CommonActions } from '@react-navigation/native';
 import {
   MainTabParamList,
@@ -97,9 +97,9 @@ export const TabNavigator = () => {
         tabBarStyle: {
           backgroundColor: theme.colors.white,
           borderTopColor: theme.colors.lightGray,
-          height: 60,
+          height: 80,
           paddingBottom: 8,
-          paddingTop: 8,
+          paddingTop: 24,
         },
         tabBarIconStyle: {
           marginTop: -10,
@@ -125,17 +125,6 @@ export const TabNavigator = () => {
         })}
       />
       <Tab.Screen
-        name="Camera"
-        component={CameraStackNavigator}
-        options={{
-          tabBarIcon: ({ color, size }) => (
-            <View style={[styles.cameraIcon, { borderColor: color }]}>
-              <Icon name="CAMERA" color={color} size={size - 4} />
-            </View>
-          ),
-        }}
-      />
-      <Tab.Screen
         name="Conversations"
         component={ConversationsStackNavigator}
         options={{
@@ -154,10 +143,23 @@ export const TabNavigator = () => {
         })}
       />
       <Tab.Screen
+        name="Camera"
+        component={CameraStackNavigator}
+        options={{
+          tabBarIcon: ({ focused }) => (
+            <Image
+              source={require('../assets/images/VibeReel.jpeg')}
+              style={[styles.cameraIconImage, focused && styles.cameraIconActive]}
+              resizeMode="contain"
+            />
+          ),
+        }}
+      />
+      <Tab.Screen
         name="Profile"
         component={ProfileStackNavigator}
         options={{
-          tabBarIcon: ({ color, size }) => <Icon name="USER" color={color} size={size} />,
+          tabBarIcon: ({ color }) => <Icon name="USER" color={color} size={28} />,
         }}
         listeners={({ navigation }) => ({
           tabPress: e => {
@@ -183,5 +185,13 @@ const styles = StyleSheet.create({
     height: 32,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  cameraIconImage: {
+    width: 32,
+    height: 32,
+    opacity: 0.8,
+  },
+  cameraIconActive: {
+    opacity: 1,
   },
 });

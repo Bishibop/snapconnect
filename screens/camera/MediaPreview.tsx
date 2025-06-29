@@ -7,6 +7,7 @@ import {
   Dimensions,
   Alert,
   ActivityIndicator,
+  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -16,6 +17,7 @@ import { uploadMedia } from '../../services/media';
 import { Filter, FILTERS } from '../../types/filters';
 import FilteredImage from '../../components/FilteredImage';
 import FilterSelector from '../../components/FilterSelector';
+import Icon from '../../components/ui/Icon';
 import { CameraStackParamList } from '../../types';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
@@ -70,19 +72,23 @@ export default function MediaPreview({ route, navigation }: MediaPreviewProps) {
       {/* Controls */}
       <View style={styles.controls}>
         <TouchableOpacity
-          style={[styles.button, styles.sendButton]}
+          style={[styles.iconButton, styles.sendButton]}
           onPress={handleSend}
           disabled={uploading}
         >
-          <Text style={styles.sendButtonText}>VibeCheck</Text>
+          <Icon name="COMMENT" size={48} color={theme.colors.primary} />
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[styles.button, styles.vibeReelButton]}
+          style={[styles.iconButton, styles.vibeReelButton]}
           onPress={handleCreateVibeReel}
           disabled={uploading}
         >
-          <Text style={styles.vibeReelButtonText}>VibeReel</Text>
+          <Image
+            source={require('../../assets/images/VibeReel.jpeg')}
+            style={styles.vibeReelIcon}
+            resizeMode="contain"
+          />
         </TouchableOpacity>
       </View>
 
@@ -118,26 +124,41 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: theme.spacing.lg,
     paddingHorizontal: theme.spacing.md,
-    backgroundColor: 'rgba(0, 0, 0, 0.1)',
+    marginHorizontal: theme.spacing.md,
+    marginBottom: theme.spacing.md,
   },
   button: {
     paddingHorizontal: theme.spacing.xl,
     paddingVertical: theme.spacing.md,
-    borderRadius: theme.borderRadius.lg,
+    borderRadius: theme.borderRadius.sm,
     minWidth: 120,
     alignItems: 'center',
     marginHorizontal: theme.spacing.sm,
   },
+  iconButton: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginHorizontal: theme.spacing.sm,
+  },
   sendButton: {
-    backgroundColor: theme.colors.primary,
+    backgroundColor: theme.colors.white,
   },
   sendButtonText: {
-    color: theme.colors.secondary,
+    color: theme.colors.white,
     fontSize: 16,
     fontWeight: 'bold',
   },
   vibeReelButton: {
-    backgroundColor: '#FF6B35', // Orange accent color for VibeReel
+    backgroundColor: theme.colors.white,
+    borderWidth: 2,
+    borderColor: theme.colors.border,
+  },
+  vibeReelIcon: {
+    width: 60,
+    height: 60,
   },
   vibeReelButtonText: {
     color: theme.colors.white,
