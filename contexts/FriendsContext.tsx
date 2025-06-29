@@ -126,6 +126,11 @@ export function FriendsProvider({ children }: FriendsProviderProps) {
       } catch (error) {
         if (!isMountedRef.current) return;
 
+        // Don't log authentication errors during sign out
+        if (error instanceof Error && error.message === 'Not authenticated') {
+          return;
+        }
+
         ErrorHandler.handleApiError(error, 'load friends', silent);
         if (!silent) {
           handleError(error, { context: 'Loading friends' });
@@ -158,6 +163,11 @@ export function FriendsProvider({ children }: FriendsProviderProps) {
         cache.set(CACHE_KEYS.FRIEND_REQUESTS_SENT, sent, user.id);
       } catch (error) {
         if (!isMountedRef.current) return;
+
+        // Don't log authentication errors during sign out
+        if (error instanceof Error && error.message === 'Not authenticated') {
+          return;
+        }
 
         ErrorHandler.handleApiError(error, 'load friend requests', silent);
         if (!silent) {
@@ -300,15 +310,23 @@ export function FriendsProvider({ children }: FriendsProviderProps) {
   useEffect(() => {
     if (!user?.id) return;
 
+    // Track if effect is still active
+    let isActive = true;
+
     // Initial poll after a short delay to let initial cache load complete
     const initialTimer = setTimeout(() => {
-      refreshFriends(true); // silent refresh
-      refreshRequests(true); // silent refresh
+      if (isActive && user?.id && isMountedRef.current) {
+        refreshFriends(true); // silent refresh
+        refreshRequests(true); // silent refresh
+      }
     }, 500);
 
     // Set up recurring poll every 1 second
     const pollInterval = setInterval(async () => {
-      if (!isMountedRef.current) return;
+      // Check if user still exists and component is mounted
+      if (!isActive || !user?.id || !isMountedRef.current) {
+        return;
+      }
 
       try {
         await Promise.all([
@@ -316,12 +334,13 @@ export function FriendsProvider({ children }: FriendsProviderProps) {
           refreshRequests(true), // silent refresh
         ]);
       } catch {
-        // Polling error
+        // Polling error - silently ignore
       }
     }, 1000);
 
     // Cleanup
     return () => {
+      isActive = false;
       clearTimeout(initialTimer);
       clearInterval(pollInterval);
     };
