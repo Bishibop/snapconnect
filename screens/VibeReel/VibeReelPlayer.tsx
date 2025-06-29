@@ -252,11 +252,8 @@ export default function VibeReelPlayer() {
     navigation.goBack();
   };
 
-
   if (loading) {
-    return (
-      <View style={styles.loadingContainer} />
-    );
+    return <View style={styles.loadingContainer} />;
   }
 
   // Helper to render an image buffer
@@ -316,7 +313,6 @@ export default function VibeReelPlayer() {
           </View>
         </View>
       )}
-
     </View>
   );
 }

@@ -31,6 +31,7 @@ export const Icons = {
   INBOX: { name: 'inbox', component: MaterialIcons },
   SENT_TAB: { name: 'send', component: Feather },
   VIBE_REEL: { name: 'play-circle', component: Ionicons },
+  MENU: { name: 'menu', component: Ionicons },
 
   // Action icons
   ADD: { name: 'add-circle', component: Ionicons },

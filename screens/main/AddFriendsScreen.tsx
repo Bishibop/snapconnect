@@ -125,12 +125,7 @@ export default function AddFriendsScreen({ navigation }: any) {
         />
       )}
 
-      {!loading && searchQuery === '' && (
-        <EmptyState
-          icon="USER_ADD"
-          title="Search for friends"
-        />
-      )}
+      {!loading && searchQuery === '' && <EmptyState icon="USER_ADD" title="Search for friends" />}
 
       <RefreshableList
         data={searchResults}

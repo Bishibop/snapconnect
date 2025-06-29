@@ -62,7 +62,6 @@ export default function CameraScreen({ navigation }: CameraScreenProps) {
     );
   }
 
-
   const takePicture = async () => {
     if (!cameraRef.current || !isCameraReady) return;
 

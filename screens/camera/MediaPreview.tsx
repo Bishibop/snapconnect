@@ -13,7 +13,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RouteProp } from '@react-navigation/native';
 import { theme } from '../../constants/theme';
-import { uploadMedia } from '../../services/media';
 import { Filter, FILTERS } from '../../types/filters';
 import FilteredImage from '../../components/FilteredImage';
 import FilterSelector from '../../components/FilterSelector';
@@ -32,7 +31,6 @@ interface MediaPreviewProps {
 
 export default function MediaPreview({ route, navigation }: MediaPreviewProps) {
   const { mediaUri, mediaType } = route.params;
-  const [uploading, setUploading] = useState(false);
   const [selectedFilter, setSelectedFilter] = useState<Filter>(FILTERS[0]); // Start with Original
   const [showFilters, setShowFilters] = useState(false);
 
@@ -74,7 +72,6 @@ export default function MediaPreview({ route, navigation }: MediaPreviewProps) {
         <TouchableOpacity
           style={[styles.iconButton, styles.sendButton]}
           onPress={handleSend}
-          disabled={uploading}
         >
           <Icon name="COMMENT" size={48} color={theme.colors.primary} />
         </TouchableOpacity>
@@ -82,7 +79,6 @@ export default function MediaPreview({ route, navigation }: MediaPreviewProps) {
         <TouchableOpacity
           style={[styles.iconButton, styles.vibeReelButton]}
           onPress={handleCreateVibeReel}
-          disabled={uploading}
         >
           <Image
             source={require('../../assets/images/VibeReel.jpeg')}
@@ -127,14 +123,6 @@ const styles = StyleSheet.create({
     marginHorizontal: theme.spacing.md,
     marginBottom: theme.spacing.md,
   },
-  button: {
-    paddingHorizontal: theme.spacing.xl,
-    paddingVertical: theme.spacing.md,
-    borderRadius: theme.borderRadius.sm,
-    minWidth: 120,
-    alignItems: 'center',
-    marginHorizontal: theme.spacing.sm,
-  },
   iconButton: {
     width: 80,
     height: 80,
@@ -146,11 +134,6 @@ const styles = StyleSheet.create({
   sendButton: {
     backgroundColor: theme.colors.white,
   },
-  sendButtonText: {
-    color: theme.colors.white,
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
   vibeReelButton: {
     backgroundColor: theme.colors.white,
     borderWidth: 2,
@@ -159,10 +142,5 @@ const styles = StyleSheet.create({
   vibeReelIcon: {
     width: 60,
     height: 60,
-  },
-  vibeReelButtonText: {
-    color: theme.colors.white,
-    fontSize: 16,
-    fontWeight: 'bold',
   },
 });

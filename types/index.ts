@@ -104,8 +104,9 @@ export type AuthStackParamList = {
 
 export type MainTabParamList = {
   Friends: undefined;
-  Camera: undefined;
   Conversations: undefined;
+  VibeReels: undefined;
+  Camera: undefined;
   Profile: undefined;
 };
 
@@ -221,6 +222,20 @@ export type CameraStackParamList = {
 export type ProfileStackParamList = {
   ProfileScreen: { userId?: string };
   EditProfile: undefined;
+};
+
+export type VibeReelsStackParamList = {
+  VibeReelsList: undefined;
+  VibeReelPlayer: {
+    vibeReelId: string;
+  };
+  CreateVibeReel: {
+    imageUri: string;
+    imageFile?: File | string;
+  };
+  VibeReelPreview: {
+    vibeReelId: string;
+  };
 };
 
 export type ConversationsStackParamList = {

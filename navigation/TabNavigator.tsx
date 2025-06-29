@@ -9,6 +9,7 @@ import {
   CameraStackParamList,
   ConversationsStackParamList,
   ProfileStackParamList,
+  VibeReelsStackParamList,
 } from '../types';
 import { theme } from '../constants/theme';
 import Icon from '../components/ui/Icon';
@@ -24,6 +25,7 @@ import MediaPreview from '../screens/camera/MediaPreview';
 import FriendSelectorScreen from '../screens/vibeChecks/FriendSelectorScreen';
 
 // VibeReel screens
+import VibeReelsListScreen from '../screens/VibeReel/VibeReelsListScreen';
 import CreateVibeReel from '../screens/VibeReel/CreateVibeReel';
 import VibeReelPreview from '../screens/VibeReel/VibeReelPreview';
 import VibeReelPlayer from '../screens/VibeReel/VibeReelPlayer';
@@ -44,6 +46,7 @@ const FriendsStack = createStackNavigator<FriendsStackParamList>();
 const CameraStack = createStackNavigator<CameraStackParamList>();
 const ConversationsStack = createStackNavigator<ConversationsStackParamList>();
 const ProfileStack = createStackNavigator<ProfileStackParamList>();
+const VibeReelsStack = createStackNavigator<VibeReelsStackParamList>();
 
 // Friends Stack Navigator
 const FriendsStackNavigator = () => (
@@ -85,10 +88,20 @@ const ProfileStackNavigator = () => (
   </ProfileStack.Navigator>
 );
 
+// VibeReels Stack Navigator
+const VibeReelsStackNavigator = () => (
+  <VibeReelsStack.Navigator screenOptions={{ headerShown: false }}>
+    <VibeReelsStack.Screen name="VibeReelsList" component={VibeReelsListScreen} />
+    <VibeReelsStack.Screen name="VibeReelPlayer" component={VibeReelPlayer} />
+    <VibeReelsStack.Screen name="CreateVibeReel" component={CreateVibeReel} />
+    <VibeReelsStack.Screen name="VibeReelPreview" component={VibeReelPreview} />
+  </VibeReelsStack.Navigator>
+);
+
 export const TabNavigator = () => {
   return (
     <Tab.Navigator
-      initialRouteName="Camera"
+      initialRouteName="VibeReels"
       screenOptions={{
         headerShown: false,
         tabBarActiveTintColor: theme.colors.primary,
@@ -137,6 +150,24 @@ export const TabNavigator = () => {
               CommonActions.reset({
                 index: 0,
                 routes: [{ name: 'Conversations' }],
+              })
+            );
+          },
+        })}
+      />
+      <Tab.Screen
+        name="VibeReels"
+        component={VibeReelsStackNavigator}
+        options={{
+          tabBarIcon: ({ color, size }) => <Icon name="MENU" color={color} size={size} />,
+        }}
+        listeners={({ navigation }) => ({
+          tabPress: e => {
+            e.preventDefault();
+            navigation.dispatch(
+              CommonActions.reset({
+                index: 0,
+                routes: [{ name: 'VibeReels' }],
               })
             );
           },

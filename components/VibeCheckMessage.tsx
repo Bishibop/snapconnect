@@ -55,7 +55,7 @@ function VibeCheckMessage({ message, isOwnMessage, onPress }: VibeCheckMessagePr
       <TouchableOpacity
         style={[
           styles.vibeCheckContainer,
-          !isOwnMessage && !isViewed && styles.vibeCheckContainerUnopened
+          !isOwnMessage && !isViewed && styles.vibeCheckContainerUnopened,
         ]}
         onPress={handlePress}
         disabled={!onPress || !canView}
@@ -72,10 +72,10 @@ function VibeCheckMessage({ message, isOwnMessage, onPress }: VibeCheckMessagePr
               ]}
             >
               <View style={styles.mediaPlaceholderIcon}>
-                <Icon 
-                  name={isViewed ? "CLOSED" : "OPENED"} 
-                  size={30} 
-                  color={isViewed ? theme.colors.gray : theme.colors.primary} 
+                <Icon
+                  name={isViewed ? 'CLOSED' : 'OPENED'}
+                  size={30}
+                  color={isViewed ? theme.colors.gray : theme.colors.primary}
                 />
               </View>
               <Text style={styles.placeholderSubtext}>{displayText}</Text>

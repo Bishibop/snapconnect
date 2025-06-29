@@ -252,7 +252,7 @@ export const postVibeReel = async (vibeReelId: string): Promise<void> => {
 
   const postedAt = new Date().toISOString();
 
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from('vibe_reels')
     .update({ posted_at: postedAt })
     .eq('id', vibeReelId)
@@ -290,7 +290,7 @@ export const getPostedVibeReelsFromFriends = async (): Promise<VibeReelWithViewS
     return [];
   }
 
-  // Get posted VibeReels from friends that haven't expired
+  // Get all posted VibeReels from friends
   const { data: vibeReels, error } = await supabase
     .from('vibe_reels')
     .select(
@@ -303,7 +303,6 @@ export const getPostedVibeReelsFromFriends = async (): Promise<VibeReelWithViewS
     )
     .in('creator_id', friendIds)
     .not('posted_at', 'is', null)
-    .gt('posted_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()) // 24 hours
     .order('posted_at', { ascending: false });
 
   if (error) {
@@ -311,23 +310,8 @@ export const getPostedVibeReelsFromFriends = async (): Promise<VibeReelWithViewS
     throw new Error('Failed to fetch friend VibeReels');
   }
 
-  // Deduplicate to get only the latest vibe reel per creator
-  type VibeReelData = (typeof vibeReels)[0];
-  const latestByCreator = new Map<string, VibeReelData>();
-  for (const vibeReel of vibeReels || []) {
-    const existing = latestByCreator.get(vibeReel.creator_id);
-    if (
-      !existing ||
-      (vibeReel.posted_at &&
-        existing.posted_at &&
-        new Date(vibeReel.posted_at) > new Date(existing.posted_at))
-    ) {
-      latestByCreator.set(vibeReel.creator_id, vibeReel);
-    }
-  }
-
-  // Add view status to each VibeReel
-  const vibeReelsWithViewStatus = Array.from(latestByCreator.values()).map(vibeReel => ({
+  // Add view status to each VibeReel (no deduplication - show all reels)
+  const vibeReelsWithViewStatus = (vibeReels || []).map(vibeReel => ({
     ...vibeReel,
     is_viewed:
       vibeReel.vibe_reel_views?.some((view: { viewer_id: string }) => view.viewer_id === user.id) ||
@@ -337,8 +321,8 @@ export const getPostedVibeReelsFromFriends = async (): Promise<VibeReelWithViewS
   return vibeReelsWithViewStatus;
 };
 
-// Get current user's posted VibeReel
-export const getCurrentUserPostedVibeReel = async (): Promise<VibeReel | null> => {
+// Get all current user's posted VibeReels
+export const getCurrentUserPostedVibeReels = async (): Promise<VibeReel[]> => {
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -355,18 +339,20 @@ export const getCurrentUserPostedVibeReel = async (): Promise<VibeReel | null> =
     )
     .eq('creator_id', user.id)
     .not('posted_at', 'is', null)
-    .gt('posted_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
-    .order('posted_at', { ascending: false })
-    .limit(1)
-    .single();
+    .order('posted_at', { ascending: false });
 
-  if (error && error.code !== 'PGRST116') {
-    // PGRST116 is "no rows returned"
-    console.error('Error fetching user VibeReel:', error);
-    throw new Error('Failed to fetch user VibeReel');
+  if (error) {
+    console.error('Error fetching user VibeReels:', error);
+    throw new Error('Failed to fetch user VibeReels');
   }
 
-  return data || null;
+  return data || [];
+};
+
+// Get current user's most recent posted VibeReel (for compatibility)
+export const getCurrentUserPostedVibeReel = async (): Promise<VibeReel | null> => {
+  const vibeReels = await getCurrentUserPostedVibeReels();
+  return vibeReels.length > 0 ? vibeReels[0] : null;
 };
 
 // Mark a VibeReel as viewed
@@ -401,4 +387,5 @@ export const markVibeReelViewed = async (vibeReelId: string): Promise<void> => {
 // Types for VibeReels with view status
 export interface VibeReelWithViewStatus extends VibeReel {
   is_viewed: boolean;
+  is_own_vibe_reel?: boolean;
 }

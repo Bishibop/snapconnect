@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import {
   getPostedVibeReelsFromFriends,
-  getCurrentUserPostedVibeReel,
+  getCurrentUserPostedVibeReels,
   markVibeReelViewed,
   VibeReelWithViewStatus,
   VibeReel,
@@ -13,7 +13,7 @@ import { ErrorHandler, StandardError, ErrorHandlingOptions } from '../utils/erro
 
 interface VibeReelsContextType {
   friendVibeReels: VibeReelWithViewStatus[];
-  myVibeReel: VibeReel | null;
+  myVibeReels: VibeReel[];
   refreshing: boolean;
   error: StandardError | null;
   refresh: () => Promise<void>;
@@ -50,10 +50,11 @@ export function VibeReelsProvider({ children }: VibeReelsProviderProps) {
     );
   });
 
-  const [myVibeReel, setMyVibeReel] = useState<VibeReel | null>(() => {
-    if (!user?.id) return null;
-    const cached = cache.get<VibeReel | null>('USER_VIBE_REEL', user.id, CACHE_DURATIONS.VIBE_REELS);
-    return cached !== undefined ? cached : null;
+  const [myVibeReels, setMyVibeReels] = useState<VibeReel[]>(() => {
+    if (!user?.id) return [];
+    return (
+      cache.get<VibeReel[]>('USER_VIBE_REELS', user.id, CACHE_DURATIONS.VIBE_REELS) || []
+    );
   });
 
   const [refreshing, setRefreshing] = useState(false);
@@ -83,9 +84,9 @@ export function VibeReelsProvider({ children }: VibeReelsProviderProps) {
     }
   }, []);
 
-  const safeSetMyVibeReel = useCallback((vibeReel: VibeReel | null) => {
+  const safeSetMyVibeReels = useCallback((vibeReels: VibeReel[]) => {
     if (isMountedRef.current) {
-      setMyVibeReel(vibeReel);
+      setMyVibeReels(vibeReels);
     }
   }, []);
 
@@ -119,9 +120,9 @@ export function VibeReelsProvider({ children }: VibeReelsProviderProps) {
         if (!silent) safeSetRefreshing(true);
 
         // Also fetch friend IDs for client-side filtering
-        const [friendVibeReelsData, myVibeReelData, friendshipsData] = await Promise.all([
+        const [friendVibeReelsData, myVibeReelsData, friendshipsData] = await Promise.all([
           getPostedVibeReelsFromFriends(),
-          getCurrentUserPostedVibeReel(),
+          getCurrentUserPostedVibeReels(),
           supabase
             .from('friendships')
             .select('friend_id')
@@ -137,11 +138,11 @@ export function VibeReelsProvider({ children }: VibeReelsProviderProps) {
         setFriendIds(newFriendIds);
 
         safeSetFriendVibeReels(friendVibeReelsData);
-        safeSetMyVibeReel(myVibeReelData);
+        safeSetMyVibeReels(myVibeReelsData);
 
         // Cache the new data
         cache.set('VIBE_REELS', friendVibeReelsData, user.id);
-        cache.set('USER_VIBE_REEL', myVibeReelData, user.id);
+        cache.set('USER_VIBE_REELS', myVibeReelsData, user.id);
       } catch (error) {
         if (!isMountedRef.current) return;
 
@@ -159,7 +160,7 @@ export function VibeReelsProvider({ children }: VibeReelsProviderProps) {
       clearError,
       safeSetRefreshing,
       safeSetFriendVibeReels,
-      safeSetMyVibeReel,
+      safeSetMyVibeReels,
     ]
   );
 
@@ -207,9 +208,13 @@ export function VibeReelsProvider({ children }: VibeReelsProviderProps) {
 
     // Check if we need fresh data
     const hasValidVibeReelsCache = cache.has('VIBE_REELS', user.id, CACHE_DURATIONS.VIBE_REELS);
-    const hasValidUserVibeReelCache = cache.has('USER_VIBE_REEL', user.id, CACHE_DURATIONS.VIBE_REELS);
+    const hasValidUserVibeReelsCache = cache.has(
+      'USER_VIBE_REELS',
+      user.id,
+      CACHE_DURATIONS.VIBE_REELS
+    );
 
-    if (!hasValidVibeReelsCache || !hasValidUserVibeReelCache) {
+    if (!hasValidVibeReelsCache || !hasValidUserVibeReelsCache) {
       // Prevent concurrent loads
       loadingRef.current = true;
 
@@ -235,11 +240,11 @@ export function VibeReelsProvider({ children }: VibeReelsProviderProps) {
   useEffect(() => {
     if (!user?.id) {
       safeSetFriendVibeReels([]);
-      safeSetMyVibeReel(null);
+      safeSetMyVibeReels([]);
       safeSetRefreshing(false);
       safeSetError(null);
     }
-  }, [user?.id, safeSetFriendVibeReels, safeSetMyVibeReel, safeSetRefreshing, safeSetError]);
+  }, [user?.id, safeSetFriendVibeReels, safeSetMyVibeReels, safeSetRefreshing, safeSetError]);
 
   // Mark component as unmounted to prevent crashes
   useEffect(() => {
@@ -250,7 +255,7 @@ export function VibeReelsProvider({ children }: VibeReelsProviderProps) {
 
   const contextValue: VibeReelsContextType = {
     friendVibeReels,
-    myVibeReel,
+    myVibeReels,
     refreshing,
     error,
     refresh,

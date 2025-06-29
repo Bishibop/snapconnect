@@ -14,6 +14,7 @@ interface RefreshableListProps<T> {
   showsVerticalScrollIndicator?: boolean;
   horizontal?: boolean;
   numColumns?: number;
+  columnWrapperStyle?: ViewStyle;
   ItemSeparatorComponent?: React.ComponentType | null;
   ListHeaderComponent?: React.ComponentType | React.ReactElement | null;
   ListFooterComponent?: React.ComponentType | React.ReactElement | null;
@@ -31,6 +32,7 @@ export default function RefreshableList<T>({
   showsVerticalScrollIndicator = false,
   horizontal = false,
   numColumns,
+  columnWrapperStyle,
   ItemSeparatorComponent,
   ListHeaderComponent,
   ListFooterComponent,
@@ -45,6 +47,7 @@ export default function RefreshableList<T>({
       showsVerticalScrollIndicator={showsVerticalScrollIndicator}
       horizontal={horizontal}
       numColumns={numColumns}
+      columnWrapperStyle={numColumns && numColumns > 1 ? columnWrapperStyle : undefined}
       refreshControl={
         onRefresh ? (
           <RefreshControl
