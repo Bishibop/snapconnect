@@ -91,8 +91,9 @@ export const TabNavigator = () => {
       initialRouteName="Camera"
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: theme.colors.secondary,
-        tabBarInactiveTintColor: theme.colors.gray,
+        tabBarActiveTintColor: theme.colors.primary,
+        tabBarInactiveTintColor: theme.colors.primary,
+        tabBarShowLabel: false,
         tabBarStyle: {
           backgroundColor: theme.colors.white,
           borderTopColor: theme.colors.lightGray,
@@ -100,9 +101,8 @@ export const TabNavigator = () => {
           paddingBottom: 8,
           paddingTop: 8,
         },
-        tabBarLabelStyle: {
-          fontSize: 12,
-          fontWeight: '600',
+        tabBarIconStyle: {
+          marginTop: -10,
         },
       }}
     >

@@ -306,7 +306,7 @@ const styles = StyleSheet.create({
     borderColor: theme.colors.primary,
   },
   checkmark: {
-    color: '#000000',
+    color: theme.colors.white,
     fontSize: 14,
     fontWeight: 'bold',
   },

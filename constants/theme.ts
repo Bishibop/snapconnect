@@ -1,7 +1,7 @@
 export const theme = {
   colors: {
-    primary: '#FFFC00', // Snapchat yellow
-    primaryLight: '#FFFB80', // Light yellow for selections
+    primary: '#096b3b', // Green primary color
+    primaryLight: '#0a8547', // Lighter green for selections
     secondary: '#000000',
     background: '#FFFFFF',
     white: '#FFFFFF',

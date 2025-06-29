@@ -158,6 +158,7 @@ export const CACHE_DURATIONS = {
   FRIENDS: 10 * 60 * 1000, // 10 minutes
   SNAPS: 5 * 60 * 1000, // 5 minutes
   VIBE_CHECKS: 5 * 60 * 1000, // 5 minutes (same as snaps)
+  VIBE_REELS: 5 * 60 * 1000, // 5 minutes
   PROFILE: 30 * 60 * 1000, // 30 minutes
   CONVERSATIONS: 2 * 60 * 1000, // 2 minutes (conversations change with new messages)
   MESSAGES: 30 * 1000, // 30 seconds (messages need to be fresh but can cache briefly)

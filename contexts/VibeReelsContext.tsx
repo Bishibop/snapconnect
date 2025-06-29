@@ -46,13 +46,13 @@ export function VibeReelsProvider({ children }: VibeReelsProviderProps) {
   const [friendVibeReels, setFriendVibeReels] = useState<VibeReelWithViewStatus[]>(() => {
     if (!user?.id) return [];
     return (
-      cache.get<VibeReelWithViewStatus[]>('VIBE_REELS', user.id, CACHE_DURATIONS.STORIES) || []
+      cache.get<VibeReelWithViewStatus[]>('VIBE_REELS', user.id, CACHE_DURATIONS.VIBE_REELS) || []
     );
   });
 
   const [myVibeReel, setMyVibeReel] = useState<VibeReel | null>(() => {
     if (!user?.id) return null;
-    const cached = cache.get<VibeReel | null>('USER_VIBE_REEL', user.id, CACHE_DURATIONS.STORIES);
+    const cached = cache.get<VibeReel | null>('USER_VIBE_REEL', user.id, CACHE_DURATIONS.VIBE_REELS);
     return cached !== undefined ? cached : null;
   });
 
@@ -206,8 +206,8 @@ export function VibeReelsProvider({ children }: VibeReelsProviderProps) {
     if (!user?.id || loadingRef.current) return;
 
     // Check if we need fresh data
-    const hasValidVibeReelsCache = cache.has('VIBE_REELS', user.id, CACHE_DURATIONS.STORIES);
-    const hasValidUserVibeReelCache = cache.has('USER_VIBE_REEL', user.id, CACHE_DURATIONS.STORIES);
+    const hasValidVibeReelsCache = cache.has('VIBE_REELS', user.id, CACHE_DURATIONS.VIBE_REELS);
+    const hasValidUserVibeReelCache = cache.has('USER_VIBE_REEL', user.id, CACHE_DURATIONS.VIBE_REELS);
 
     if (!hasValidVibeReelsCache || !hasValidUserVibeReelCache) {
       // Prevent concurrent loads

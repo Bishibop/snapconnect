@@ -146,7 +146,7 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.gray,
   },
   primaryText: {
-    color: theme.colors.secondary,
+    color: theme.colors.white,
     fontWeight: 'bold',
   },
 

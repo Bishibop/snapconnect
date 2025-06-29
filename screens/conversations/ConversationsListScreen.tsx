@@ -163,7 +163,7 @@ const ConversationsListScreen = () => {
         ListEmptyComponent={
           hasLoadedOnce ? (
             <EmptyState
-              icon="💬"
+              icon="COMMENT"
               title="No Conversations Yet"
               subtitle="Start a conversation with your friends!"
             />

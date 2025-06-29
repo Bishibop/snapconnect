@@ -162,7 +162,7 @@ export default function FriendRequestsScreen({ navigation }: any) {
         refreshing={loading}
         ListEmptyComponent={() => (
           <EmptyState
-            icon={activeTab === 'received' ? '👥' : '📤'}
+            icon={activeTab === 'received' ? 'FRIENDS_EMPTY' : 'SENT_EMPTY'}
             title={activeTab === 'received' ? 'No friend requests' : 'No pending requests'}
             subtitle={
               activeTab === 'received'
