@@ -24,14 +24,44 @@ export interface FriendWithProfile {
 export async function searchUsers(query: string): Promise<Profile[]> {
   if (!query.trim()) return [];
 
-  const { data, error } = await supabase
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error('Not authenticated');
+
+  // First get all users matching the search query (excluding current user)
+  const { data: searchResults, error: searchError } = await supabase
     .from('profiles')
     .select('*')
     .ilike('username', `%${query}%`)
+    .neq('id', user.id) // Exclude current user from search results
     .limit(20);
 
-  if (error) throw error;
-  return data || [];
+  if (searchError) throw searchError;
+  if (!searchResults || searchResults.length === 0) return [];
+
+  // Get existing friendships (both accepted and pending)
+  const { data: friendships, error: friendshipsError } = await supabase
+    .from('friendships')
+    .select('friend_id, user_id, status')
+    .or(`user_id.eq.${user.id},friend_id.eq.${user.id}`);
+
+  if (friendshipsError) throw friendshipsError;
+
+  // Create a set of user IDs that are already friends or have pending requests
+  const existingFriendIds = new Set<string>();
+  friendships?.forEach(friendship => {
+    if (friendship.user_id === user.id) {
+      existingFriendIds.add(friendship.friend_id);
+    } else if (friendship.friend_id === user.id) {
+      existingFriendIds.add(friendship.user_id);
+    }
+  });
+
+  // Filter out users who are already friends or have pending requests
+  const filteredResults = searchResults.filter(profile => !existingFriendIds.has(profile.id));
+
+  return filteredResults;
 }
 
 // Send friend request
@@ -40,6 +70,11 @@ export async function sendFriendRequest(friendId: string): Promise<void> {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) throw new Error('Not authenticated');
+
+  // Prevent self-friend requests
+  if (user.id === friendId) {
+    throw new Error('You cannot send a friend request to yourself');
+  }
 
   // Check if friendship already exists
   const { data: existing } = await supabase
