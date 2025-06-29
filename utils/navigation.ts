@@ -93,12 +93,6 @@ export class NavigationUtils {
     navigation.navigate('AddFriends');
   }
 
-  /**
-   * Navigate to friend requests screen
-   */
-  static navigateToFriendRequests(navigation: FriendsNavigation) {
-    navigation.navigate('FriendRequests');
-  }
 
   /**
    * Navigate to Profile tab
@@ -177,7 +171,6 @@ export function useNavigationHelpers(navigation: any) {
       navigateToFriendSelector: (params: CameraStackParamList['FriendSelector']) =>
         NavigationUtils.navigateToFriendSelector(navigation, params),
       navigateToAddFriends: () => NavigationUtils.navigateToAddFriends(navigation),
-      navigateToFriendRequests: () => NavigationUtils.navigateToFriendRequests(navigation),
       navigateToUserProfile: (userId: string) =>
         NavigationUtils.navigateToUserProfile(navigation, userId),
       navigateToProfileTab: () => NavigationUtils.navigateToProfileTab(navigation),

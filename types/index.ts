@@ -161,7 +161,6 @@ export type SentStackParamList = {
 export type FriendsStackParamList = {
   FriendsList: undefined;
   AddFriends: undefined;
-  FriendRequests: undefined;
   VibeReelPlayer: {
     vibeReelId: string;
   };

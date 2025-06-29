@@ -46,6 +46,8 @@ export default function AddFriendsScreen({ navigation }: any) {
       if (success) {
         // Remove user from search results to prevent duplicate requests
         setSearchResults(prev => prev.filter(u => u.id !== userProfile.id));
+        // Navigate back to Friends page after successful request
+        navigation.goBack();
       } else {
         Alert.alert('Error', 'Failed to send friend request');
       }

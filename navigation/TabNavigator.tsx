@@ -17,7 +17,6 @@ import Icon from '../components/ui/Icon';
 // Import existing friends screens
 import FriendsListScreen from '../screens/main/FriendsListScreen';
 import AddFriendsScreen from '../screens/main/AddFriendsScreen';
-import FriendRequestsScreen from '../screens/main/FriendRequestsScreen';
 
 // Camera screens
 import CameraScreen from '../screens/camera/CameraScreen';
@@ -53,7 +52,6 @@ const FriendsStackNavigator = () => (
   <FriendsStack.Navigator screenOptions={{ headerShown: false }}>
     <FriendsStack.Screen name="FriendsList" component={FriendsListScreen} />
     <FriendsStack.Screen name="AddFriends" component={AddFriendsScreen} />
-    <FriendsStack.Screen name="FriendRequests" component={FriendRequestsScreen} />
     <FriendsStack.Screen name="VibeReelPlayer" component={VibeReelPlayer} />
     <FriendsStack.Screen name="VibeCheckViewer" component={VibeCheckViewerScreen} />
   </FriendsStack.Navigator>
