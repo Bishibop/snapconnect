@@ -58,15 +58,6 @@ export interface VibeCheckMessage {
 
 export type ConversationMessage = TextMessage | VibeCheckMessage;
 
-export interface Story {
-  id: string;
-  user_id: string;
-  media_url: string;
-  caption?: string;
-  expires_at: string;
-  created_at: string;
-}
-
 export interface VibeCheck {
   id: string;
   sender_id: string;

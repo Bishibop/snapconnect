@@ -144,8 +144,6 @@ export const CACHE_KEYS = {
   FRIENDS: 'friends',
   FRIEND_REQUESTS_RECEIVED: 'friend_requests_received',
   FRIEND_REQUESTS_SENT: 'friend_requests_sent',
-  STORIES: 'stories',
-  USER_STORY: 'user_story',
   INBOX_SNAPS: 'inbox_snaps',
   SENT_SNAPS: 'sent_snaps',
   INBOX_VIBE_CHECKS: 'inbox_vibe_checks',
@@ -158,7 +156,6 @@ export const CACHE_KEYS = {
 // Cache durations
 export const CACHE_DURATIONS = {
   FRIENDS: 10 * 60 * 1000, // 10 minutes
-  STORIES: 2 * 60 * 1000, // 2 minutes (stories change frequently)
   SNAPS: 5 * 60 * 1000, // 5 minutes
   VIBE_CHECKS: 5 * 60 * 1000, // 5 minutes (same as snaps)
   PROFILE: 30 * 60 * 1000, // 30 minutes

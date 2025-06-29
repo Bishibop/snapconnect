@@ -67,17 +67,6 @@ export function useRealtimeSubscription(
 }
 
 // Legacy compatibility hooks (now use centralized context)
-export function useStoriesSubscription(
-  callback: (payload: any) => void,
-  options: UseRealtimeSubscriptionOptions = {}
-) {
-  return useRealtimeSubscription(
-    [{ table: 'stories' }, { table: 'story_views' }],
-    callback,
-    options
-  );
-}
-
 export function useTableSubscription(
   table: string,
   callback: (payload: any) => void,

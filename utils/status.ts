@@ -187,7 +187,7 @@ export const isSnapInteracted = isVibeCheckInteracted;
  * @param type - The type of empty state
  * @returns Emoji icon for the empty state
  */
-export function getEmptyStateIcon(type: 'inbox' | 'sent' | 'friends' | 'stories'): string {
+export function getEmptyStateIcon(type: 'inbox' | 'sent' | 'friends'): string {
   switch (type) {
     case 'inbox':
       return ICONS.INBOX_EMPTY;
@@ -195,8 +195,6 @@ export function getEmptyStateIcon(type: 'inbox' | 'sent' | 'friends' | 'stories'
       return ICONS.SENT_EMPTY;
     case 'friends':
       return ICONS.FRIENDS_EMPTY;
-    case 'stories':
-      return ICONS.STORIES_EMPTY;
     default:
       return ICONS.INBOX_EMPTY;
   }

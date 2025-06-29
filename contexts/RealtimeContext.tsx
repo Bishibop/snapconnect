@@ -126,31 +126,6 @@ export function RealtimeProvider({ children }: RealtimeProviderProps) {
     (channel: any) => {
       if (!user?.id) return;
 
-      // Listen to stories table
-      // Adding listener for stories table
-      channel.on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'stories',
-        },
-        (payload: any) => handleRealtimeEvent('stories', payload)
-      );
-
-      // Listen to story_views table
-      // Adding listener for story_views table
-      channel.on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'story_views',
-          // Filter removed - will be done client-side to avoid channel mismatch
-        },
-        (payload: any) => handleRealtimeEvent('story_views', payload)
-      );
-
       // Listen to profiles table
       channel.on(
         'postgres_changes',
@@ -162,7 +137,7 @@ export function RealtimeProvider({ children }: RealtimeProviderProps) {
         (payload: any) => handleRealtimeEvent('profiles', payload)
       );
 
-      // Total listeners added: 3 (stories, story_views, profiles)
+      // Total listeners added: 1 (profiles)
     },
     [user?.id]
   );
