@@ -7,6 +7,7 @@ import { AuthStackParamList } from '../../types';
 import AuthForm from '../../components/ui/AuthForm';
 import FormInput from '../../components/ui/FormInput';
 import ActionButton from '../../components/ui/ActionButton';
+import { theme } from '../../constants/theme';
 
 const VibeReelSignInImage = require('../../assets/images/VibeReelSignIn.jpeg');
 
@@ -51,9 +52,9 @@ export const LoginScreen = () => {
       <TouchableOpacity 
         onPress={() => navigation.navigate('Signup')} 
         disabled={loading}
-        style={styles.signupButton}
+        style={styles.signupLink}
       >
-        <Text style={styles.signupText}>Sign Up</Text>
+        <Text style={styles.signupText}>Don't have an account? Sign up</Text>
       </TouchableOpacity>
     </AuthForm>
   );
@@ -64,18 +65,15 @@ const styles = StyleSheet.create({
     marginTop: 10,
     marginBottom: 20,
   },
-  signupButton: {
+  signupLink: {
     paddingVertical: 12,
-    paddingHorizontal: 24,
-    backgroundColor: '#f0f0f0',
-    borderRadius: 8,
     alignItems: 'center',
-    marginTop: 10,
   },
   signupText: {
     textAlign: 'center',
-    color: '#000',
-    fontSize: 18,
-    fontWeight: '600',
+    color: theme.colors.primary,
+    fontSize: 16,
+    fontWeight: '500',
+    textDecorationLine: 'underline',
   },
 });

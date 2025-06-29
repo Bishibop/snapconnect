@@ -17,7 +17,7 @@ export const RootNavigator = () => {
       <Stack.Navigator
         screenOptions={{
           headerStyle: {
-            backgroundColor: '#FFFC00',
+            backgroundColor: '#FFFFFF',
           },
           headerTintColor: '#000',
           headerTitleStyle: {
@@ -39,15 +39,7 @@ export const RootNavigator = () => {
             <Stack.Screen
               name="Signup"
               component={SignupScreen}
-              options={{
-                headerShown: true,
-                title: '',
-                headerStyle: {
-                  backgroundColor: '#FFFC00',
-                  elevation: 0,
-                  shadowOpacity: 0,
-                },
-              }}
+              options={{ headerShown: false }}
             />
           </>
         )}
