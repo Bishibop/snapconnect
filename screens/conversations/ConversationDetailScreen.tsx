@@ -652,7 +652,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   sendButtonDisabled: {
-    backgroundColor: theme.colors.lightGray,
+    backgroundColor: theme.colors.border,
   },
   sendButtonText: {
     color: theme.colors.white,

@@ -18,6 +18,7 @@ export const Icons = {
   SENT: { name: 'send', component: Ionicons },
   DELIVERED: { name: 'mail', component: Ionicons },
   OPENED: { name: 'eye', component: Ionicons },
+  CLOSED: { name: 'eye-off', component: Ionicons },
   EXPIRED: { name: 'timer-off', component: MaterialIcons },
 
   // VibeCheck/Media type icons

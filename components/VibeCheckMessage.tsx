@@ -9,7 +9,7 @@ import { formatTimeAgo } from '../utils/dateTime';
 import Icon from './ui/Icon';
 
 const { width: screenWidth } = Dimensions.get('window');
-const MESSAGE_MAX_WIDTH = screenWidth * 0.75;
+const MESSAGE_MAX_WIDTH = screenWidth * 0.5;
 
 interface VibeCheckMessageProps {
   message: VibeCheckMessageType;
@@ -53,7 +53,10 @@ function VibeCheckMessage({ message, isOwnMessage, onPress }: VibeCheckMessagePr
   return (
     <View style={[styles.container, isOwnMessage ? styles.ownMessage : styles.otherMessage]}>
       <TouchableOpacity
-        style={styles.vibeCheckContainer}
+        style={[
+          styles.vibeCheckContainer,
+          !isOwnMessage && !isViewed && styles.vibeCheckContainerUnopened
+        ]}
         onPress={handlePress}
         disabled={!onPress || !canView}
       >
@@ -68,30 +71,40 @@ function VibeCheckMessage({ message, isOwnMessage, onPress }: VibeCheckMessagePr
                 isViewed && styles.mediaPlaceholderOpened,
               ]}
             >
-              {isViewed && (
-                <View style={styles.mediaPlaceholderIcon}>
-                  <Icon name="OPENED" size={40} color={theme.colors.gray} />
-                </View>
-              )}
+              <View style={styles.mediaPlaceholderIcon}>
+                <Icon 
+                  name={isViewed ? "CLOSED" : "OPENED"} 
+                  size={30} 
+                  color={isViewed ? theme.colors.gray : theme.colors.primary} 
+                />
+              </View>
               <Text style={styles.placeholderSubtext}>{displayText}</Text>
+              <View style={[styles.timestampOverlay, styles.timestampOverlayViewed]}>
+                <Text style={[styles.timestampOverlayText, styles.timestampViewedText]}>
+                  {formatTimeAgo(message.created_at)}
+                </Text>
+              </View>
             </View>
           ) : // Senders see the thumbnail
           mediaUrl ? (
-            <FilteredImage
-              imageUri={mediaUrl}
-              filter={FILTERS.find(f => f.id === message.vibe_check?.filter_type) || FILTERS[0]}
-              style={styles.media}
-              resizeMode="cover"
-            />
+            <View style={styles.media}>
+              <FilteredImage
+                imageUri={mediaUrl}
+                filter={FILTERS.find(f => f.id === message.vibe_check?.filter_type) || FILTERS[0]}
+                style={styles.media}
+                resizeMode="cover"
+              />
+              <View style={styles.timestampOverlay}>
+                <Text style={styles.timestampOverlayText}>{formatTimeAgo(message.created_at)}</Text>
+              </View>
+            </View>
           ) : (
-            <View style={[styles.media, styles.mediaPlaceholder]} />
+            <View style={[styles.media, styles.mediaPlaceholder]}>
+              <View style={styles.timestampOverlay}>
+                <Text style={styles.timestampOverlayText}>{formatTimeAgo(message.created_at)}</Text>
+              </View>
+            </View>
           )}
-        </View>
-
-        {/* Message Metadata */}
-        <View style={styles.metadata}>
-          <Text style={styles.vibeCheckLabel}>VibeCheck</Text>
-          <Text style={styles.timestamp}>{formatTimeAgo(message.created_at)}</Text>
         </View>
       </TouchableOpacity>
     </View>
@@ -101,7 +114,6 @@ function VibeCheckMessage({ message, isOwnMessage, onPress }: VibeCheckMessagePr
 const styles = StyleSheet.create({
   container: {
     marginVertical: theme.spacing.xs,
-    paddingHorizontal: theme.spacing.md,
   },
   ownMessage: {
     alignItems: 'flex-end',
@@ -125,10 +137,14 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
   },
+  vibeCheckContainerUnopened: {
+    borderColor: theme.colors.primary,
+    borderWidth: 2,
+  },
   mediaContainer: {
     position: 'relative',
-    width: 200,
-    height: 200,
+    width: 150,
+    height: 150,
   },
   media: {
     width: '100%',
@@ -153,20 +169,27 @@ const styles = StyleSheet.create({
     marginTop: theme.spacing.xs,
     opacity: 0.7,
   },
-  metadata: {
-    padding: theme.spacing.sm,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+  timestampOverlay: {
+    position: 'absolute',
+    bottom: theme.spacing.sm,
+    right: theme.spacing.sm,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    paddingHorizontal: theme.spacing.sm,
+    paddingVertical: theme.spacing.xs,
+    borderRadius: theme.borderRadius.sm,
   },
-  vibeCheckLabel: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: theme.colors.primary,
+  timestampOverlayViewed: {
+    backgroundColor: 'transparent',
+    paddingHorizontal: 0,
+    paddingVertical: 0,
   },
-  timestamp: {
+  timestampOverlayText: {
     fontSize: 11,
+    color: theme.colors.white,
+  },
+  timestampViewedText: {
     color: theme.colors.textSecondary,
+    opacity: 0.7,
   },
   errorContainer: {
     padding: theme.spacing.md,
