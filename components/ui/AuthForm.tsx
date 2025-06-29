@@ -1,21 +1,35 @@
 import React from 'react';
-import { View, Text, StyleSheet, KeyboardAvoidingView, Platform, ViewStyle } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  KeyboardAvoidingView,
+  Platform,
+  ViewStyle,
+  Image,
+  ImageSourcePropType,
+} from 'react-native';
 import { theme } from '../../constants/theme';
 
 interface AuthFormProps {
-  title: string;
+  title?: string;
+  titleImage?: ImageSourcePropType;
   children: React.ReactNode;
   style?: ViewStyle;
 }
 
-export default function AuthForm({ title, children, style }: AuthFormProps) {
+export default function AuthForm({ title, titleImage, children, style }: AuthFormProps) {
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       style={[styles.container, style]}
     >
       <View style={styles.content}>
-        <Text style={styles.title}>{title}</Text>
+        {titleImage ? (
+          <Image source={titleImage} style={styles.titleImage} resizeMode="contain" />
+        ) : (
+          <Text style={styles.title}>{title}</Text>
+        )}
         <View style={styles.form}>{children}</View>
       </View>
     </KeyboardAvoidingView>
@@ -41,5 +55,11 @@ const styles = StyleSheet.create({
   },
   form: {
     gap: theme.spacing.md,
+  },
+  titleImage: {
+    width: 400,
+    height: 240,
+    alignSelf: 'center',
+    marginBottom: theme.spacing.xl * 2,
   },
 });

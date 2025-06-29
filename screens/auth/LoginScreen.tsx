@@ -8,6 +8,8 @@ import AuthForm from '../../components/ui/AuthForm';
 import FormInput from '../../components/ui/FormInput';
 import ActionButton from '../../components/ui/ActionButton';
 
+const VibeReelSignInImage = require('../../assets/images/VibeReelSignIn.jpeg');
+
 export const LoginScreen = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -22,7 +24,7 @@ export const LoginScreen = () => {
   };
 
   return (
-    <AuthForm title="SnapConnect">
+    <AuthForm titleImage={VibeReelSignInImage}>
       <FormInput
         placeholder="Email"
         value={email}
@@ -46,8 +48,12 @@ export const LoginScreen = () => {
         style={styles.button}
       />
 
-      <TouchableOpacity onPress={() => navigation.navigate('Signup')} disabled={loading}>
-        <Text style={styles.linkText}>Don&apos;t have an account? Sign up</Text>
+      <TouchableOpacity 
+        onPress={() => navigation.navigate('Signup')} 
+        disabled={loading}
+        style={styles.signupButton}
+      >
+        <Text style={styles.signupText}>Sign Up</Text>
       </TouchableOpacity>
     </AuthForm>
   );
@@ -58,9 +64,18 @@ const styles = StyleSheet.create({
     marginTop: 10,
     marginBottom: 20,
   },
-  linkText: {
+  signupButton: {
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    backgroundColor: '#f0f0f0',
+    borderRadius: 8,
+    alignItems: 'center',
+    marginTop: 10,
+  },
+  signupText: {
     textAlign: 'center',
     color: '#000',
-    fontSize: 16,
+    fontSize: 18,
+    fontWeight: '600',
   },
 });
