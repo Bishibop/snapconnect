@@ -488,7 +488,7 @@ const ConversationDetailScreen = () => {
               {loadingMessages ? (
                 <Text style={styles.emptyText}>Loading messages...</Text>
               ) : (
-                <Text style={styles.emptyText}>No messages yet. Say hello! 👋</Text>
+                <Text style={styles.emptyText}>No messages yet. Say hello!</Text>
               )}
             </View>
           }

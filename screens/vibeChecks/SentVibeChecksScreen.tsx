@@ -6,15 +6,10 @@ import { VibeCheck } from '../../services/vibeChecks';
 import TabHeader from '../../components/TabHeader';
 import EmptyState from '../../components/ui/EmptyState';
 import RefreshableList from '../../components/ui/RefreshableList';
+import StatusIcon from '../../components/ui/StatusIcon';
 import { useVibeChecks } from '../../hooks/useVibeChecks';
 import { SentNavigation } from '../../utils/navigation';
 import { formatTimeAgo } from '../../utils/dateTime';
-import {
-  getStatusIcon,
-  getStatusColor,
-  getSnapTypeIcon,
-  getEmptyStateIcon,
-} from '../../utils/status';
 
 interface SentVibeChecksProps {
   navigation: SentNavigation;
@@ -29,27 +24,20 @@ export default function SentVibeChecksScreen({ navigation: _navigation }: SentVi
 
   const renderVibeCheckItem = ({ item }: { item: VibeCheck }) => (
     <View style={styles.vibeCheckItem}>
-      <View style={styles.vibeCheckIcon}>
-        <Text style={styles.vibeCheckIconText}>{getSnapTypeIcon(item.vibe_check_type)}</Text>
-      </View>
-
       <View style={styles.vibeCheckContent}>
         <Text style={styles.recipientName}>{item.recipient_profile?.username || 'Unknown'}</Text>
         <Text style={styles.vibeCheckDetails}>VibeCheck • {formatTimeAgo(item.created_at)}</Text>
       </View>
 
       <View style={styles.vibeCheckStatus}>
-        <Text style={styles.statusIcon}>{getStatusIcon(item.status)}</Text>
-        <Text style={[styles.statusText, { color: getStatusColor(item.status) }]}>
-          {item.status}
-        </Text>
+        <StatusIcon status={item.status} size={20} showLabel />
       </View>
     </View>
   );
 
   const renderEmptyState = () => (
     <EmptyState
-      icon={getEmptyStateIcon('sent')}
+      icon="SENT_EMPTY"
       title="No VibeChecks sent yet!"
       subtitle="When you send VibeChecks to friends, you'll see them here with their status"
     />
@@ -88,18 +76,6 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: theme.colors.border,
   },
-  vibeCheckIcon: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: theme.colors.lightGray,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: theme.spacing.md,
-  },
-  vibeCheckIconText: {
-    fontSize: 20,
-  },
   vibeCheckContent: {
     flex: 1,
   },
@@ -116,14 +92,5 @@ const styles = StyleSheet.create({
   vibeCheckStatus: {
     alignItems: 'center',
     minWidth: 80,
-  },
-  statusIcon: {
-    fontSize: 16,
-    marginBottom: theme.spacing.xs,
-  },
-  statusText: {
-    fontSize: 12,
-    fontWeight: '500',
-    textTransform: 'capitalize',
   },
 });

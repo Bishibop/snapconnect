@@ -1,9 +1,11 @@
 import React from 'react';
 import { View, Text, StyleSheet, ViewStyle } from 'react-native';
 import { theme } from '../../constants/theme';
+import { IconKey } from '../../constants/icons';
+import Icon from './Icon';
 
 interface EmptyStateProps {
-  icon?: string;
+  icon?: IconKey;
   title: string;
   subtitle?: string;
   style?: ViewStyle;
@@ -12,7 +14,7 @@ interface EmptyStateProps {
 export default function EmptyState({ icon, title, subtitle, style }: EmptyStateProps) {
   return (
     <View style={[styles.container, style]}>
-      {icon && <Text style={styles.icon}>{icon}</Text>}
+      {icon && <Icon name={icon} size={48} color={theme.colors.gray} style={styles.icon} />}
       <Text style={styles.title}>{title}</Text>
       {subtitle && <Text style={styles.subtitle}>{subtitle}</Text>}
     </View>
@@ -28,7 +30,6 @@ const styles = StyleSheet.create({
     paddingVertical: theme.spacing.xl,
   },
   icon: {
-    fontSize: 48,
     marginBottom: theme.spacing.md,
   },
   title: {

@@ -6,6 +6,7 @@ import { supabase } from '../lib/supabase';
 import FilteredImage from './FilteredImage';
 import { FILTERS } from '../types/filters';
 import { formatTimeAgo } from '../utils/dateTime';
+import Icon from './ui/Icon';
 
 const { width: screenWidth } = Dimensions.get('window');
 const MESSAGE_MAX_WIDTH = screenWidth * 0.75;
@@ -20,13 +21,11 @@ function VibeCheckMessage({ message, isOwnMessage, onPress }: VibeCheckMessagePr
   const [mediaUrl, setMediaUrl] = useState<string>('');
 
   // Simplified display logic for recipients
-  const isVideo = message.vibe_check?.vibe_check_type === 'video';
   const isViewed = message.vibe_check?.status === 'opened';
   const canView = isOwnMessage || !isViewed;
 
   // Display values for recipients
   const displayText = isViewed ? 'Already viewed' : 'Tap to view';
-  const displayIcon = isViewed ? '👁️' : isVideo ? '🎥' : '📸';
 
   React.useEffect(() => {
     if (message.vibe_check?.media_url && !mediaUrl) {
@@ -69,7 +68,11 @@ function VibeCheckMessage({ message, isOwnMessage, onPress }: VibeCheckMessagePr
                 isViewed && styles.mediaPlaceholderOpened,
               ]}
             >
-              <Text style={styles.mediaPlaceholderText}>{displayIcon}</Text>
+              {isViewed && (
+                <View style={styles.mediaPlaceholderIcon}>
+                  <Icon name="OPENED" size={40} color={theme.colors.gray} />
+                </View>
+              )}
               <Text style={styles.placeholderSubtext}>{displayText}</Text>
             </View>
           ) : // Senders see the thumbnail
@@ -81,23 +84,7 @@ function VibeCheckMessage({ message, isOwnMessage, onPress }: VibeCheckMessagePr
               resizeMode="cover"
             />
           ) : (
-            <View style={[styles.media, styles.mediaPlaceholder]}>
-              <Text style={styles.mediaPlaceholderText}>📸</Text>
-            </View>
-          )}
-
-          {/* VibeCheck Type Indicator */}
-          <View style={styles.typeIndicator}>
-            <Text style={styles.typeText}>
-              {message.vibe_check?.vibe_check_type === 'video' ? '🎥' : '📸'}
-            </Text>
-          </View>
-
-          {/* View Timer Indicator for Videos */}
-          {message.vibe_check?.vibe_check_type === 'video' && message.vibe_check?.duration && (
-            <View style={styles.durationIndicator}>
-              <Text style={styles.durationText}>{message.vibe_check.duration}s</Text>
-            </View>
+            <View style={[styles.media, styles.mediaPlaceholder]} />
           )}
         </View>
 
@@ -157,43 +144,14 @@ const styles = StyleSheet.create({
     backgroundColor: '#f0f0f0',
     opacity: 0.7,
   },
-  mediaPlaceholderText: {
-    fontSize: 40,
-    opacity: 0.5,
+  mediaPlaceholderIcon: {
+    marginBottom: theme.spacing.xs,
   },
   placeholderSubtext: {
     fontSize: 14,
     color: theme.colors.textSecondary,
     marginTop: theme.spacing.xs,
     opacity: 0.7,
-  },
-  typeIndicator: {
-    position: 'absolute',
-    top: theme.spacing.sm,
-    right: theme.spacing.sm,
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
-    borderRadius: theme.borderRadius.full,
-    width: 28,
-    height: 28,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  typeText: {
-    fontSize: 14,
-  },
-  durationIndicator: {
-    position: 'absolute',
-    bottom: theme.spacing.sm,
-    right: theme.spacing.sm,
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
-    borderRadius: theme.borderRadius.sm,
-    paddingHorizontal: theme.spacing.xs,
-    paddingVertical: 2,
-  },
-  durationText: {
-    color: theme.colors.white,
-    fontSize: 12,
-    fontWeight: '600',
   },
   metadata: {
     padding: theme.spacing.sm,

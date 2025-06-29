@@ -1,7 +1,7 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import { CommonActions } from '@react-navigation/native';
 import {
   MainTabParamList,
@@ -11,6 +11,7 @@ import {
   ProfileStackParamList,
 } from '../types';
 import { theme } from '../constants/theme';
+import Icon from '../components/ui/Icon';
 
 // Import existing friends screens
 import FriendsListScreen from '../screens/main/FriendsListScreen';
@@ -109,7 +110,7 @@ export const TabNavigator = () => {
         name="Friends"
         component={FriendsStackNavigator}
         options={{
-          tabBarIcon: ({ color, size }) => <Text style={{ color, fontSize: size }}>👥</Text>,
+          tabBarIcon: ({ color, size }) => <Icon name="FRIENDS" color={color} size={size} />,
         }}
         listeners={({ navigation }) => ({
           tabPress: e => {
@@ -129,7 +130,7 @@ export const TabNavigator = () => {
         options={{
           tabBarIcon: ({ color, size }) => (
             <View style={[styles.cameraIcon, { borderColor: color }]}>
-              <Text style={{ color, fontSize: size - 4 }}>📸</Text>
+              <Icon name="CAMERA" color={color} size={size - 4} />
             </View>
           ),
         }}
@@ -138,7 +139,7 @@ export const TabNavigator = () => {
         name="Conversations"
         component={ConversationsStackNavigator}
         options={{
-          tabBarIcon: ({ color, size }) => <Text style={{ color, fontSize: size }}>💬</Text>,
+          tabBarIcon: ({ color, size }) => <Icon name="COMMENT" color={color} size={size} />,
         }}
         listeners={({ navigation }) => ({
           tabPress: e => {
@@ -156,7 +157,7 @@ export const TabNavigator = () => {
         name="Profile"
         component={ProfileStackNavigator}
         options={{
-          tabBarIcon: ({ color, size }) => <Text style={{ color, fontSize: size }}>👤</Text>,
+          tabBarIcon: ({ color, size }) => <Icon name="USER" color={color} size={size} />,
         }}
         listeners={({ navigation }) => ({
           tabPress: e => {

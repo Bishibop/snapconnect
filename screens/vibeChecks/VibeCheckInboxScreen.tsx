@@ -9,7 +9,6 @@ import RefreshableList from '../../components/ui/RefreshableList';
 import { useVibeChecks } from '../../hooks/useVibeChecks';
 import { useNavigationHelpers, InboxNavigation } from '../../utils/navigation';
 import { formatTimeAgo } from '../../utils/dateTime';
-import { getSnapTypeIcon, getEmptyStateIcon } from '../../utils/status';
 
 interface VibeCheckInboxProps {
   navigation: InboxNavigation;
@@ -29,10 +28,6 @@ export default function VibeCheckInboxScreen({ navigation }: VibeCheckInboxProps
 
   const renderVibeCheckItem = ({ item }: { item: VibeCheck }) => (
     <TouchableOpacity style={styles.vibeCheckItem} onPress={() => handleVibeCheckPress(item)}>
-      <View style={styles.vibeCheckIcon}>
-        <Text style={styles.vibeCheckIconText}>{getSnapTypeIcon(item.vibe_check_type)}</Text>
-      </View>
-
       <View style={styles.vibeCheckContent}>
         <Text style={styles.senderName}>{item.sender_profile?.username || 'Unknown'}</Text>
         <Text style={styles.vibeCheckDetails}>Sent a VibeCheck</Text>
@@ -47,7 +42,7 @@ export default function VibeCheckInboxScreen({ navigation }: VibeCheckInboxProps
 
   const renderEmptyState = () => (
     <EmptyState
-      icon={getEmptyStateIcon('inbox')}
+      icon="INBOX_EMPTY"
       title="No VibeChecks yet!"
       subtitle="When friends send you VibeChecks, they'll appear here"
     />
@@ -85,18 +80,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: theme.spacing.md,
     borderBottomWidth: 1,
     borderBottomColor: theme.colors.border,
-  },
-  vibeCheckIcon: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: theme.colors.primaryLight,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: theme.spacing.md,
-  },
-  vibeCheckIconText: {
-    fontSize: 20,
   },
   vibeCheckContent: {
     flex: 1,

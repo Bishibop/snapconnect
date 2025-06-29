@@ -120,7 +120,7 @@ export default function AddFriendsScreen({ navigation }: any) {
 
       {!loading && searchQuery && searchResults.length === 0 && (
         <EmptyState
-          icon="🔍"
+          icon="SEARCH"
           title="No users found"
           subtitle="Try searching for a different username"
         />
@@ -128,7 +128,7 @@ export default function AddFriendsScreen({ navigation }: any) {
 
       {!loading && searchQuery === '' && (
         <EmptyState
-          icon="👥"
+          icon="USER_ADD"
           title="Search for friends"
           subtitle="Enter a username to find and add friends"
         />
