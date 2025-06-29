@@ -239,38 +239,19 @@ export default function VibeReelPlayer() {
       playbackTimer.current = null;
     }
     setIsPlaying(false);
-  };
-
-  const handleClose = () => {
-    stopPlayback();
+    // Auto-close when playback completes
     navigation.goBack();
   };
 
-  const handleScreenTap = () => {
-    // Restart playback if it has ended
-    if (!isPlaying && currentIndexRef.current >= allArtRef.current.length - 1) {
-      // Reset for replay
-      currentIndexRef.current = 0;
-      setCurrentDisplayIndex(0);
-      activeBuffer.current = 'A';
-
-      // Reset animations - start with 0 for fade-in
-      fadeAnimA.setValue(0);
-      fadeAnimB.setValue(0);
-      scaleAnimA.setValue(1.0);
-      scaleAnimB.setValue(1.0);
-
-      // Reset images
-      if (allArtRef.current.length > 0) {
-        setImageA(allArtRef.current[0]);
-        if (allArtRef.current.length > 1) {
-          setImageB(allArtRef.current[1]);
-        }
-      }
-
-      startPlayback();
+  const handleClose = () => {
+    if (playbackTimer.current) {
+      clearTimeout(playbackTimer.current);
+      playbackTimer.current = null;
     }
+    setIsPlaying(false);
+    navigation.goBack();
   };
+
 
   if (loading) {
     return (
@@ -311,7 +292,7 @@ export default function VibeReelPlayer() {
   };
 
   return (
-    <TouchableOpacity style={styles.container} activeOpacity={1} onPress={handleScreenTap}>
+    <View style={styles.container}>
       <TouchableOpacity style={styles.closeButton} onPress={handleClose}>
         <Text style={styles.closeText}>✕</Text>
       </TouchableOpacity>
@@ -336,12 +317,7 @@ export default function VibeReelPlayer() {
         </View>
       )}
 
-      {!isPlaying && currentIndexRef.current >= allArt.length - 1 && (
-        <View style={styles.replayHint}>
-          <Text style={styles.replayText}>Tap to replay</Text>
-        </View>
-      )}
-    </TouchableOpacity>
+    </View>
   );
 }
 
@@ -449,19 +425,6 @@ const styles = StyleSheet.create({
     height: '100%',
     backgroundColor: theme.colors.primary,
     borderRadius: 2,
-  },
-  replayHint: {
-    position: 'absolute',
-    bottom: 100,
-    backgroundColor: 'rgba(0, 0, 0, 0.8)',
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 20,
-  },
-  replayText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: '500',
   },
   vignette: {
     position: 'absolute',
