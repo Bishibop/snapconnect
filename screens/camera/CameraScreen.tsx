@@ -62,15 +62,6 @@ export default function CameraScreen({ navigation }: CameraScreenProps) {
     );
   }
 
-  const toggleCameraFacing = () => {
-    setIsCameraReady(false);
-    setFacing(current => (current === 'back' ? 'front' : 'back'));
-
-    // Reset camera ready state after facing change
-    setTimeout(() => {
-      setIsCameraReady(true);
-    }, 100);
-  };
 
   const takePicture = async () => {
     if (!cameraRef.current || !isCameraReady) return;
@@ -108,10 +99,6 @@ export default function CameraScreen({ navigation }: CameraScreenProps) {
             onPress={() => navigation.navigate('Friends' as any)}
           >
             <Text style={styles.closeButtonText}>✕</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.flipButton} onPress={toggleCameraFacing}>
-            <Text style={styles.flipButtonText}>🔄</Text>
           </TouchableOpacity>
         </View>
 
@@ -171,35 +158,21 @@ const styles = StyleSheet.create({
   topControls: {
     position: 'absolute',
     top: theme.spacing.md,
-    left: theme.spacing.md,
     right: theme.spacing.md,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
     zIndex: 1,
   },
   closeButton: {
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    borderRadius: theme.borderRadius.full,
-    width: 44,
-    height: 44,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
     justifyContent: 'center',
     alignItems: 'center',
   },
   closeButtonText: {
-    fontSize: 18,
     color: theme.colors.white,
-    fontWeight: 'bold',
-  },
-  flipButton: {
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    borderRadius: theme.borderRadius.full,
-    width: 44,
-    height: 44,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  flipButtonText: {
-    fontSize: 20,
+    fontSize: 24,
+    fontWeight: '300',
   },
   bottomControls: {
     position: 'absolute',
