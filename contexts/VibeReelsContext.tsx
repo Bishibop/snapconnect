@@ -214,48 +214,13 @@ export function VibeReelsProvider({ children }: VibeReelsProviderProps) {
     if (!hasValidVibeReelsCache || !hasValidUserVibeReelCache) {
       // Prevent concurrent loads
       loadingRef.current = true;
-
-      // Call loadVibeReels directly without it being a dependency
-      (async () => {
-        if (!user?.id || !isMountedRef.current) return;
-
-        try {
-          clearError();
-
-          const [friendVibeReelsData, myVibeReelData, friendshipsData] = await Promise.all([
-            getPostedVibeReelsFromFriends(),
-            getCurrentUserPostedVibeReel(),
-            supabase
-              .from('friendships')
-              .select('friend_id')
-              .eq('user_id', user.id)
-              .eq('status', 'accepted'),
-          ]);
-
-          // Check if component is still mounted after async operations
-          if (!isMountedRef.current) return;
-
-          // Update friend IDs
-          const newFriendIds = friendshipsData.data?.map(f => f.friend_id) || [];
-          setFriendIds(newFriendIds);
-
-          // The service already deduplicates, but double-check here for safety
-          safeSetFriendVibeReels(friendVibeReelsData);
-          safeSetMyVibeReel(myVibeReelData);
-
-          // Cache the new data
-          cache.set('VIBE_REELS', friendVibeReelsData, user.id);
-          cache.set('USER_VIBE_REEL', myVibeReelData, user.id);
-        } catch (error) {
-          if (!isMountedRef.current) return;
-
-          ErrorHandler.handleApiError(error, 'load VibeReels', true);
-        } finally {
-          loadingRef.current = false;
-        }
-      })();
+      
+      // Use the existing loadVibeReels function with silent=true
+      loadVibeReels(true).finally(() => {
+        loadingRef.current = false;
+      });
     }
-  }, [user?.id, clearError, safeSetFriendVibeReels, safeSetMyVibeReel]); // Minimal stable dependencies
+  }, [user?.id, loadVibeReels]); // Use loadVibeReels as dependency
 
   // Add 1-second polling
   useEffect(() => {
