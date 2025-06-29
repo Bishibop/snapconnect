@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Dimensions } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Dimensions, Animated } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RouteProp } from '@react-navigation/native';
@@ -37,9 +37,10 @@ export default function VibeCheckViewerScreen({ route, navigation }: VibeCheckVi
   const content = vibeCheck as VibeCheck;
   const { user } = useAuth();
 
-  const [timeLeft, setTimeLeft] = useState(30); // 30 seconds for photos
+  const [timeLeft, setTimeLeft] = useState(10); // 10 seconds for photos
   const [mediaUrl, setMediaUrl] = useState<string>('');
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const progressAnim = useRef(new Animated.Value(1)).current; // Start at 100%
 
   // Helper function to get the content type
   const getContentType = (): 'photo' | 'video' | undefined => {
@@ -59,7 +60,7 @@ export default function VibeCheckViewerScreen({ route, navigation }: VibeCheckVi
     getMediaUrl();
   }, [content?.id, user?.id]);
 
-  // Simple countdown timer for photos
+  // Simple countdown timer for photos with progress bar animation
   useEffect(() => {
     // Only start timer for photos when media is loaded
     if (!content || getContentType() !== 'photo' || !mediaUrl) {
@@ -71,8 +72,16 @@ export default function VibeCheckViewerScreen({ route, navigation }: VibeCheckVi
       clearInterval(timerRef.current);
     }
 
-    // Reset to 30 seconds
-    setTimeLeft(30);
+    // Reset to 10 seconds
+    setTimeLeft(10);
+    progressAnim.setValue(1); // Reset progress to 100%
+
+    // Animate progress bar over 10 seconds
+    Animated.timing(progressAnim, {
+      toValue: 0,
+      duration: 10000, // 10 seconds
+      useNativeDriver: false,
+    }).start();
 
     // Start simple 1-second interval countdown
     timerRef.current = setInterval(() => {
@@ -95,6 +104,7 @@ export default function VibeCheckViewerScreen({ route, navigation }: VibeCheckVi
         clearInterval(timerRef.current);
         timerRef.current = null;
       }
+      progressAnim.stopAnimation();
     };
   }, [getContentType(), mediaUrl]);
 
@@ -128,10 +138,22 @@ export default function VibeCheckViewerScreen({ route, navigation }: VibeCheckVi
         <Text style={styles.closeButtonText}>✕</Text>
       </TouchableOpacity>
 
-      {/* Countdown timer for photos */}
+      {/* Progress bar for photos */}
       {getContentType() === 'photo' && timeLeft > 0 && (
-        <View style={styles.timerContainer}>
-          <Text style={styles.timerText}>{timeLeft}</Text>
+        <View style={styles.progressContainer}>
+          <View style={styles.progressBar}>
+            <Animated.View
+              style={[
+                styles.progressFill,
+                {
+                  width: progressAnim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: ['0%', '100%'],
+                  }),
+                },
+              ]}
+            />
+          </View>
         </View>
       )}
 
@@ -161,37 +183,38 @@ const styles = StyleSheet.create({
   },
   closeButton: {
     position: 'absolute',
-    top: 50,
-    left: 20,
-    zIndex: 10,
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  closeButtonText: {
-    color: theme.colors.white,
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  timerContainer: {
-    position: 'absolute',
-    top: 50,
+    top: 60,
     right: 20,
     zIndex: 10,
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
     justifyContent: 'center',
     alignItems: 'center',
   },
-  timerText: {
+  closeButtonText: {
     color: theme.colors.white,
-    fontSize: 18,
-    fontWeight: 'bold',
+    fontSize: 24,
+    fontWeight: '300',
+  },
+  progressContainer: {
+    position: 'absolute',
+    top: 50,
+    left: 20,
+    right: 20,
+    zIndex: 10,
+  },
+  progressBar: {
+    height: 4,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    borderRadius: 2,
+    overflow: 'hidden',
+  },
+  progressFill: {
+    height: '100%',
+    backgroundColor: theme.colors.primary,
+    borderRadius: 2,
   },
   mediaContainer: {
     flex: 1,
