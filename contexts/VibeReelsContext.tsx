@@ -8,7 +8,7 @@ import {
 } from '../services/vibeReels';
 import { useAuth } from './AuthContext';
 import { supabase } from '../lib/supabase';
-import { cache, CACHE_KEYS, CACHE_DURATIONS } from '../utils/cache';
+import { cache, CACHE_DURATIONS } from '../utils/cache';
 import { ErrorHandler, StandardError, ErrorHandlingOptions } from '../utils/errorHandler';
 
 interface VibeReelsContextType {
@@ -112,13 +112,9 @@ export function VibeReelsProvider({ children }: VibeReelsProviderProps) {
     }
   }, []);
 
-  // Throttled update logic removed - using polling instead
-
   const loadVibeReels = useCallback(
     async (silent = false) => {
       if (!user?.id || !isMountedRef.current) return;
-
-      console.log('[LOAD VIBEREELS] Starting load, silent:', silent);
 
       try {
         clearError();
@@ -137,13 +133,6 @@ export function VibeReelsProvider({ children }: VibeReelsProviderProps) {
 
         // Check if component is still mounted after async operations
         if (!isMountedRef.current) return;
-
-        console.log('[LOAD VIBEREELS] Results:', {
-          friendCount: friendVibeReelsData.length,
-          hasMyVibeReel: !!myVibeReelData,
-          myVibeReelId: myVibeReelData?.id,
-          myVibeReelPostedAt: myVibeReelData?.posted_at,
-        });
 
         // Update friend IDs
         const newFriendIds = friendshipsData.data?.map(f => f.friend_id) || [];
@@ -230,8 +219,6 @@ export function VibeReelsProvider({ children }: VibeReelsProviderProps) {
       (async () => {
         if (!user?.id || !isMountedRef.current) return;
 
-        console.log('[LOAD VIBEREELS] Starting load, silent:', true);
-
         try {
           clearError();
 
@@ -247,13 +234,6 @@ export function VibeReelsProvider({ children }: VibeReelsProviderProps) {
 
           // Check if component is still mounted after async operations
           if (!isMountedRef.current) return;
-
-          console.log('[LOAD VIBEREELS] Results:', {
-            friendCount: friendVibeReelsData.length,
-            hasMyVibeReel: !!myVibeReelData,
-            myVibeReelId: myVibeReelData?.id,
-            myVibeReelPostedAt: myVibeReelData?.posted_at,
-          });
 
           // Update friend IDs
           const newFriendIds = friendshipsData.data?.map(f => f.friend_id) || [];
@@ -276,8 +256,6 @@ export function VibeReelsProvider({ children }: VibeReelsProviderProps) {
       })();
     }
   }, [user?.id, clearError, safeSetFriendVibeReels, safeSetMyVibeReel]); // Minimal stable dependencies
-
-  // Realtime subscription removed - using polling instead
 
   // Add 1-second polling
   useEffect(() => {

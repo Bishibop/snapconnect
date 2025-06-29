@@ -252,13 +252,6 @@ export const postVibeReel = async (vibeReelId: string): Promise<void> => {
 
   const postedAt = new Date().toISOString();
 
-  console.log('[postVibeReel] Updating vibe reel:', {
-    vibeReelId,
-    userId: user.id,
-    postedAt,
-    timestamp: new Date().toISOString(),
-  });
-
   const { data, error } = await supabase
     .from('vibe_reels')
     .update({ posted_at: postedAt })
@@ -270,8 +263,6 @@ export const postVibeReel = async (vibeReelId: string): Promise<void> => {
     console.error('[postVibeReel] Error posting VibeReel:', error);
     throw new Error('Failed to post VibeReel');
   }
-
-  console.log('[postVibeReel] Successfully posted vibe reel:', vibeReelId, data);
 };
 
 // Get posted VibeReels from friends with view status
