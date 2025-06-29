@@ -18,11 +18,15 @@ interface VibeReelsListProps {
   navigation: VibeReelsListNavigationProp;
 }
 
-type FilterTab = 'friends' | 'yours';
+type FilterTab = 'community' | 'friends' | 'yours';
 
 export default function VibeReelsListScreen({ navigation }: VibeReelsListProps) {
-  const { friendVibeReels, myVibeReels, refreshing, refresh, markViewed } = useVibeReels();
-  const [activeFilter, setActiveFilter] = useState<FilterTab>('friends');
+  const { friendVibeReels, myVibeReels, communityVibeReels, refreshing, refresh, markViewed } = useVibeReels();
+  const [activeFilter, setActiveFilter] = useState<FilterTab>('community');
+
+  // Calculate unviewed counts
+  const unviewedCommunityCount = communityVibeReels.filter(vr => !vr.is_viewed).length;
+  const unviewedFriendsCount = friendVibeReels.filter(vr => !vr.is_viewed).length;
 
   const handleCreateVibeReel = () => {
     navigation.getParent()?.navigate('Camera');
@@ -33,24 +37,34 @@ export default function VibeReelsListScreen({ navigation }: VibeReelsListProps) 
     await markViewed(vibeReel.id);
   };
 
-  // Combine all vibeReels
-  const allVibeReels = [...friendVibeReels];
-  // Add all user's VibeReels
-  myVibeReels.forEach(vibeReel => {
-    allVibeReels.push({
-      ...vibeReel,
-      is_viewed: true,
-      is_own_vibe_reel: true,
-    } as VibeReelWithViewStatus);
-  });
+  // Get the appropriate vibe reels based on active tab
+  const getFilteredVibeReels = () => {
+    switch (activeFilter) {
+      case 'community':
+        return communityVibeReels;
+      case 'friends':
+        return friendVibeReels;
+      case 'yours':
+        return myVibeReels;
+      default:
+        return [];
+    }
+  };
 
-  // Filter VibeReels based on active tab
-  const filteredVibeReels = allVibeReels.filter((reel: VibeReelWithViewStatus) => {
-    return activeFilter === 'friends' ? !reel.is_own_vibe_reel : reel.is_own_vibe_reel;
-  });
+  const filteredVibeReels = getFilteredVibeReels();
 
   const renderFilterTabs = () => (
     <View style={styles.filterTabs}>
+      <TouchableOpacity
+        style={[styles.filterTab, activeFilter === 'community' && styles.filterTabActive]}
+        onPress={() => setActiveFilter('community')}
+      >
+        <Text
+          style={[styles.filterTabText, activeFilter === 'community' && styles.filterTabTextActive]}
+        >
+          Community{unviewedCommunityCount > 0 ? ` (${unviewedCommunityCount})` : ''}
+        </Text>
+      </TouchableOpacity>
       <TouchableOpacity
         style={[styles.filterTab, activeFilter === 'friends' && styles.filterTabActive]}
         onPress={() => setActiveFilter('friends')}
@@ -58,7 +72,7 @@ export default function VibeReelsListScreen({ navigation }: VibeReelsListProps) 
         <Text
           style={[styles.filterTabText, activeFilter === 'friends' && styles.filterTabTextActive]}
         >
-          Friends
+          Friends{unviewedFriendsCount > 0 ? ` (${unviewedFriendsCount})` : ''}
         </Text>
       </TouchableOpacity>
       <TouchableOpacity
@@ -68,7 +82,7 @@ export default function VibeReelsListScreen({ navigation }: VibeReelsListProps) 
         <Text
           style={[styles.filterTabText, activeFilter === 'yours' && styles.filterTabTextActive]}
         >
-          Your VibeReels
+          Yours
         </Text>
       </TouchableOpacity>
     </View>
@@ -106,10 +120,18 @@ export default function VibeReelsListScreen({ navigation }: VibeReelsListProps) 
 
       {filteredVibeReels.length === 0 ? (
         <EmptyState
-          title={activeFilter === 'yours' ? 'No VibeReels yet' : 'No VibeReels to show'}
+          title={
+            activeFilter === 'yours'
+              ? 'No VibeReels yet'
+              : activeFilter === 'community'
+              ? 'No community VibeReels'
+              : 'No VibeReels to show'
+          }
           subtitle={
             activeFilter === 'yours'
               ? 'Create your first VibeReel!'
+              : activeFilter === 'community'
+              ? 'Be the first to share with the community!'
               : 'Check back later for new VibeReels'
           }
         />

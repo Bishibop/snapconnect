@@ -258,7 +258,7 @@ export const postVibeReel = async (vibeReelId: string): Promise<void> => {
 
   const postedAt = new Date().toISOString();
 
-  const { data, error } = await supabase
+  const { error } = await supabase
     .from('vibe_reels')
     .update({ posted_at: postedAt })
     .eq('id', vibeReelId)
@@ -395,3 +395,47 @@ export interface VibeReelWithViewStatus extends VibeReel {
   is_viewed: boolean;
   is_own_vibe_reel?: boolean;
 }
+
+// Get all posted VibeReels for community feed
+export const getAllPostedVibeReels = async (): Promise<VibeReelWithViewStatus[]> => {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error('User not authenticated');
+
+  try {
+    // Get all posted VibeReels
+    const { data: vibeReels, error } = await supabase
+      .from('vibe_reels')
+      .select(
+        `
+        *,
+        creator:profiles!vibe_reels_creator_id_fkey(username),
+        primary_art:art_pieces(image_url, vibe_count),
+        vibe_reel_views(viewer_id)
+      `
+      )
+      .not('posted_at', 'is', null)
+      .order('posted_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching all VibeReels:', error);
+      throw new Error('Failed to fetch all VibeReels');
+    }
+
+    // Add view status to each VibeReel
+    const vibeReelsWithViewStatus = (vibeReels || []).map(vibeReel => ({
+      ...vibeReel,
+      is_viewed:
+        vibeReel.vibe_reel_views?.some(
+          (view: { viewer_id: string }) => view.viewer_id === user.id
+        ) || false,
+      is_own_vibe_reel: vibeReel.creator_id === user.id,
+    }));
+
+    return vibeReelsWithViewStatus;
+  } catch (error) {
+    console.error('Error in getAllPostedVibeReels:', error);
+    throw error;
+  }
+};
