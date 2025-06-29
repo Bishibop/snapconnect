@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, ActivityIndicator, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, ActivityIndicator, Dimensions, Alert } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { useAuth } from '../../contexts/AuthContext';
 import { useProfile } from '../../hooks/useProfile';
@@ -20,7 +20,7 @@ type ProfileScreenRouteProp = RouteProp<ProfileStackParamList, 'ProfileScreen'>;
 export default function ProfileScreen() {
   const navigation = useNavigation<ProfileNavigation>();
   const route = useRoute<ProfileScreenRouteProp>();
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   const userId = route.params?.userId;
   const profileId = userId || user?.id;
   const { profile, loading } = useProfile(profileId || '');
@@ -52,6 +52,25 @@ export default function ProfileScreen() {
     }
   };
 
+  const handleSignOut = () => {
+    Alert.alert(
+      'Sign Out',
+      'Are you sure you want to sign out?',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Sign Out',
+          onPress: signOut,
+          style: 'destructive',
+        },
+      ],
+      { cancelable: true }
+    );
+  };
+
   if (loading) {
     return (
       <SafeAreaView style={styles.container}>
@@ -78,12 +97,21 @@ export default function ProfileScreen() {
         <View style={styles.header}>
           <Text style={styles.username}>{profile.username}</Text>
           {isOwnProfile && (
-            <ActionButton
-              title="Edit Profile"
-              onPress={() => navigation.navigate('EditProfile')}
-              variant="primary"
-              size="small"
-            />
+            <View style={styles.buttonContainer}>
+              <ActionButton
+                title="Edit Profile"
+                onPress={() => navigation.navigate('EditProfile')}
+                variant="primary"
+                size="small"
+              />
+              <ActionButton
+                title="Sign Out"
+                onPress={handleSignOut}
+                variant="secondary"
+                size="small"
+                style={styles.signOutButton}
+              />
+            </View>
           )}
         </View>
 
@@ -208,5 +236,11 @@ const styles = StyleSheet.create({
   },
   artPieceWrapper: {
     paddingHorizontal: 4,
+  },
+  buttonContainer: {
+    gap: theme.spacing.sm,
+  },
+  signOutButton: {
+    marginTop: theme.spacing.sm,
   },
 });
