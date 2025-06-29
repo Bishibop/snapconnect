@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "snapconnect",
-    "slug": "snapconnect",
+    "name": "VibeReel",
+    "slug": "vibereel",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -14,7 +14,7 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.anonymous.snapconnect",
+      "bundleIdentifier": "com.anonymous.vibereel",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
@@ -25,7 +25,7 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "package": "com.anonymous.snapconnect"
+      "package": "com.anonymous.vibereel"
     },
     "web": {
       "favicon": "./assets/favicon.png"
