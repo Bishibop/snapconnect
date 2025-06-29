@@ -10,11 +10,12 @@ SnapConnect follows a client-server architecture with a React Native mobile clie
 2. **Authentication Service** - Supabase Auth for user management
 3. **Database** - PostgreSQL with Row Level Security
 4. **Storage Service** - Supabase Storage for media files
-5. **Realtime Service** - WebSocket connections for live updates
+5. **Realtime Service** - WebSocket connections for live updates (limited use)
 6. **Messaging Service** - Real-time text messaging with conversations
 7. **CDN** - Content delivery for media files
 8. **Edge Functions** - Serverless functions for AI/ML integrations
 9. **Vector Database** - pgvector for similarity search
+10. **Polling Service** - Client-side polling for VibeReels updates
 
 ## Service Boundaries
 
@@ -28,11 +29,12 @@ SnapConnect follows a client-server architecture with a React Native mobile clie
   - Friend management (context provider with realtime)
   - Messaging system (conversations with text and VibeCheck messages)
   - VibeCheck sending/receiving (ephemeral media messages)
-  - Story posting/viewing (context provider with caching)
-  - Profile management (bio editing, user profiles)
+  - VibeReel creation/viewing (replaced Stories)
+  - Profile management (bio editing, user profiles, art grid)
   - Filter application
-  - Realtime subscription management (centralized)
+  - Realtime subscription management (centralized, reduced usage)
   - Error handling (standardized utility)
+  - Art similarity browsing (CLIP embeddings)
 
 ### Authentication Service
 
@@ -50,10 +52,9 @@ SnapConnect follows a client-server architecture with a React Native mobile clie
   - `conversations` - Direct message conversations between users
   - `messages` - Multi-type messages (text and VibeCheck) with read receipts
   - `vibe_checks` - Ephemeral media messages (formerly snaps)
-  - `stories` - 24-hour posts
-  - `story_views` - View tracking
-  - `art_pieces` - User-created art with CLIP embeddings for similarity search
+  - `art_pieces` - User-created art with CLIP embeddings (768-dim) for similarity search
   - `vibe_reels` - Collaborative art stories combining multiple art pieces
+  - `vibe_reel_views` - View tracking for VibeReels
 
 ### Storage Service
 
@@ -73,10 +74,9 @@ SnapConnect follows a client-server architecture with a React Native mobile clie
   - Conversation updates
   - Real-time messaging (per conversation)
   - VibeCheck updates
-  - Story updates
   - Status updates
-  - Art pieces updates (vibe count changes)
-  - VibeReel creation notifications
+  
+**Note**: VibeReels and art pieces no longer use realtime subscriptions to prevent O(N²) database load issues. Instead, a 1-second client-side polling mechanism is used.
 
 ### Edge Functions Service
 
@@ -91,10 +91,10 @@ SnapConnect follows a client-server architecture with a React Native mobile clie
 - **Responsibilities**: Similarity search for art discovery, semantic matching
 - **Technology**: PostgreSQL with pgvector extension
 - **Features**:
-  - 512-dimensional CLIP embeddings
+  - 768-dimensional CLIP embeddings (ViT-L model)
   - Cosine similarity search
   - IVFFlat indexing for performance
-  - Configurable similarity thresholds
+  - Configurable similarity thresholds (default 0.3 for MVP)
 
 ## Core Data Flow
 
@@ -120,14 +120,18 @@ SnapConnect follows a client-server architecture with a React Native mobile clie
 10. 30-second timer starts for photos
 11. VibeCheck marked as opened in database
 
-### Story Posting Flow
+### VibeReel Creation Flow
 
-1. User captures photo
-2. Photo uploaded to Stories bucket
-3. Story record created (replaces existing)
-4. Realtime broadcast to all friends
-5. Story appears in friends' story rows
-6. Auto-expires after 24 hours via database
+1. User captures art photo via camera
+2. Photo uploaded to art-pieces bucket (public)
+3. CLIP embedding generated via Edge Function (768-dim)
+4. Art piece record created with embedding
+5. Similar art found using vector similarity search
+6. User selects up to 7 similar pieces
+7. VibeReel record created with selections
+8. Selected art pieces' vibe counts increment
+9. VibeReel can be posted to share with friends
+10. Friends discover via 1-second polling (not realtime)
 
 ### Real-time Messaging Flow
 
@@ -153,19 +157,20 @@ SnapConnect follows a client-server architecture with a React Native mobile clie
 5. Friendship record created if accepted
 6. Both users' friend lists update in real-time
 
-### Art Similarity Flow (Future - Feature 5)
+### Art Similarity Flow
 
 1. User captures art photo via camera
 2. Photo uploaded to art-pieces storage bucket (public)
 3. App calls Edge Function with image URL
 4. Edge Function calls Replicate API for CLIP embedding
-5. 512-dimensional embedding vector returned
+5. 768-dimensional embedding vector returned (ViT-L model)
 6. Art piece record created with embedding
-7. Vector similarity search finds related art
+7. Vector similarity search finds related art (threshold 0.3)
 8. User selects up to 7 similar pieces for VibeReel
 9. VibeReel record created with selected art IDs
 10. Selected art pieces' vibe counts increment
 11. Art enters global pool for discovery by others
+12. VibeReel playback shows selected art + user's art with animations
 
 ## Technology Integration Points
 
@@ -279,8 +284,8 @@ App.tsx
 ├── Contexts/ (Global state providers)
 │   ├── AuthContext.tsx (User authentication)
 │   ├── FriendsContext.tsx (Friend management + realtime)
-│   ├── StoriesContext.tsx (Stories + caching)
-│   └── RealtimeContext.tsx (Centralized subscriptions)
+│   ├── VibeReelsContext.tsx (VibeReels + 1-second polling)
+│   └── RealtimeContext.tsx (Centralized subscriptions, reduced scope)
 ├── Navigation/
 │   ├── MainTabs (Friends, Camera, Conversations, Profile)
 │   └── Stack Navigators per tab
@@ -290,28 +295,30 @@ App.tsx
 │   ├── Main/ (Friends: List, Requests, Search)
 │   ├── Conversations/ (ConversationsList, ConversationDetail)
 │   ├── VibeChecks/ (FriendSelector, Inbox, Sent, Viewer)
-│   └── Profile/ (ProfileScreen, EditProfile)
+│   ├── VibeReel/ (CreateVibeReel, VibeReelPlayer, VibeReelPreview)
+│   └── Profile/ (ProfileScreen with art grid, EditProfile)
 ├── Components/
 │   ├── UI/ (ActionButton, FormInput, LoadingSpinner, RefreshableList)
 │   ├── Common/ (ErrorBoundary, AuthErrorBoundary)
-│   ├── Features/ (StoriesRow, StoryCircle, FilteredImage)
+│   ├── Features/ (VibeReelsRow, VibeReelCircle, YourVibeReelCircle, ArtPiece, FilteredImage)
 │   └── Messages/ (VibeCheckMessage)
 ├── Services/
 │   ├── supabase.ts (Client setup)
 │   ├── friends.ts (Friend operations)
 │   ├── conversations.ts (Multi-type messaging & conversations)
 │   ├── vibeChecks.ts (VibeCheck operations)
-│   ├── stories.ts (Story operations)
+│   ├── vibeReels.ts (VibeReel operations + posting)
 │   ├── profiles.ts (Profile management)
 │   ├── media.ts (File upload/processing)
 │   └── artSimilarity.ts (CLIP embeddings & vector search)
 ├── Hooks/
 │   ├── useAuth.ts (Authentication state)
 │   ├── useFriends.ts (Friend data + context)
-│   ├── useStories.ts (Story data + context)
+│   ├── useVibeReels.ts (VibeReel data + context)
 │   ├── useVibeChecks.ts (VibeCheck data management)
 │   ├── useProfile.ts (Profile management + sync)
 │   ├── useProfileUsername.ts (Lightweight profile data)
+│   ├── useFriendSync.ts (Sync friend IDs to VibeReels context)
 │   └── useRealtimeSubscription.ts (Subscription lifecycle)
 └── Utils/
     ├── cache.ts (Multi-level caching system)
@@ -329,10 +336,9 @@ friendships (user_id, friend_id, status, created_at)
 conversations (id, participant1_id, participant2_id, last_message_at)
 messages (id, conversation_id, sender_id, message_type, content, vibe_check_id, read_at, created_at)
 vibe_checks (id, sender_id, recipient_id, media_url, vibe_check_type, filter_type, status, opened_at)
-stories (id, user_id, media_url, snap_type, filter_type, expires_at)
-story_views (story_id, viewer_id, viewed_at)
-art_pieces (id, user_id, image_url, embedding VECTOR(512), vibe_count, created_at)
-vibe_reels (id, creator_id, primary_art_id, selected_art_ids UUID[], created_at)
+art_pieces (id, user_id, image_url, embedding VECTOR(768), vibe_count, created_at)
+vibe_reels (id, creator_id, primary_art_id, selected_art_ids UUID[], created_at, posted_at)
+vibe_reel_views (vibe_reel_id, viewer_id, viewed_at)
 
 -- Recent migrations
 -- Migration 008: ALTER TABLE profiles ADD COLUMN bio TEXT;
@@ -345,6 +351,10 @@ vibe_reels (id, creator_id, primary_art_id, selected_art_ids UUID[], created_at)
 -- Migration 015: Add similarity search functions (find_similar_art)
 -- Migration 016: Add vibe count increment function
 -- Migration 017: Create art-pieces storage bucket
+-- Migration 018: Update embeddings to 768 dimensions (ViT-L model)
+-- Migration 020: Add vibe_reel posting and views tracking
+-- Migration 021: Optimize RLS policies to prevent O(N²) load
+-- Migration 022: Remove vibe_reels from realtime publication
 
 -- Indexes for performance
 idx_friendships_user_id
@@ -358,16 +368,18 @@ idx_messages_message_type
 idx_messages_vibe_check_id
 idx_vibe_checks_recipient_id
 idx_vibe_checks_status
-idx_stories_expires_at
 idx_art_pieces_user
 idx_art_pieces_popular
-art_pieces_embedding_idx (IVFFlat vector index)
+idx_art_pieces_embedding (IVFFlat vector index)
 idx_vibe_reels_creator
 idx_vibe_reels_art (GIN index)
 idx_vibe_reels_primary_art
+idx_vibe_reels_posted (for querying posted VibeReels)
+idx_vibe_reels_active_posted (composite for friend queries)
+idx_vibe_reel_views_viewer (for view history)
 
 -- RPC Functions
-find_similar_art(query_embedding, match_threshold, match_count) - Vector similarity search
+find_similar_art(query_embedding VECTOR(768), match_threshold, match_count) - Vector similarity search
 increment_vibe_count(art_piece_id) - Atomic vibe count increment
 create_or_get_conversation(user1_id, user2_id) - Conversation management
 update_conversation_activity(conversation_id) - Activity timestamp update
@@ -403,7 +415,8 @@ update_conversation_activity(conversation_id) - Activity timestamp update
 
 - Efficient database indexes for message types and VibeChecks
 - Lazy loading of images
-- Centralized realtime subscription management
+- Reduced realtime subscription scope (removed vibe_reels to prevent O(N²) load)
+- 1-second client-side polling for VibeReels updates
 - Multi-type messaging with optimistic updates
 - Component memoization for conversation rendering
 - Multi-level client-side caching with user isolation
@@ -417,6 +430,8 @@ update_conversation_activity(conversation_id) - Activity timestamp update
 - Public storage bucket for art to avoid signed URL overhead
 - Edge Function for scalable ML inference
 - Async embedding generation to prevent UI blocking
+- Client-side friend filtering for VibeReels (moved from RLS)
+- Simplified RLS policies for better performance
 
 ### Future Scalability
 
@@ -446,26 +461,33 @@ The art similarity feature enables semantic discovery of artwork using CLIP (Con
 1. **Embedding Generation**:
    - Client uploads art to public storage bucket
    - Calls Edge Function with image URL
-   - Edge Function invokes Replicate CLIP model
-   - Returns 512-dimensional embedding vector
+   - Edge Function invokes Replicate CLIP model (ViT-L)
+   - Returns 768-dimensional embedding vector
 
 2. **Similarity Search**:
    - Uses pgvector's cosine similarity operator (<=>)
    - IVFFlat index for performant nearest neighbor search
-   - Configurable similarity threshold (default 0.8)
+   - Configurable similarity threshold (default 0.3 for MVP)
    - Returns up to 50 similar art pieces
+   - Excludes user's own art from results
 
 3. **Data Model**:
 
    ```sql
    art_pieces:
-   - embedding: VECTOR(512) - CLIP feature vector
+   - embedding: VECTOR(768) - CLIP feature vector (ViT-L)
    - vibe_count: INTEGER - Popularity metric
    - image_url: TEXT - Public storage reference
 
    vibe_reels:
    - primary_art_id: UUID - User's original art
    - selected_art_ids: UUID[] - Up to 7 similar pieces
+   - posted_at: TIMESTAMPTZ - When shared with friends
+   
+   vibe_reel_views:
+   - vibe_reel_id: UUID - VibeReel reference
+   - viewer_id: UUID - Who viewed it
+   - viewed_at: TIMESTAMPTZ - When viewed
    ```
 
 4. **Performance Considerations**:
@@ -487,6 +509,30 @@ The art similarity feature enables semantic discovery of artwork using CLIP (Con
 - Text-to-image search using CLIP's multimodal capabilities
 - Batch embedding generation for efficiency
 - Regional Edge Function deployment for lower latency
+- Return to realtime subscriptions when database load issues are resolved
+
+## Feature: VibeReel Playback
+
+### Overview
+
+VibeReel playback provides an immersive viewing experience with smooth animations and attribution for collaborative art stories.
+
+### Key Features
+
+- **Double-buffered Animation**: Seamless transitions between art pieces
+- **Variable Timing**: 0.75s for selected art, 10s for creator's main piece
+- **Username Attribution**: @username displayed for each art piece
+- **Progress Tracking**: Visual progress bar during playback
+- **Zoom Effects**: Ken Burns-style zoom during display
+- **Replay Support**: Tap to replay after completion
+
+### Technical Implementation
+
+1. **Animation System**: React Native Animated API with double buffering
+2. **Image Preloading**: Next image loaded while current displays
+3. **State Management**: Refs for performance-critical playback state
+4. **Transition Effects**: Cross-fade with configurable durations
+5. **Memory Management**: Cleanup timers and animations on unmount
 
 ## Feature: VibeChecks Integration
 
