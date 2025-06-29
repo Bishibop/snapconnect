@@ -15,9 +15,10 @@ interface VibeCheckMessageProps {
   message: VibeCheckMessageType;
   isOwnMessage: boolean;
   onPress?: () => void;
+  onImageLoad?: () => void;
 }
 
-function VibeCheckMessage({ message, isOwnMessage, onPress }: VibeCheckMessageProps) {
+function VibeCheckMessage({ message, isOwnMessage, onPress, onImageLoad }: VibeCheckMessageProps) {
   const [mediaUrl, setMediaUrl] = useState<string>('');
 
   // Simplified display logic for recipients
@@ -93,6 +94,7 @@ function VibeCheckMessage({ message, isOwnMessage, onPress }: VibeCheckMessagePr
                 filter={FILTERS.find(f => f.id === message.vibe_check?.filter_type) || FILTERS[0]}
                 style={styles.media}
                 resizeMode="cover"
+                onLoad={onImageLoad}
               />
               <View style={styles.timestampOverlay}>
                 <Text style={styles.timestampOverlayText}>{formatTimeAgo(message.created_at)}</Text>

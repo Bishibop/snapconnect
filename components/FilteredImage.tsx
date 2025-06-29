@@ -7,19 +7,32 @@ interface FilteredImageProps {
   filter: Filter;
   style?: ViewStyle;
   resizeMode?: 'cover' | 'contain' | 'stretch' | 'center';
+  onLoad?: () => void;
 }
 
 const FilteredImage = memo(
-  ({ imageUri, filter, style, resizeMode = 'contain' }: FilteredImageProps) => {
+  ({ imageUri, filter, style, resizeMode = 'contain', onLoad }: FilteredImageProps) => {
     if (filter.id === 'original') {
       // Original - no filter
-      return <Image source={{ uri: imageUri }} style={styles.image} resizeMode={resizeMode} />;
+      return (
+        <Image
+          source={{ uri: imageUri }}
+          style={styles.image}
+          resizeMode={resizeMode}
+          onLoad={onLoad}
+        />
+      );
     }
 
     // Apply filter using overlay technique
     return (
       <View style={[styles.container, style]}>
-        <Image source={{ uri: imageUri }} style={styles.image} resizeMode={resizeMode} />
+        <Image
+          source={{ uri: imageUri }}
+          style={styles.image}
+          resizeMode={resizeMode}
+          onLoad={onLoad}
+        />
         {filter.id === 'bw' ? (
           // Black and white filter using multiple overlays
           <>

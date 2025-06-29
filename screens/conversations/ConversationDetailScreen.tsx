@@ -186,17 +186,33 @@ const ConversationDetailScreen = () => {
   useEffect(() => {
     if (pendingVibeCheck && conversation && user?.id) {
       const tempId = `pending-${Date.now()}`;
-      const pendingMessage: TextMessage = {
+      const pendingMessage: VibeCheckMessage = {
         id: tempId,
         conversation_id: conversation.id,
         sender_id: user.id,
-        message_type: 'text',
-        content: `📸 Sending ${pendingVibeCheck.mediaType}...`,
+        message_type: 'vibe_check',
+        vibe_check_id: tempId,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         sender: currentUserProfile || {
           id: user.id,
           username: 'You',
+          created_at: new Date().toISOString(),
+        },
+        vibe_check: {
+          id: tempId,
+          sender_id: user.id,
+          recipient_id:
+            conversation.participant1_id === user.id
+              ? conversation.participant2_id
+              : conversation.participant1_id,
+          media_url: '', // Empty while sending
+          vibe_check_type: pendingVibeCheck.mediaType === 'photo' ? 'photo' : 'video',
+          filter_type:
+            typeof pendingVibeCheck.filter === 'string'
+              ? pendingVibeCheck.filter
+              : pendingVibeCheck.filter?.id || 'original',
+          status: 'sent',
           created_at: new Date().toISOString(),
         },
       };
@@ -415,6 +431,14 @@ const ConversationDetailScreen = () => {
             message={item as VibeCheckMessage}
             isOwnMessage={isOwnMessage}
             onPress={() => handleVibeCheckPressRef.current(item as VibeCheckMessage)}
+            onImageLoad={() => {
+              // Scroll to bottom when VibeCheck image loads
+              if (isOwnMessage) {
+                setTimeout(() => {
+                  flatListRef.current?.scrollToEnd({ animated: false });
+                }, 100);
+              }
+            }}
           />
         );
       }
