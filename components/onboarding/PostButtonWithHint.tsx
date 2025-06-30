@@ -10,10 +10,10 @@ interface PostButtonWithHintProps {
   disabled: boolean;
 }
 
-export const PostButtonWithHint: React.FC<PostButtonWithHintProps> = ({ 
-  onPress, 
-  loading, 
-  disabled 
+export const PostButtonWithHint: React.FC<PostButtonWithHintProps> = ({
+  onPress,
+  loading,
+  disabled,
 }) => {
   const { state } = useOnboarding();
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -76,7 +76,7 @@ export const PostButtonWithHint: React.FC<PostButtonWithHintProps> = ({
         disabled={disabled}
         style={styles.button}
       />
-      
+
       {showHint && (
         <Animated.View
           style={[

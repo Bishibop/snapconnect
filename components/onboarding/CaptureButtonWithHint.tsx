@@ -9,10 +9,10 @@ interface CaptureButtonWithHintProps {
   isCameraReady: boolean;
 }
 
-export const CaptureButtonWithHint: React.FC<CaptureButtonWithHintProps> = ({ 
-  onPress, 
-  disabled, 
-  isCameraReady 
+export const CaptureButtonWithHint: React.FC<CaptureButtonWithHintProps> = ({
+  onPress,
+  disabled,
+  isCameraReady,
 }) => {
   const { state } = useOnboarding();
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -73,13 +73,10 @@ export const CaptureButtonWithHint: React.FC<CaptureButtonWithHintProps> = ({
         disabled={disabled}
       >
         <View
-          style={[
-            styles.captureButtonInner,
-            !isCameraReady && styles.captureButtonInnerDisabled,
-          ]}
+          style={[styles.captureButtonInner, !isCameraReady && styles.captureButtonInnerDisabled]}
         />
       </TouchableOpacity>
-      
+
       {showHint && (
         <Animated.View
           style={[

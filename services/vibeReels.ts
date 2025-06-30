@@ -1,5 +1,6 @@
 import { supabase } from '../lib/supabase';
 import { generateEmbedding, uploadArtImage, getArtPieceUrl } from './artSimilarity';
+import { generateVibeCaption } from './aiCaptions';
 import * as FileSystem from 'expo-file-system';
 
 export interface VibeReel {
@@ -9,6 +10,7 @@ export interface VibeReel {
   selected_art_ids: string[];
   created_at: string;
   posted_at?: string | null;
+  ai_caption?: string | null;
   creator?: {
     username: string;
   };
@@ -135,6 +137,35 @@ export const createVibeReel = async (
         // Continue with other art pieces even if one fails
       }
     }
+
+    // 6. Generate AI caption in the background (don't block on this)
+    // Get the image URLs for selected art (if any)
+    let selectedArtUrls: string[] = [];
+    if (selectedArtIds.length > 0) {
+      const { data: selectedArtData } = await supabase
+        .from('art_pieces')
+        .select('image_url')
+        .in('id', selectedArtIds);
+
+      selectedArtUrls = selectedArtData?.map(art => art.image_url) || [];
+    }
+
+    // Generate caption asynchronously (for both solo and collection vibe reels)
+    generateVibeCaption(imageFile as string, selectedArtUrls)
+      .then(caption => {
+        if (caption && vibeReel.id) {
+          // Update the vibe reel with the caption
+          return supabase.from('vibe_reels').update({ ai_caption: caption }).eq('id', vibeReel.id);
+        }
+      })
+      .then(result => {
+        if (result && result.error) {
+          console.error('Error updating vibe reel with AI caption:', result.error);
+        }
+      })
+      .catch(error => {
+        console.error('Error in caption generation process:', error);
+      });
 
     return vibeReel;
   } catch (error) {

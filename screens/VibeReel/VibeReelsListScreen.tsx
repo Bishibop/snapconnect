@@ -21,7 +21,8 @@ interface VibeReelsListProps {
 type FilterTab = 'community' | 'friends' | 'yours';
 
 export default function VibeReelsListScreen({ navigation }: VibeReelsListProps) {
-  const { friendVibeReels, myVibeReels, communityVibeReels, refreshing, refresh, markViewed } = useVibeReels();
+  const { friendVibeReels, myVibeReels, communityVibeReels, refreshing, refresh, markViewed } =
+    useVibeReels();
   const [activeFilter, setActiveFilter] = useState<FilterTab>('community');
 
   // Calculate unviewed counts
@@ -124,15 +125,15 @@ export default function VibeReelsListScreen({ navigation }: VibeReelsListProps) 
             activeFilter === 'yours'
               ? 'No VibeReels yet'
               : activeFilter === 'community'
-              ? 'No community VibeReels'
-              : 'No VibeReels to show'
+                ? 'No community VibeReels'
+                : 'No VibeReels to show'
           }
           subtitle={
             activeFilter === 'yours'
               ? 'Create your first VibeReel!'
               : activeFilter === 'community'
-              ? 'Be the first to share with the community!'
-              : 'Check back later for new VibeReels'
+                ? 'Be the first to share with the community!'
+                : 'Check back later for new VibeReels'
           }
         />
       ) : (

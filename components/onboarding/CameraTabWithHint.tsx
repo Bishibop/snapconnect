@@ -62,7 +62,7 @@ export const CameraTabWithHint: React.FC<CameraTabWithHintProps> = ({ focused, s
         style={[styles.cameraIcon, focused && styles.cameraIconActive]}
         resizeMode="contain"
       />
-      
+
       {showHint && (
         <Animated.View
           style={[

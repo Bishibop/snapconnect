@@ -7,11 +7,13 @@ This document outlines the implementation plan for a simple, effective onboardin
 ## User Journey
 
 ### 1. First App Launch
+
 - New user opens the app after signing up
 - App detects this is their first time (no onboarding completion flag)
 - Welcome screen is displayed
 
 ### 2. Welcome Screen
+
 - **Full-screen presentation** with SnapConnect branding
 - **Key messaging:**
   - App logo/name
@@ -20,6 +22,7 @@ This document outlines the implementation plan for a simple, effective onboardin
 - **Single CTA:** "Get Started" button
 
 ### 3. Camera Tab Discovery
+
 - User lands on main app (VibeReels tab)
 - Semi-transparent overlay dims all UI except camera tab
 - Animated arrow points to camera icon with bounce effect
@@ -27,12 +30,14 @@ This document outlines the implementation plan for a simple, effective onboardin
 - Camera icon pulses with subtle glow
 
 ### 4. First Photo Capture
+
 - Camera opens with brief instructional overlay
 - Message: "Take a photo of something that inspires you"
 - Tip: "Your photo will be matched with similar art from the community"
 - User takes photo and proceeds to preview
 
 ### 5. VibeReel Creation
+
 - Art matching screen appears
 - Contextual messaging based on available art:
   - If matches exist: "Select pieces that match your vibe"
@@ -40,6 +45,7 @@ This document outlines the implementation plan for a simple, effective onboardin
 - Create button is highlighted
 
 ### 6. Success & Education
+
 - Confetti animation on first VibeReel creation
 - Success message: "Your first VibeReel is live for 24 hours!"
 - Quick tips carousel:
@@ -69,6 +75,7 @@ interface OnboardingContextType {
 ```
 
 **Key features:**
+
 - Persist state to AsyncStorage
 - Load state on app launch
 - Provide hooks for components to check/update progress
@@ -77,6 +84,7 @@ interface OnboardingContextType {
 ### 2. Welcome Screen (`screens/onboarding/WelcomeScreen.tsx`)
 
 **Component structure:**
+
 ```typescript
 - SafeAreaView wrapper
 - Logo/branding section (top 40%)
@@ -86,6 +94,7 @@ interface OnboardingContextType {
 ```
 
 **Key behaviors:**
+
 - Navigate to main app on "Get Started" tap
 - Update onboarding context (hasSeenWelcome = true)
 - No skip option (single path forward)
@@ -93,6 +102,7 @@ interface OnboardingContextType {
 ### 3. Camera Tab Hint (`components/onboarding/CameraTabHint.tsx`)
 
 **Component features:**
+
 - Absolute positioned overlay
 - Semi-transparent background (rgba(0,0,0,0.7))
 - Cutout/highlight for camera tab
@@ -100,6 +110,7 @@ interface OnboardingContextType {
 - Tooltip with instructional text
 
 **Animation details:**
+
 - Arrow: Bounce animation (transform translateY)
 - Camera icon: Pulse effect (scale + opacity)
 - Auto-dismiss on camera tab press
@@ -107,6 +118,7 @@ interface OnboardingContextType {
 ### 4. Navigation Updates
 
 **RootNavigator.tsx modifications:**
+
 ```typescript
 const { state } = useOnboarding();
 
@@ -120,6 +132,7 @@ return <TabNavigator />;
 ```
 
 **TabNavigator.tsx modifications:**
+
 - Wrap in OnboardingProvider
 - Add CameraTabHint overlay conditionally
 - Track camera tab interactions
@@ -127,6 +140,7 @@ return <TabNavigator />;
 ### 5. VibeReel Creation Success
 
 **Updates to VibeReelPreview.tsx:**
+
 - Detect if this is user's first VibeReel
 - Show confetti animation (using react-native-confetti-cannon)
 - Display educational tooltips
@@ -151,18 +165,21 @@ Normal App Experience
 ## UI/UX Considerations
 
 ### Visual Design
+
 - **Consistency:** Use existing theme colors and typography
 - **Clarity:** High contrast overlays for visibility
 - **Delight:** Subtle animations to engage without overwhelming
 - **Accessibility:** Ensure all text meets WCAG contrast requirements
 
 ### Interaction Design
+
 - **Progressive disclosure:** One concept at a time
 - **Clear CTAs:** Single, obvious next action
 - **Quick completion:** Entire flow under 2 minutes
 - **Non-blocking:** Users can explore if they dismiss hints
 
 ### Copy Guidelines
+
 - **Concise:** Maximum 2 lines of text per screen
 - **Action-oriented:** Use verbs ("Create", "Explore", "Share")
 - **Benefit-focused:** Explain the "why" not just the "what"
@@ -185,12 +202,14 @@ Normal App Experience
 ## Future Enhancements
 
 ### Phase 2 (Post-MVP)
+
 - Interactive tutorial for AR filters
 - Friend addition prompts after first VibeReel
 - Gamification elements (achievements for first actions)
 - Personalized tips based on user behavior
 
 ### Phase 3 (Growth)
+
 - A/B testing different welcome messages
 - Video tutorial option
 - Social proof (show popular VibeReels during onboarding)
@@ -202,25 +221,26 @@ Track these events to measure onboarding effectiveness:
 
 ```typescript
 // Onboarding funnel
-'onboarding_started'
-'welcome_screen_viewed'
-'welcome_get_started_tapped'
-'camera_hint_shown'
-'camera_hint_dismissed'
-'camera_opened_first_time'
-'first_photo_taken'
-'first_vibereel_created'
-'onboarding_completed'
+'onboarding_started';
+'welcome_screen_viewed';
+'welcome_get_started_tapped';
+'camera_hint_shown';
+'camera_hint_dismissed';
+'camera_opened_first_time';
+'first_photo_taken';
+'first_vibereel_created';
+'onboarding_completed';
 
 // Drop-off points
-'onboarding_abandoned_welcome'
-'onboarding_abandoned_camera'
-'onboarding_abandoned_creation'
+'onboarding_abandoned_welcome';
+'onboarding_abandoned_camera';
+'onboarding_abandoned_creation';
 ```
 
 ## Testing Considerations
 
 ### Manual Testing
+
 1. Fresh install flow
 2. Returning user (no onboarding)
 3. Partial completion scenarios
@@ -228,6 +248,7 @@ Track these events to measure onboarding effectiveness:
 5. Background/foreground transitions
 
 ### Automated Testing
+
 - Unit tests for OnboardingContext
 - Component tests for each screen
 - E2E test for complete flow

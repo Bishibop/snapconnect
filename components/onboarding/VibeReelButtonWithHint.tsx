@@ -61,17 +61,14 @@ export const VibeReelButtonWithHint: React.FC<VibeReelButtonWithHintProps> = ({ 
 
   return (
     <View style={styles.container}>
-      <TouchableOpacity
-        style={[styles.iconButton, styles.vibeReelButton]}
-        onPress={onPress}
-      >
+      <TouchableOpacity style={[styles.iconButton, styles.vibeReelButton]} onPress={onPress}>
         <Image
           source={require('../../assets/images/VibeReel.jpeg')}
           style={styles.vibeReelIcon}
           resizeMode="contain"
         />
       </TouchableOpacity>
-      
+
       {showHint && (
         <Animated.View
           style={[

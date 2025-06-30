@@ -4,7 +4,6 @@ import {
   Text,
   StyleSheet,
   Image,
-  ActivityIndicator,
   TouchableOpacity,
   Dimensions,
   Animated,
@@ -37,6 +36,8 @@ export default function VibeReelPlayer() {
   const [allArt, setAllArt] = useState<ArtPiece[]>([]);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentDisplayIndex, setCurrentDisplayIndex] = useState(0); // For progress bar
+  const [aiCaption, setAiCaption] = useState<string | null>(null);
+  const [showCaption, setShowCaption] = useState(false);
 
   // Double buffer animation values - start with 0 for initial fade-in
   const fadeAnimA = useRef(new Animated.Value(0)).current;
@@ -46,12 +47,17 @@ export default function VibeReelPlayer() {
   const scaleAnimA = useRef(new Animated.Value(1.0)).current;
   const scaleAnimB = useRef(new Animated.Value(1.0)).current;
 
+  // Caption fade animation
+  const captionFadeAnim = useRef(new Animated.Value(0)).current;
+
   // Refs for managing playback
   const playbackTimer = useRef<NodeJS.Timeout | null>(null);
+  const captionTimer = useRef<NodeJS.Timeout | null>(null);
   const isMounted = useRef(true);
   const currentIndexRef = useRef(0);
   const allArtRef = useRef<ArtPiece[]>([]);
   const activeBuffer = useRef<'A' | 'B'>('A'); // Track which buffer is currently visible
+  const aiCaptionRef = useRef<string | null>(null);
 
   // State for both buffers
   const [imageA, setImageA] = useState<ArtPiece | null>(null);
@@ -64,6 +70,9 @@ export default function VibeReelPlayer() {
       isMounted.current = false;
       if (playbackTimer.current) {
         clearTimeout(playbackTimer.current);
+      }
+      if (captionTimer.current) {
+        clearTimeout(captionTimer.current);
       }
     };
   }, []);
@@ -80,6 +89,8 @@ export default function VibeReelPlayer() {
       }
 
       setVibeReel(data);
+      setAiCaption(data.ai_caption || null);
+      aiCaptionRef.current = data.ai_caption || null;
 
       // Combine selected art with the primary art at the end
       const artSequence = [
@@ -156,6 +167,20 @@ export default function VibeReelPlayer() {
       useNativeDriver: true,
     }).start();
 
+    // Show caption on the final image
+    if (isMainPhoto && aiCaptionRef.current) {
+      // Wait 3 seconds, then fade in caption
+      captionTimer.current = setTimeout(() => {
+        if (!isMounted.current) return;
+        setShowCaption(true);
+        Animated.timing(captionFadeAnim, {
+          toValue: 1,
+          duration: 1000,
+          useNativeDriver: true,
+        }).start();
+      }, 3000);
+    }
+
     // Schedule transition after display duration
     playbackTimer.current = setTimeout(() => {
       if (!isMounted.current) return;
@@ -165,6 +190,18 @@ export default function VibeReelPlayer() {
 
   const transitionToNext = () => {
     const nextIdx = currentIndexRef.current + 1;
+
+    // Hide caption before transitioning
+    if (showCaption) {
+      setShowCaption(false);
+      captionFadeAnim.setValue(0);
+    }
+
+    // Clear caption timer if it's running
+    if (captionTimer.current) {
+      clearTimeout(captionTimer.current);
+      captionTimer.current = null;
+    }
 
     if (nextIdx >= allArtRef.current.length) {
       // End of sequence
@@ -238,6 +275,10 @@ export default function VibeReelPlayer() {
       clearTimeout(playbackTimer.current);
       playbackTimer.current = null;
     }
+    if (captionTimer.current) {
+      clearTimeout(captionTimer.current);
+      captionTimer.current = null;
+    }
     setIsPlaying(false);
     // Auto-close when playback completes
     navigation.goBack();
@@ -247,6 +288,10 @@ export default function VibeReelPlayer() {
     if (playbackTimer.current) {
       clearTimeout(playbackTimer.current);
       playbackTimer.current = null;
+    }
+    if (captionTimer.current) {
+      clearTimeout(captionTimer.current);
+      captionTimer.current = null;
     }
     setIsPlaying(false);
     navigation.goBack();
@@ -261,7 +306,7 @@ export default function VibeReelPlayer() {
     art: ArtPiece | null,
     fadeAnim: Animated.Value,
     scaleAnim: Animated.Value,
-    bufferName: string
+    _bufferName: string
   ) => {
     if (!art) return null;
 
@@ -312,6 +357,17 @@ export default function VibeReelPlayer() {
             />
           </View>
         </View>
+      )}
+
+      {showCaption && aiCaption && (
+        <Animated.View
+          style={[styles.captionContainer, { opacity: captionFadeAnim }]}
+          pointerEvents="none"
+        >
+          <View style={styles.captionBackground}>
+            <Text style={styles.captionText}>{aiCaption}</Text>
+          </View>
+        </Animated.View>
       )}
     </View>
   );
@@ -384,27 +440,6 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '600',
   },
-  controls: {
-    position: 'absolute',
-    bottom: 100,
-    alignItems: 'center',
-  },
-  playButton: {
-    backgroundColor: theme.colors.primary,
-    paddingHorizontal: 32,
-    paddingVertical: 16,
-    borderRadius: 30,
-    marginBottom: 16,
-  },
-  playButtonText: {
-    color: 'white',
-    fontSize: 18,
-    fontWeight: '600',
-  },
-  artCount: {
-    color: 'rgba(255, 255, 255, 0.6)',
-    fontSize: 14,
-  },
   progressContainer: {
     position: 'absolute',
     top: 50,
@@ -438,5 +473,32 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
     borderWidth: 40,
     borderColor: 'rgba(0, 0, 0, 0.2)',
+  },
+  captionContainer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    paddingBottom: 100,
+    paddingHorizontal: 20,
+  },
+  captionBackground: {
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    borderRadius: 16,
+    paddingVertical: 20,
+    paddingHorizontal: 24,
+    // Subtle blur effect
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+  },
+  captionText: {
+    color: 'white',
+    fontSize: 18,
+    fontWeight: '600',
+    textAlign: 'center',
+    lineHeight: 27,
+    letterSpacing: 0.3,
   },
 });

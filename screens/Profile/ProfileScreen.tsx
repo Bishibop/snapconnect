@@ -129,7 +129,9 @@ export default function ProfileScreen() {
             <Text style={styles.bioText}>{profile.bio}</Text>
           ) : (
             <Text style={styles.bioPlaceholder}>
-              {isOwnProfile ? 'Add a bio to tell others about yourself and your art!' : 'No bio yet'}
+              {isOwnProfile
+                ? 'Add a bio to tell others about yourself and your art!'
+                : 'No bio yet'}
             </Text>
           )}
         </View>

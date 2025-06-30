@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, Alert, Animated } from 'react-native';
+import { View, Text, StyleSheet, Alert, Animated, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { theme } from '../../constants/theme';
@@ -21,7 +21,17 @@ export default function VibeReelPreview() {
   const [posting, setPosting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [showTooltips, setShowTooltips] = useState(false);
+  const [captionGenerating, setCaptionGenerating] = useState(true);
   const fadeAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    // Caption generation typically takes 15-30 seconds
+    const timer = setTimeout(() => {
+      setCaptionGenerating(false);
+    }, 30000);
+
+    return () => clearTimeout(timer);
+  }, []);
 
   const handlePreview = () => {
     // Navigate to VibeReelPlayer for private viewing
@@ -80,14 +90,18 @@ export default function VibeReelPreview() {
                 <Text style={styles.tooltipText}>Others can now Vibe your art.</Text>
               </View>
               <View style={styles.tooltip}>
-                <Text style={styles.tooltipText}>View your profile to see how many times your art has been Vibed.</Text>
+                <Text style={styles.tooltipText}>
+                  View your profile to see how many times your art has been Vibed.
+                </Text>
               </View>
               <View style={styles.tooltip}>
-                <Text style={styles.tooltipText}>Add friends to share private VibeCheck messages.</Text>
+                <Text style={styles.tooltipText}>
+                  Add friends to share private VibeCheck messages.
+                </Text>
               </View>
             </View>
           )}
-          
+
           <TouchableOpacity style={styles.keepVibingButton} onPress={handleKeepVibing}>
             <Text style={styles.keepVibingText}>Keep Vibing!</Text>
           </TouchableOpacity>
@@ -96,6 +110,13 @@ export default function VibeReelPreview() {
 
       <View style={styles.content}>
         <Text style={styles.title}>Your VibeReel is ready!</Text>
+
+        {captionGenerating && (
+          <View style={styles.captionStatus}>
+            <ActivityIndicator size="small" color={theme.colors.primary} />
+            <Text style={styles.captionStatusText}>Analyzing vibe...</Text>
+          </View>
+        )}
 
         <View style={styles.buttonContainer}>
           <ActionButton
@@ -106,11 +127,7 @@ export default function VibeReelPreview() {
             style={styles.button}
           />
 
-          <PostButtonWithHint
-            onPress={handlePost}
-            loading={posting}
-            disabled={posting}
-          />
+          <PostButtonWithHint onPress={handlePost} loading={posting} disabled={posting} />
         </View>
       </View>
     </SafeAreaView>
@@ -197,5 +214,17 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '600',
     textAlign: 'center',
+  },
+  captionStatus: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: theme.spacing.lg,
+    paddingHorizontal: theme.spacing.md,
+  },
+  captionStatusText: {
+    marginLeft: theme.spacing.sm,
+    color: theme.colors.textSecondary,
+    fontSize: 14,
   },
 });

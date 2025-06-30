@@ -46,7 +46,8 @@ export function VibeReelsProvider({ children }: VibeReelsProviderProps) {
   const [allVibeReels, setAllVibeReels] = useState<VibeReelWithViewStatus[]>(() => {
     if (!user?.id) return [];
     return (
-      cache.get<VibeReelWithViewStatus[]>('ALL_VIBE_REELS', user.id, CACHE_DURATIONS.VIBE_REELS) || []
+      cache.get<VibeReelWithViewStatus[]>('ALL_VIBE_REELS', user.id, CACHE_DURATIONS.VIBE_REELS) ||
+      []
     );
   });
 
@@ -136,13 +137,7 @@ export function VibeReelsProvider({ children }: VibeReelsProviderProps) {
         safeSetRefreshing(false);
       }
     },
-    [
-      user?.id,
-      handleError,
-      clearError,
-      safeSetRefreshing,
-      safeSetAllVibeReels,
-    ]
+    [user?.id, handleError, clearError, safeSetRefreshing, safeSetAllVibeReels]
   );
 
   const refresh = useCallback(async () => {
@@ -230,7 +225,7 @@ export function VibeReelsProvider({ children }: VibeReelsProviderProps) {
 
   // Create a Set for O(1) friend ID lookup instead of O(n) with includes
   const friendIdSet = new Set(friendIds);
-  
+
   // Compute filtered arrays for backward compatibility
   const friendVibeReels = allVibeReels.filter(vr => friendIdSet.has(vr.creator_id));
   const myVibeReels = allVibeReels.filter(vr => vr.creator_id === user?.id);

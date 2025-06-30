@@ -67,7 +67,9 @@ export const WelcomeScreen: React.FC = () => {
         </View>
 
         <View style={styles.textSection}>
-          <Text style={styles.tagline}>Share Your Art{'\n'}&{'\n'}Find Your Vibe</Text>
+          <Text style={styles.tagline}>
+            Share Your Art{'\n'}&{'\n'}Find Your Vibe
+          </Text>
           <Text style={styles.description}>
             Turn your art into collaborative experiences and discover new vibes.
           </Text>

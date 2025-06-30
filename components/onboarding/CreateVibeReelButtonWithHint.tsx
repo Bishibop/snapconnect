@@ -12,12 +12,12 @@ interface CreateVibeReelButtonWithHintProps {
   hasSimilarArt: boolean;
 }
 
-export const CreateVibeReelButtonWithHint: React.FC<CreateVibeReelButtonWithHintProps> = ({ 
-  onPress, 
-  disabled, 
+export const CreateVibeReelButtonWithHint: React.FC<CreateVibeReelButtonWithHintProps> = ({
+  onPress,
+  disabled,
   loading,
   title,
-  hasSimilarArt
+  hasSimilarArt,
 }) => {
   const { state } = useOnboarding();
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -93,13 +93,8 @@ export const CreateVibeReelButtonWithHint: React.FC<CreateVibeReelButtonWithHint
           </View>
         </Animated.View>
       )}
-      
-      <ActionButton
-        title={title}
-        onPress={onPress}
-        disabled={disabled}
-        loading={loading}
-      />
+
+      <ActionButton title={title} onPress={onPress} disabled={disabled} loading={loading} />
     </View>
   );
 };

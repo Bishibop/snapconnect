@@ -101,122 +101,123 @@ const VibeReelsStackNavigator = () => (
 export const TabNavigator = () => {
   const { state, markCameraTapped } = useOnboarding();
 
-  const shouldShowCameraHint = state.hasSeenWelcome && !state.hasTappedCamera && !state.hasCreatedFirstVibeReel;
+  const shouldShowCameraHint =
+    state.hasSeenWelcome && !state.hasTappedCamera && !state.hasCreatedFirstVibeReel;
 
   return (
     <Tab.Navigator
-        initialRouteName="VibeReels"
-        screenOptions={{
-          headerShown: false,
-          tabBarActiveTintColor: theme.colors.primary,
-          tabBarInactiveTintColor: theme.colors.primary,
-          tabBarShowLabel: false,
-          tabBarStyle: {
-            backgroundColor: theme.colors.white,
-            borderTopColor: theme.colors.lightGray,
-            height: 80,
-            paddingBottom: 8,
-            paddingTop: 24,
-          },
-          tabBarIconStyle: {
-            marginTop: -10,
-          },
+      initialRouteName="VibeReels"
+      screenOptions={{
+        headerShown: false,
+        tabBarActiveTintColor: theme.colors.primary,
+        tabBarInactiveTintColor: theme.colors.primary,
+        tabBarShowLabel: false,
+        tabBarStyle: {
+          backgroundColor: theme.colors.white,
+          borderTopColor: theme.colors.lightGray,
+          height: 80,
+          paddingBottom: 8,
+          paddingTop: 24,
+        },
+        tabBarIconStyle: {
+          marginTop: -10,
+        },
+      }}
+    >
+      <Tab.Screen
+        name="Profile"
+        component={ProfileStackNavigator}
+        options={{
+          tabBarIcon: ({ color }) => <Icon name="USER" color={color} size={28} />,
         }}
-      >
-        <Tab.Screen
-          name="Profile"
-          component={ProfileStackNavigator}
-          options={{
-            tabBarIcon: ({ color }) => <Icon name="USER" color={color} size={28} />,
-          }}
-          listeners={({ navigation }) => ({
-            tabPress: e => {
-              e.preventDefault();
-              navigation.dispatch(
-                CommonActions.reset({
-                  index: 0,
-                  routes: [{ name: 'Profile' }],
-                })
-              );
-            },
-          })}
-        />
-        <Tab.Screen
-          name="Conversations"
-          component={ConversationsStackNavigator}
-          options={{
-            tabBarIcon: ({ color, size }) => <Icon name="COMMENT" color={color} size={size} />,
-          }}
-          listeners={({ navigation }) => ({
-            tabPress: e => {
-              e.preventDefault();
-              navigation.dispatch(
-                CommonActions.reset({
-                  index: 0,
-                  routes: [{ name: 'Conversations' }],
-                })
-              );
-            },
-          })}
-        />
-        <Tab.Screen
-          name="VibeReels"
-          component={VibeReelsStackNavigator}
-          options={{
-            tabBarIcon: ({ color, size }) => <Icon name="GRID" color={color} size={size} />,
-          }}
-          listeners={({ navigation }) => ({
-            tabPress: e => {
-              e.preventDefault();
-              navigation.dispatch(
-                CommonActions.reset({
-                  index: 0,
-                  routes: [{ name: 'VibeReels' }],
-                })
-              );
-            },
-          })}
-        />
-        <Tab.Screen
-          name="Camera"
-          component={CameraStackNavigator}
-          options={{
-            tabBarIcon: ({ focused }) => (
-              <CameraTabWithHint focused={focused} showHint={shouldShowCameraHint} />
-            ),
-          }}
-          listeners={({ navigation }) => ({
-            tabPress: e => {
-              e.preventDefault();
-              markCameraTapped();
-              navigation.dispatch(
-                CommonActions.reset({
-                  index: 0,
-                  routes: [{ name: 'Camera' }],
-                })
-              );
-            },
-          })}
-        />
-        <Tab.Screen
-          name="Friends"
-          component={FriendsStackNavigator}
-          options={{
-            tabBarIcon: ({ color, size }) => <Icon name="FRIENDS" color={color} size={size} />,
-          }}
-          listeners={({ navigation }) => ({
-            tabPress: e => {
-              e.preventDefault();
-              navigation.dispatch(
-                CommonActions.reset({
-                  index: 0,
-                  routes: [{ name: 'Friends' }],
-                })
-              );
-            },
-          })}
-        />
-      </Tab.Navigator>
+        listeners={({ navigation }) => ({
+          tabPress: e => {
+            e.preventDefault();
+            navigation.dispatch(
+              CommonActions.reset({
+                index: 0,
+                routes: [{ name: 'Profile' }],
+              })
+            );
+          },
+        })}
+      />
+      <Tab.Screen
+        name="Conversations"
+        component={ConversationsStackNavigator}
+        options={{
+          tabBarIcon: ({ color, size }) => <Icon name="COMMENT" color={color} size={size} />,
+        }}
+        listeners={({ navigation }) => ({
+          tabPress: e => {
+            e.preventDefault();
+            navigation.dispatch(
+              CommonActions.reset({
+                index: 0,
+                routes: [{ name: 'Conversations' }],
+              })
+            );
+          },
+        })}
+      />
+      <Tab.Screen
+        name="VibeReels"
+        component={VibeReelsStackNavigator}
+        options={{
+          tabBarIcon: ({ color, size }) => <Icon name="GRID" color={color} size={size} />,
+        }}
+        listeners={({ navigation }) => ({
+          tabPress: e => {
+            e.preventDefault();
+            navigation.dispatch(
+              CommonActions.reset({
+                index: 0,
+                routes: [{ name: 'VibeReels' }],
+              })
+            );
+          },
+        })}
+      />
+      <Tab.Screen
+        name="Camera"
+        component={CameraStackNavigator}
+        options={{
+          tabBarIcon: ({ focused }) => (
+            <CameraTabWithHint focused={focused} showHint={shouldShowCameraHint} />
+          ),
+        }}
+        listeners={({ navigation }) => ({
+          tabPress: e => {
+            e.preventDefault();
+            markCameraTapped();
+            navigation.dispatch(
+              CommonActions.reset({
+                index: 0,
+                routes: [{ name: 'Camera' }],
+              })
+            );
+          },
+        })}
+      />
+      <Tab.Screen
+        name="Friends"
+        component={FriendsStackNavigator}
+        options={{
+          tabBarIcon: ({ color, size }) => <Icon name="FRIENDS" color={color} size={size} />,
+        }}
+        listeners={({ navigation }) => ({
+          tabPress: e => {
+            e.preventDefault();
+            navigation.dispatch(
+              CommonActions.reset({
+                index: 0,
+                routes: [{ name: 'Friends' }],
+              })
+            );
+          },
+        })}
+      />
+    </Tab.Navigator>
   );
 };
 

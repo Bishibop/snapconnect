@@ -66,7 +66,6 @@ export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children
     saveOnboardingState(newState);
   };
 
-
   const value: OnboardingContextType = {
     state,
     completeWelcome,
